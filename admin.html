@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة الإدارة  —  عبايات أمل</title>
+
+  <link rel="icon" href="assets/img/logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@500;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="assets/css/admin.css" />
+</head>
+<body>
+
+<!-- ============================================
+     شاشة تسجيل الدخول
+============================================ -->
+<div id="loginScreen" class="login-wrap" style="display:none;">
+  <div class="login-card">
+    <img src="assets/img/logo.png" alt="عبايات أمل" class="logo-img"
+         decoding="sync" loading="eager" fetchpriority="high"
+         onerror="this.style.display='none'">
+    <h2>لوحة الإدارة</h2>
+    <p class="sub">عبايات أمل  —  تسجيل الدخول</p>
+    <form id="loginForm">
+      <div class="field">
+        <label>اسم المستخدم</label>
+        <input type="text" name="username" required autocomplete="username" />
+      </div>
+      <div class="field">
+        <label>كلمة المرور</label>
+        <input type="password" name="password" required autocomplete="current-password" />
+      </div>
+      <button type="submit" class="btn" style="width:100%; padding:12px;">دخول</button>
+      <div class="login-error" id="loginError"></div>
+      <p class="sub" style="margin-top:14px; font-size:12px;">
+        الافتراضي: <strong>admin</strong> / <strong>admin123</strong>  —  غيّريه من الإعدادات.
+      </p>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================
+     الواجهة الرئيسية (تظهر بعد الدخول)
+============================================ -->
+<div id="appShell" class="layout" style="display:none;">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="assets/img/logo.png" alt="عبايات أمل" class="logo-img"
+           decoding="sync" loading="eager" fetchpriority="high"
+           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+      <div class="brand-text-wrap" style="display:none;">
+        <div class="brand-title">عبايات أمل</div>
+        <div class="brand-sub">لوحة عبايات أمل</div>
+      </div>
+    </div>
+    <nav class="menu">
+      <button class="menu-item active" data-page="dashboard">📊 لوحة القيادة</button>
+      <button class="menu-item" data-page="products">👗 المنتجات</button>
+      <button class="menu-item" data-page="inventory">📦 المخزون <span class="badge" id="lowStockBadge" style="display:none">0</span></button>
+      <button class="menu-item" data-page="orders">🧾 الطلبات <span class="badge" id="pendingBadge" style="display:none">0</span></button>
+      <button class="menu-item" data-page="delivery">🚚 التوصيل</button>
+      <button class="menu-item" data-page="customers">👥 العملاء</button>
+      <button class="menu-item" data-page="settings">⚙️ الإعدادات</button>
+      <a class="menu-item" href="index.html" target="_blank">🛍️ عرض المتجر</a>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="admin-info" id="adminInfo">admin@amal-abaya.loc</div>
+      <button id="logoutBtn" class="logout-pill">🚪 تسجيل خروج</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- ====== لوحة القيادة ====== -->
+    <section class="page active" id="page-dashboard">
+      <div class="topbar">
+        <div><h1>لوحة القيادة</h1></div>
+        <div class="date-display" id="dateDisplay">—</div>
+      </div>
+      <div class="cards-row" id="statsRow"></div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>الطلبات  —  <span id="ordersCountDash">0</span></h2>
+          <button class="btn ghost" data-goto="orders">عرض الكل</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>الرمز</th>
+              <th>الزبون</th>
+              <th>المدينة</th>
+              <th>القطع</th>
+              <th>المجموع</th>
+              <th>الطلبات</th>
+            </tr>
+          </thead>
+          <tbody id="recentOrders"></tbody>
+        </table>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2>الطلبات حسب المدينة</h2></div>
+        <table>
+          <thead><tr><th>المدينة</th><th>عدد الطلبات</th><th>الإجمالي</th></tr></thead>
+          <tbody id="cityStatsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ====== المنتجات ====== -->
+    <section class="page" id="page-products">
+      <div class="topbar">
+        <div><h1>المنتجات</h1><div class="sub">إضافة، تعديل، وحذف العبايات</div></div>
+        <button class="btn" id="addProductBtn">+ إضافة منتج جديد</button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <input class="input" id="searchProducts" placeholder="🔎 ابحثي عن منتج..." style="width: 280px;">
+          <select id="filterCategory" class="input">
+            <option value="">كل التصنيفات</option>
+          </select>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>الصورة</th><th>الاسم</th><th>التصنيف</th><th>السعر</th>
+              <th>الخصم</th><th>الألوان</th><th>المخزون</th><th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="productsTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ====== المخزون ====== -->
+    <section class="page" id="page-inventory">
+      <div class="topbar">
+        <div><h1>المخزون</h1><div class="sub">تنبيهات عند نزول إجمالي المخزون عن <span id="threshold">5</span></div></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2>القطع التي تحتاج إلى تجديد</h2></div>
+        <table>
+          <thead><tr><th>المنتج</th><th>الإجمالي</th><th>الحالة</th><th>التركيبات</th></tr></thead>
+          <tbody id="inventoryTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ====== الطلبات ====== -->
+    <section class="page" id="page-orders">
+      <div class="topbar">
+        <div><h1>الطلبات</h1><div class="sub">إدارة الطلبات وتحديث حالاتها</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div class="tools">
+            <select id="filterCity" class="input"><option value="">كل المدن</option></select>
+            <select id="filterStatus" class="input"><option value="">كل الحالات</option></select>
+          </div>
+          <div style="color:var(--muted); font-size:14px;">إجمالي: <strong id="ordersCount">0</strong></div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>الزبونة</th><th>الجوال</th>
+              <th>المدينة</th><th>الإجمالي</th><th>الحالة</th>
+              <th>التاريخ</th><th>تفاصيل</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ====== التوصيل ====== -->
+    <section class="page" id="page-delivery">
+      <div class="topbar">
+        <div><h1>التوصيل</h1><div class="sub">إدارة الطلبات الجاهزة للشحن والتوصيل</div></div>
+        <div class="date-display" id="dateDisplayDelivery">—</div>
+      </div>
+
+      <div class="cards-row" id="deliveryStats"></div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>الطلبات قيد التوصيل</h2>
+          <select id="deliveryCityFilter" class="input">
+            <option value="">كل المدن</option>
+          </select>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>الرمز</th><th>الزبون</th><th>المدينة</th>
+              <th>القطع</th><th>المجموع</th><th>الحالة</th><th>إجراء سريع</th>
+            </tr>
+          </thead>
+          <tbody id="deliveryTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ====== العملاء ====== -->
+    <section class="page" id="page-customers">
+      <div class="topbar">
+        <div><h1>العملاء</h1><div class="sub">قائمة العملاء وسجل طلباتهم</div></div>
+        <div class="date-display" id="dateDisplayCustomers">—</div>
+      </div>
+
+      <div class="cards-row" id="customersStats"></div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>قائمة العملاء  —  <span id="customersCount">0</span></h2>
+          <input class="input" id="searchCustomers" placeholder="🔎 ابحثي بالاسم أو الجوال..." style="width: 280px;">
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>الاسم</th><th>الجوال</th><th>المدينة</th>
+              <th>عدد الطلبات</th><th>إجمالي الإنفاق</th><th>آخر طلب</th>
+            </tr>
+          </thead>
+          <tbody id="customersTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ====== الإعدادات ====== -->
+    <section class="page" id="page-settings">
+      <div class="topbar">
+        <div><h1>الإعدادات</h1><div class="sub">معلومات التواصل والحسابات البنكية والأمان</div></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2>📞 معلومات التواصل</h2></div>
+        <form id="contactForm" class="row-2">
+          <div class="field">
+            <label>رقم الاتصال</label>
+            <input type="tel" name="phone" id="cfgPhone" placeholder="+970 59 1234567" />
+          </div>
+          <div class="field">
+            <label>رقم الواتساب</label>
+            <input type="tel" name="whatsapp" id="cfgWa" placeholder="+970 59 1234567" />
+          </div>
+          <div class="field" style="grid-column: 1/-1;">
+            <label>عنوان الصفحة (Headline)</label>
+            <input type="text" id="cfgHeadline" placeholder="عبايات وأكثر تجدينها لدى عبايات أمل" />
+          </div>
+          <div style="grid-column: 1/-1;">
+            <button type="submit" class="btn">حفظ معلومات التواصل</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>🏦 الحسابات البنكية</h2>
+          <button class="btn gold" id="addBankBtn">+ إضافة حساب</button>
+        </div>
+        <div id="banksList"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>🎟️ أكواد الخصم</h2>
+          <button class="btn gold" id="addCouponBtn">+ إضافة كود</button>
+        </div>
+        <div id="couponsList"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2>🔒 تغيير كلمة المرور</h2></div>
+        <form id="pwdForm" class="row-3">
+          <div class="field"><label>الكلمة الحالية</label><input type="password" name="current" required /></div>
+          <div class="field"><label>الكلمة الجديدة</label><input type="password" name="next" required minlength="4" /></div>
+          <div class="field"><label>تأكيد الجديدة</label><input type="password" name="confirm" required /></div>
+          <div style="grid-column: 1/-1;">
+            <button type="submit" class="btn">تحديث كلمة المرور</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ============================================
+     Modal إضافة/تعديل منتج
+============================================ -->
+<div class="modal" id="productModal">
+  <div class="modal-box">
+    <h3 id="productModalTitle">إضافة منتج</h3>
+    <p class="sub">معلومات المنتج، ألوانه (لكلٍ صورته)، والمخزون لكل تركيبة لون+مقاس.</p>
+    <form id="productForm">
+      <input type="hidden" name="id" />
+
+      <div class="row-3">
+        <div class="field">
+          <label>اسم المنتج</label>
+          <input type="text" name="name" required />
+        </div>
+        <div class="field">
+          <label>التصنيف</label>
+          <select name="category" id="formCategory" required></select>
+        </div>
+        <div class="field">
+          <label>السعر (₪)</label>
+          <input type="number" name="price" min="0" step="1" required />
+        </div>
+      </div>
+
+      <div class="row-2">
+        <div class="field">
+          <label>الخصم % (اختياري)</label>
+          <input type="number" name="discount" min="0" max="90" step="1" value="0" />
+        </div>
+        <div class="field">
+          <label>المقاسات (افصلي بفاصلة)</label>
+          <input type="text" name="sizes" id="sizesInput" placeholder="S, M, L, XL" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>الوصف</label>
+        <textarea name="description" rows="2"></textarea>
+      </div>
+
+      <!-- الألوان مع رفع الصور -->
+      <div class="section-block">
+        <h4>الألوان والصور  <button type="button" class="btn ghost" id="addColorBtn">+ إضافة لون</button></h4>
+        <div id="colorsContainer"></div>
+      </div>
+
+      <!-- جدول المخزون لكل تركيبة -->
+      <div class="section-block">
+        <h4>المخزون لكل تركيبة (لون × مقاس)
+          <button type="button" class="btn ghost" id="rebuildStockBtn">↻ إعادة بناء الجدول</button>
+        </h4>
+        <div style="overflow-x:auto;">
+          <table class="stock-grid" id="stockGrid"></table>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn">حفظ</button>
+        <button type="button" class="btn ghost" id="cancelProduct">إلغاء</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================
+     Modal تفاصيل الطلب
+============================================ -->
+<div class="modal" id="orderModal">
+  <div class="modal-box">
+    <h3>تفاصيل الطلب</h3>
+    <p class="sub">معلومات الزبونة، القطع المطلوبة، وصورة التحويل</p>
+    <div id="orderModalBody"></div>
+    <div class="form-actions" style="flex-wrap:wrap;">
+      <select id="orderStatusSelect" class="input" style="flex:1; min-width:200px;"></select>
+      <button class="btn" id="saveOrderStatus">تحديث الحالة</button>
+      <button class="btn ok" id="verifyPaymentBtn" style="display:none;">✓ تأكيد الدفع</button>
+      <button class="btn ghost" id="closeOrderModal">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/admin.js"></script>
+</body>
+</html>
