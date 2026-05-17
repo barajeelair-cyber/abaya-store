@@ -160,10 +160,13 @@ function $(id) { return document.getElementById(id); }
    التصنيفات
 ========================================================= */
 function renderCategories() {
-  $catsBar.innerHTML = CATEGORIES.map(c => `
-    <button class="cat-pill ${c.id === currentCategory ? "active" : ""}" data-id="${c.id}">
-      ${t("category." + c.id)}
-    </button>`).join("");
+  const cats = getActiveCategories();
+  $catsBar.innerHTML = cats.map(c => {
+    const info = Utils.categoryById(c.id);
+    return `<button class="cat-pill ${c.id === currentCategory ? "active" : ""}" data-id="${c.id}">
+      ${escapeHtml(info.name)}
+    </button>`;
+  }).join("");
   $catsBar.querySelectorAll(".cat-pill").forEach(b => {
     b.onclick = () => {
       currentCategory = b.dataset.id;
@@ -648,5 +651,9 @@ renderProducts();
 renderCart();
 
 window.addEventListener("storage", (e) => {
-  if (e.key === "abaya_amal_v2") { applySettings(); renderProducts(); }
+  if (e.key === "abaya_amal_v2") {
+    applySettings();
+    renderCategories();
+    renderProducts();
+  }
 });

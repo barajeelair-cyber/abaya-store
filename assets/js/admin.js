@@ -40,6 +40,8 @@ function bootApp() {
   applyContactSettings();
   renderBanksList();
   renderCouponsList();
+  renderCategoriesAdmin();
+  renderTextsEditor();
   updateLangButtons();
 }
 
@@ -63,6 +65,8 @@ function toggleLang() {
     applyContactSettings();
     renderBanksList();
     renderCouponsList();
+    renderCategoriesAdmin();
+    renderTextsEditor();
   }
 }
 document.getElementById("langToggleLogin")?.addEventListener("click", toggleLang);
@@ -216,8 +220,11 @@ const $colorsCont   = document.getElementById("colorsContainer");
 const $stockGrid    = document.getElementById("stockGrid");
 
 function fillCategorySelects() {
-  const opts = CATEGORIES.filter(c => c.id !== "all")
-                  .map(c => `<option value="${c.id}">${t("category." + c.id)}</option>`).join("");
+  const cats = CategoriesAPI.list().filter(c => c.active !== false);
+  const opts = cats.map(c => {
+    const name = (getLang() === "en" && c.name_en) ? c.name_en : c.name_ar;
+    return `<option value="${c.id}">${escapeHtml(name)}</option>`;
+  }).join("");
   document.getElementById("formCategory").innerHTML = opts;
   $filterCat.innerHTML = `<option value="">${t("admin.products.all_categories")}</option>` + opts;
 }
@@ -1100,6 +1107,140 @@ function printInvoice(orderId) {
 document.getElementById("printInvoiceBtn")?.addEventListener("click", () => {
   if (currentOrderId) printInvoice(currentOrderId);
 });
+
+/* =====================================================
+   إدارة التصنيفات
+===================================================== */
+const $categoriesList = () => document.getElementById("categoriesList");
+
+function renderCategoriesAdmin() {
+  const list = CategoriesAPI.list();
+  const el = $categoriesList();
+  if (!el) return;
+  el.innerHTML = list.length ? `
+    <div class="category-row" style="font-weight:700; color:var(--muted); font-size:12px;">
+      <div data-i18n="admin.cat.name_ar">الاسم بالعربية</div>
+      <div data-i18n="admin.cat.name_en">الاسم بالإنجليزية</div>
+      <div data-i18n="admin.cat.active">مفعّل</div>
+      <div></div>
+    </div>
+    ${list.map(c => `
+      <div class="category-row" data-id="${c.id}">
+        <input class="input" data-f="name_ar" value="${escapeAttr(c.name_ar)}" placeholder="${t("admin.cat.name_ar")}">
+        <input class="input" data-f="name_en" value="${escapeAttr(c.name_en || "")}" placeholder="${t("admin.cat.name_en")}">
+        <label class="toggle"><input type="checkbox" data-f="active" ${c.active !== false ? "checked" : ""}><span></span></label>
+        <div class="actions">
+          <button class="icon-btn-sm ok"     data-act="save-cat">${t("admin.save")}</button>
+          <button class="icon-btn-sm danger" data-act="del-cat">${t("admin.delete")}</button>
+        </div>
+      </div>`).join("")}
+  ` : `<p style="color:var(--muted); font-size:13px;">${t("admin.cat.no_cats")}</p>`;
+
+  el.querySelectorAll(".category-row[data-id]").forEach(row => {
+    const id = row.dataset.id;
+    row.querySelector('[data-act="save-cat"]').onclick = () => {
+      const name_ar = row.querySelector('[data-f="name_ar"]').value.trim();
+      const name_en = row.querySelector('[data-f="name_en"]').value.trim();
+      const active  = row.querySelector('[data-f="active"]').checked;
+      if (!name_ar || !name_en) { showToast(t("admin.cat.need_names")); return; }
+      CategoriesAPI.save({ id, name_ar, name_en, active });
+      showToast(t("admin.cat.saved"));
+      fillCategorySelects();
+      renderProductsTable();
+    };
+    row.querySelector('[data-act="del-cat"]').onclick = () => {
+      if (!confirm(t("admin.cat.delete_confirm"))) return;
+      CategoriesAPI.remove(id);
+      showToast(t("admin.cat.deleted"));
+      renderCategoriesAdmin();
+      fillCategorySelects();
+      renderProductsTable();
+    };
+  });
+}
+
+document.getElementById("addCategoryBtn")?.addEventListener("click", () => {
+  /* أنشئ تصنيفاً فارغاً جديداً */
+  const newCat = {
+    name_ar: "تصنيف جديد",
+    name_en: "New category",
+    active: true,
+  };
+  CategoriesAPI.save(newCat);
+  renderCategoriesAdmin();
+  fillCategorySelects();
+});
+
+/* =====================================================
+   محرر نصوص الواجهة
+===================================================== */
+function renderTextsEditor() {
+  const el = document.getElementById("textsEditor");
+  if (!el) return;
+  /* جمّع المفاتيح حسب القسم */
+  const bySection = {};
+  EDITABLE_TEXTS.forEach(item => {
+    if (!bySection[item.section]) bySection[item.section] = [];
+    bySection[item.section].push(item);
+  });
+
+  el.innerHTML = Object.keys(bySection).map(section => `
+    <div class="text-section">
+      <h4>${t("admin.txt.section." + section)}</h4>
+      ${bySection[section].map(item => {
+        const labelAr = item.label_ar;
+        const labelEn = item.label_en;
+        const label   = getLang() === "en" ? labelEn : labelAr;
+        const arDefault = I18N.ar[item.key] || "";
+        const enDefault = I18N.en[item.key] || "";
+        const arOverride = TextOverridesAPI.get("ar", item.key);
+        const enOverride = TextOverridesAPI.get("en", item.key);
+        return `
+          <div class="text-row" data-key="${escapeAttr(item.key)}">
+            <div class="text-label">
+              <strong>${escapeHtml(label)}</strong>
+              <code style="display:block; color:var(--muted); font-size:11px; margin-top:2px;">${escapeHtml(item.key)}</code>
+            </div>
+            <div class="text-inputs">
+              <div>
+                <label>🇸🇦 العربية</label>
+                <textarea data-f="ar" rows="1" placeholder="${escapeAttr(arDefault)}">${escapeHtml(arOverride)}</textarea>
+                <small style="color:var(--muted)">${escapeHtml(arDefault)}</small>
+              </div>
+              <div>
+                <label>🇬🇧 English</label>
+                <textarea data-f="en" rows="1" placeholder="${escapeAttr(enDefault)}">${escapeHtml(enOverride)}</textarea>
+                <small style="color:var(--muted)">${escapeHtml(enDefault)}</small>
+              </div>
+            </div>
+            <div class="text-actions">
+              <button class="icon-btn-sm ok" data-act="save-text">${t("admin.txt.save")}</button>
+              <button class="icon-btn-sm" data-act="reset-text">${t("admin.txt.reset")}</button>
+            </div>
+          </div>`;
+      }).join("")}
+    </div>
+  `).join("");
+
+  el.querySelectorAll(".text-row").forEach(row => {
+    const key = row.dataset.key;
+    row.querySelector('[data-act="save-text"]').onclick = () => {
+      const ar = row.querySelector('textarea[data-f="ar"]').value;
+      const en = row.querySelector('textarea[data-f="en"]').value;
+      TextOverridesAPI.set("ar", key, ar);
+      TextOverridesAPI.set("en", key, en);
+      showToast(t("admin.txt.saved"));
+      applyTranslations();   /* أعد ترجمة DOM فوراً لتظهر التغييرات */
+    };
+    row.querySelector('[data-act="reset-text"]').onclick = () => {
+      TextOverridesAPI.reset(key);
+      row.querySelector('textarea[data-f="ar"]').value = "";
+      row.querySelector('textarea[data-f="en"]').value = "";
+      showToast(t("admin.txt.reset_done"));
+      applyTranslations();
+    };
+  });
+}
 
 /* أدوات */
 function truncate(s, n) { s = s || ""; return s.length > n ? s.slice(0, n) + "…" : s; }

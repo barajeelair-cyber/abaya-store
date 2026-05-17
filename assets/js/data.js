@@ -389,6 +389,34 @@ const I18N = {
     "admin.settings.pwd_updated": "تم تحديث كلمة المرور ✓",
     "admin.save": "حفظ",
     "admin.delete": "حذف",
+
+    /* Admin: categories + text editor */
+    "admin.settings.categories": "📁 إدارة التصنيفات",
+    "admin.settings.add_category": "+ إضافة تصنيف",
+    "admin.settings.categories_help": "أضيفي تصنيفات جديدة بأسماء عربية وإنجليزية. ستظهر تلقائياً في المتجر وفي إضافة المنتجات.",
+    "admin.cat.name_ar": "الاسم بالعربية",
+    "admin.cat.name_en": "الاسم بالإنجليزية",
+    "admin.cat.active": "مفعّل",
+    "admin.cat.no_cats": "لا توجد تصنيفات. اضغطي \"إضافة تصنيف\".",
+    "admin.cat.saved": "تم حفظ التصنيف ✓",
+    "admin.cat.deleted": "تم حذف التصنيف",
+    "admin.cat.delete_confirm": "حذف هذا التصنيف؟ المنتجات المرتبطة به ستحتاج إعادة تصنيف.",
+    "admin.cat.need_names": "أكملي الاسم بالعربية والإنجليزية",
+    "admin.settings.texts": "✏️ نصوص الواجهة",
+    "admin.settings.texts_help": "عدّلي النصوص التي تظهر في المتجر باللغتين العربية والإنجليزية. اتركي الحقل فارغاً لاستخدام النص الافتراضي.",
+    "admin.txt.default": "(افتراضي)",
+    "admin.txt.placeholder_ar": "النص بالعربية (اتركي فارغاً للافتراضي)",
+    "admin.txt.placeholder_en": "النص بالإنجليزية (اتركي فارغاً للافتراضي)",
+    "admin.txt.save": "حفظ",
+    "admin.txt.reset": "إعادة",
+    "admin.txt.saved": "تم حفظ النص ✓",
+    "admin.txt.reset_done": "تم استرجاع النص الافتراضي",
+    "admin.txt.section.branding": "الهوية",
+    "admin.txt.section.hero": "القسم العلوي",
+    "admin.txt.section.sections": "العناوين",
+    "admin.txt.section.checkout": "صفحة الدفع",
+    "admin.txt.section.footer": "التذييل",
+    "admin.txt.section.tracking": "تتبع الطلب",
   },
 
   en: {
@@ -766,6 +794,34 @@ const I18N = {
     "admin.settings.pwd_updated": "Password updated ✓",
     "admin.save": "Save",
     "admin.delete": "Delete",
+
+    /* Admin: categories + text editor */
+    "admin.settings.categories": "📁 Categories",
+    "admin.settings.add_category": "+ Add category",
+    "admin.settings.categories_help": "Add new categories with Arabic and English names. They will appear in the store and in product editing automatically.",
+    "admin.cat.name_ar": "Arabic name",
+    "admin.cat.name_en": "English name",
+    "admin.cat.active": "Active",
+    "admin.cat.no_cats": "No categories. Click \"Add category\".",
+    "admin.cat.saved": "Category saved ✓",
+    "admin.cat.deleted": "Category deleted",
+    "admin.cat.delete_confirm": "Delete this category? Products in it will need to be re-categorized.",
+    "admin.cat.need_names": "Fill in both Arabic and English names",
+    "admin.settings.texts": "✏️ Interface Texts",
+    "admin.settings.texts_help": "Edit the texts shown in the store in both Arabic and English. Leave a field empty to use the default text.",
+    "admin.txt.default": "(default)",
+    "admin.txt.placeholder_ar": "Arabic text (leave empty for default)",
+    "admin.txt.placeholder_en": "English text (leave empty for default)",
+    "admin.txt.save": "Save",
+    "admin.txt.reset": "Reset",
+    "admin.txt.saved": "Text saved ✓",
+    "admin.txt.reset_done": "Text restored to default",
+    "admin.txt.section.branding": "Branding",
+    "admin.txt.section.hero": "Hero section",
+    "admin.txt.section.sections": "Section titles",
+    "admin.txt.section.checkout": "Checkout",
+    "admin.txt.section.footer": "Footer",
+    "admin.txt.section.tracking": "Order tracking",
   },
 };
 
@@ -777,10 +833,37 @@ function setLang(lang) {
   document.documentElement.lang = lang;
   document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
 }
+let _overridesCache = null;
+function _loadOverrides() {
+  try {
+    const raw = localStorage.getItem(DB_KEY);
+    if (!raw) { _overridesCache = { ar: {}, en: {} }; return; }
+    const db = JSON.parse(raw);
+    _overridesCache = db.settings?.textOverrides || { ar: {}, en: {} };
+  } catch (e) { _overridesCache = { ar: {}, en: {} }; }
+}
 function t(key) {
+  if (_overridesCache === null) _loadOverrides();
   const lang = getLang();
+  const override = _overridesCache[lang]?.[key];
+  if (override) return override;
   return (I18N[lang] && I18N[lang][key]) || I18N.ar[key] || key;
 }
+
+/* قائمة النصوص القابلة للتحرير من لوحة الإدارة */
+const EDITABLE_TEXTS = [
+  { key: "brand.full",         section: "branding", label_ar: "اسم المتجر",                   label_en: "Store name" },
+  { key: "brand.tagline",      section: "branding", label_ar: "العنوان الفرعي للماركة",      label_en: "Brand tagline" },
+  { key: "hero.headline",      section: "hero",     label_ar: "العنوان الرئيسي في الصفحة",   label_en: "Hero headline" },
+  { key: "hero.sub",           section: "hero",     label_ar: "الوصف تحت العنوان الرئيسي",   label_en: "Hero subtitle" },
+  { key: "hero.cta",           section: "hero",     label_ar: "نص زر التسوق",               label_en: "Shop button text" },
+  { key: "section.collection", section: "sections", label_ar: "عنوان قسم المنتجات",          label_en: "Products section title" },
+  { key: "success.title",      section: "checkout", label_ar: "عنوان رسالة نجاح الطلب",     label_en: "Order success title" },
+  { key: "success.body",       section: "checkout", label_ar: "نص رسالة نجاح الطلب",        label_en: "Order success body" },
+  { key: "success.btn",        section: "checkout", label_ar: "زر تأكيد نجاح الطلب",        label_en: "Success button" },
+  { key: "footer.copyright",   section: "footer",   label_ar: "نص حقوق النشر في التذييل",    label_en: "Footer copyright" },
+  { key: "track.sub",          section: "tracking", label_ar: "وصف صفحة تتبع الطلب",        label_en: "Tracking page description" },
+];
 
 /* Apply translations to all elements with [data-i18n] */
 function applyTranslations() {
@@ -844,13 +927,31 @@ const DEFAULT_COLORS = ["أسود", "كحلي", "بني", "ذهبي وردي"];
 function loadDB() {
   const raw = localStorage.getItem(DB_KEY);
   if (raw) {
-    try { return JSON.parse(raw); } catch (e) { /* corrupt */ }
+    try {
+      const db = JSON.parse(raw);
+      /* migrations  —  أضِف الحقول الجديدة لقواعد البيانات القديمة */
+      if (!db.settings.categories) db.settings.categories = defaultCategories();
+      if (!db.settings.textOverrides) db.settings.textOverrides = { ar: {}, en: {} };
+      return db;
+    } catch (e) { /* corrupt */ }
   }
   const seed = seedData();
   localStorage.setItem(DB_KEY, JSON.stringify(seed));
   return seed;
 }
-function saveDB(db) { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+function saveDB(db) {
+  localStorage.setItem(DB_KEY, JSON.stringify(db));
+  _overridesCache = null;   /* أبطل كاش النصوص عند أي تحديث */
+}
+
+function defaultCategories() {
+  return [
+    { id: "everyday",  name_ar: "عبايات عملية",   name_en: "Everyday Abayas",  active: true },
+    { id: "occasions", name_ar: "عبايات مناسبات", name_en: "Occasion Abayas",  active: true },
+    { id: "black",     name_ar: "عبايات سوداء",   name_en: "Black Abayas",     active: true },
+    { id: "open",      name_ar: "عبايات مفتوحة",  name_en: "Open Abayas",      active: true },
+  ];
+}
 
 /* ---------- بذرة افتراضية ---------- */
 function seedData() {
@@ -941,6 +1042,8 @@ function seedData() {
         { id: uid(), code: "WELCOME10", type: "percent", value: 10, minOrder: 0, active: true, usedCount: 0 },
         { id: uid(), code: "AMAL20",    type: "percent", value: 20, minOrder: 300, active: true, usedCount: 0 },
       ],
+      categories: defaultCategories(),
+      textOverrides: { ar: {}, en: {} },
       admin: { username: "admin", password: "admin123" },
     },
   };
@@ -1068,6 +1171,71 @@ const SettingsAPI = {
 };
 
 /* =========================================================
+   CategoriesAPI  —  تصنيفات قابلة للتحرير من الإعدادات
+========================================================= */
+const CategoriesAPI = {
+  list() { return SettingsAPI.get().categories || []; },
+  /* قائمة التصنيفات النشطة + "الكل" مُضافة في البداية */
+  active() {
+    const list = this.list().filter(c => c.active !== false);
+    return [{ id: "all" }, ...list.map(c => ({ id: c.id }))];
+  },
+  save(cat) {
+    const db = loadDB();
+    db.settings.categories = db.settings.categories || [];
+    if (cat.id && db.settings.categories.find(c => c.id === cat.id)) {
+      const idx = db.settings.categories.findIndex(c => c.id === cat.id);
+      db.settings.categories[idx] = { ...db.settings.categories[idx], ...cat };
+    } else {
+      /* id جديد: نولّده من name_en أو من uid */
+      if (!cat.id) {
+        cat.id = (cat.name_en || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || uid();
+      }
+      if (cat.active === undefined) cat.active = true;
+      db.settings.categories.push(cat);
+    }
+    saveDB(db);
+    return cat;
+  },
+  remove(id) {
+    const db = loadDB();
+    db.settings.categories = (db.settings.categories || []).filter(c => c.id !== id);
+    saveDB(db);
+  },
+};
+
+function getActiveCategories() { return CategoriesAPI.active(); }
+
+/* =========================================================
+   TextOverridesAPI  —  تخصيص نصوص الواجهة
+========================================================= */
+const TextOverridesAPI = {
+  all() { return SettingsAPI.get().textOverrides || { ar: {}, en: {} }; },
+  get(lang, key) {
+    const o = this.all();
+    return o?.[lang]?.[key] || "";
+  },
+  set(lang, key, value) {
+    const db = loadDB();
+    db.settings.textOverrides = db.settings.textOverrides || { ar: {}, en: {} };
+    if (!db.settings.textOverrides[lang]) db.settings.textOverrides[lang] = {};
+    if (value && String(value).trim()) {
+      db.settings.textOverrides[lang][key] = String(value);
+    } else {
+      delete db.settings.textOverrides[lang][key];
+    }
+    saveDB(db);
+  },
+  reset(key) {
+    const db = loadDB();
+    if (db.settings.textOverrides?.ar) delete db.settings.textOverrides.ar[key];
+    if (db.settings.textOverrides?.en) delete db.settings.textOverrides.en[key];
+    saveDB(db);
+  },
+  editableKeys() { return EDITABLE_TEXTS; },
+};
+
+/* =========================================================
    CouponsAPI  —  أكواد الخصم
 ========================================================= */
 const CouponsAPI = {
@@ -1151,9 +1319,12 @@ const Utils = {
     return { ...c, name: t("city." + id) };
   },
   categoryById(id) {
-    const c = CATEGORIES.find(x => x.id === id);
-    if (!c) return null;
-    return { ...c, name: t("category." + id) };
+    if (id === "all") return { id: "all", name: t("category.all") };
+    const cats = SettingsAPI.get().categories || [];
+    const c = cats.find(x => x.id === id);
+    if (!c) return { id, name: id };
+    const lang = getLang();
+    return { id: c.id, name: (lang === "en" && c.name_en) ? c.name_en : c.name_ar };
   },
   statusInfo(id) {
     const s = ORDER_STATUSES.find(x => x.id === id);
@@ -1184,10 +1355,12 @@ const Utils = {
 
 /* جعل كل شيء متاحاً للنوافذ */
 Object.assign(window, {
-  ProductsAPI, OrdersAPI, SettingsAPI, CouponsAPI, AuthAPI, Utils,
+  ProductsAPI, OrdersAPI, SettingsAPI, CouponsAPI,
+  CategoriesAPI, TextOverridesAPI, AuthAPI, Utils,
   GAZA_CITIES, CATEGORIES, ORDER_STATUSES,
   LOW_STOCK_THRESHOLD, DEFAULT_SIZES, DEFAULT_COLORS,
   t, getLang, setLang, applyTranslations, I18N,
+  getActiveCategories, EDITABLE_TEXTS,
 });
 
 /* تطبيق اللغة عند تحميل الصفحة */

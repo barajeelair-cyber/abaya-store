@@ -305,6 +305,54 @@ tr:hover td { background: #fcfaf5; }
 }
 .bank-row input { padding: 9px; }
 
+/* التصنيفات */
+.category-row {
+  display: grid; grid-template-columns: 1.4fr 1.4fr auto auto; gap: 10px;
+  margin-bottom: 8px; align-items: center;
+}
+.category-row input { padding: 9px; }
+.category-row .toggle { justify-self: center; }
+
+/* محرر النصوص */
+.text-section {
+  border: 1px solid var(--line); border-radius: 10px;
+  margin-bottom: 14px; padding: 14px; background: #faf8f2;
+}
+.text-section h4 {
+  margin: 0 0 12px; font-size: 14px; color: var(--accent);
+  padding-bottom: 8px; border-bottom: 1px solid var(--line);
+}
+.text-row {
+  background: #fff; border: 1px solid var(--line);
+  border-radius: 8px; padding: 12px; margin-bottom: 10px;
+}
+.text-row .text-label { margin-bottom: 10px; font-size: 14px; }
+.text-row .text-label strong { display: block; }
+.text-row .text-inputs {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  margin-bottom: 8px;
+}
+.text-row .text-inputs label {
+  display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px;
+}
+.text-row textarea {
+  width: 100%; padding: 8px 10px; border: 1px solid var(--line);
+  border-radius: 6px; font-family: inherit; font-size: 14px;
+  background: #fff; resize: vertical; min-height: 38px;
+}
+.text-row textarea:focus { outline: none; border-color: var(--accent); }
+.text-row .text-inputs small {
+  display: block; font-size: 11px; margin-top: 4px; color: #aaa;
+  font-style: italic;
+}
+.text-row .text-actions {
+  display: flex; gap: 6px; justify-content: flex-end;
+}
+@media (max-width: 700px) {
+  .text-row .text-inputs { grid-template-columns: 1fr; }
+  .category-row { grid-template-columns: 1fr; }
+}
+
 /* أكواد الخصم */
 .coupon-row-admin {
   display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr auto auto auto; gap: 10px;
