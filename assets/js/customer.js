@@ -408,9 +408,14 @@ $overlay.onclick   = closeCart;
    إتمام الطلب
 ========================================================= */
 function fillCities() {
+  const cities = CitiesAPI.active();
+  const lang = getLang();
   $citySel.innerHTML =
     `<option value="" disabled selected>${t("checkout.city_placeholder")}</option>` +
-    GAZA_CITIES.map(c => `<option value="${c.id}">${t("city." + c.id)}  —  ${t("checkout.delivery_to")} ${c.fee} ₪</option>`).join("");
+    cities.map(c => {
+      const name = (lang === "en" && c.name_en) ? c.name_en : c.name_ar;
+      return `<option value="${c.id}">${escapeHtml(name)}  —  ${t("checkout.delivery_to")} ${c.fee} ₪</option>`;
+    }).join("");
 }
 
 function renderBankAccounts() {
@@ -617,6 +622,64 @@ document.getElementById("trackCloseBtn").onclick  = closeTrackModal;
 document.getElementById("trackInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter") { e.preventDefault(); trackOrder(); }
 });
+
+/* =========================================================
+   PWA  —  تسجيل Service Worker وزر التثبيت
+========================================================= */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(err => console.warn("SW reg failed:", err));
+  });
+}
+
+let deferredPwaPrompt = null;
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPwaPrompt = e;
+  document.getElementById("installBtn")?.style.setProperty("display", "inline-block");
+});
+
+window.addEventListener("appinstalled", () => {
+  deferredPwaPrompt = null;
+  const btn = document.getElementById("installBtn");
+  if (btn) btn.style.display = "none";
+  showToast(t("pwa.installed"));
+});
+
+function isStandalone() {
+  return window.matchMedia?.("(display-mode: standalone)").matches
+      || window.navigator.standalone === true;
+}
+function isIOS() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+}
+
+document.getElementById("installBtn")?.addEventListener("click", async () => {
+  if (isStandalone()) { showToast(t("pwa.installed")); return; }
+  if (deferredPwaPrompt) {
+    deferredPwaPrompt.prompt();
+    const { outcome } = await deferredPwaPrompt.userChoice;
+    if (outcome === "accepted") {
+      document.getElementById("installBtn").style.display = "none";
+    }
+    deferredPwaPrompt = null;
+  } else if (isIOS()) {
+    document.getElementById("iosInstallModal").classList.add("open");
+  } else {
+    /* لم يُفعَّل الـ install prompt بعد  —  اعرض تعليمات iOS كاحتياط */
+    document.getElementById("iosInstallModal").classList.add("open");
+  }
+});
+
+document.getElementById("iosInstallClose")?.addEventListener("click", () => {
+  document.getElementById("iosInstallModal").classList.remove("open");
+});
+
+/* أخفِ الزر إذا كان التطبيق مثبَّتاً مسبقاً */
+if (isStandalone()) {
+  const btn = document.getElementById("installBtn");
+  if (btn) btn.style.display = "none";
+}
 
 /* =========================================================
    تبديل اللغة

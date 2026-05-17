@@ -30,6 +30,56 @@ document.getElementById("logoutBtn").onclick = () => {
 };
 
 /* =====================================================
+   PWA  —  تسجيل Service Worker وزر التثبيت
+===================================================== */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(err => console.warn("SW reg failed:", err));
+  });
+}
+
+let deferredPwaPrompt = null;
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPwaPrompt = e;
+  document.getElementById("installBtnAdmin")?.style.setProperty("display", "block");
+});
+window.addEventListener("appinstalled", () => {
+  deferredPwaPrompt = null;
+  showToast(t("pwa.installed"));
+});
+
+function isStandalone() {
+  return window.matchMedia?.("(display-mode: standalone)").matches
+      || window.navigator.standalone === true;
+}
+function isIOS() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+}
+
+document.getElementById("installBtnAdmin")?.addEventListener("click", async () => {
+  if (isStandalone()) { showToast(t("pwa.installed")); return; }
+  if (deferredPwaPrompt) {
+    deferredPwaPrompt.prompt();
+    const { outcome } = await deferredPwaPrompt.userChoice;
+    if (outcome === "accepted") {
+      document.getElementById("installBtnAdmin").style.display = "none";
+    }
+    deferredPwaPrompt = null;
+  } else {
+    document.getElementById("iosInstallModal").classList.add("open");
+  }
+});
+document.getElementById("iosInstallClose")?.addEventListener("click", () => {
+  document.getElementById("iosInstallModal").classList.remove("open");
+});
+
+if (isStandalone()) {
+  const btn = document.getElementById("installBtnAdmin");
+  if (btn) btn.style.display = "none";
+}
+
+/* =====================================================
    إقلاع الواجهة بعد الدخول
 ===================================================== */
 function bootApp() {
@@ -41,6 +91,7 @@ function bootApp() {
   renderBanksList();
   renderCouponsList();
   renderCategoriesAdmin();
+  renderCitiesAdmin();
   renderTextsEditor();
   updateLangButtons();
 }
@@ -66,6 +117,7 @@ function toggleLang() {
     renderBanksList();
     renderCouponsList();
     renderCategoriesAdmin();
+    renderCitiesAdmin();
     renderTextsEditor();
   }
 }
@@ -532,8 +584,13 @@ const $verifyBtn    = document.getElementById("verifyPaymentBtn");
 let currentOrderId = null;
 
 function fillFilters() {
-  $filterCity.innerHTML = `<option value="">${t("admin.orders.all_cities")}</option>` +
-    GAZA_CITIES.map(c => `<option value="${c.id}">${t("city." + c.id)}</option>`).join("");
+  const cities = CitiesAPI.list();
+  const lang = getLang();
+  const cityOpts = cities.map(c => {
+    const name = (lang === "en" && c.name_en) ? c.name_en : c.name_ar;
+    return `<option value="${c.id}">${escapeHtml(name)}</option>`;
+  }).join("");
+  $filterCity.innerHTML = `<option value="">${t("admin.orders.all_cities")}</option>` + cityOpts;
   $filterStatus.innerHTML = `<option value="">${t("admin.orders.all_statuses")}</option>` +
     ORDER_STATUSES.map(s => `<option value="${s.id}">${t("status." + s.id)}</option>`).join("");
   $orderStatus.innerHTML = ORDER_STATUSES.map(s => `<option value="${s.id}">${t("status." + s.id)}</option>`).join("");
@@ -614,8 +671,13 @@ function renderDelivery() {
   const $dCity = document.getElementById("deliveryCityFilter");
   if ($dCity) {
     const curr = $dCity.value;
+    const cities = CitiesAPI.list();
+    const lang = getLang();
     $dCity.innerHTML = `<option value="">${t("admin.orders.all_cities")}</option>` +
-      GAZA_CITIES.map(c => `<option value="${c.id}">${t("city." + c.id)}</option>`).join("");
+      cities.map(c => {
+        const name = (lang === "en" && c.name_en) ? c.name_en : c.name_ar;
+        return `<option value="${c.id}">${escapeHtml(name)}</option>`;
+      }).join("");
     $dCity.value = curr;
     $dCity.onchange = renderDelivery;
   }
@@ -1169,6 +1231,64 @@ document.getElementById("addCategoryBtn")?.addEventListener("click", () => {
   CategoriesAPI.save(newCat);
   renderCategoriesAdmin();
   fillCategorySelects();
+});
+
+/* =====================================================
+   إدارة مدن التوصيل
+===================================================== */
+function renderCitiesAdmin() {
+  const el = document.getElementById("citiesList");
+  if (!el) return;
+  const list = CitiesAPI.list();
+  el.innerHTML = list.length ? `
+    <div class="city-row" style="font-weight:700; color:var(--muted); font-size:12px;">
+      <div>${t("admin.city.name_ar")}</div>
+      <div>${t("admin.city.name_en")}</div>
+      <div>${t("admin.city.fee")}</div>
+      <div>${t("admin.city.active")}</div>
+      <div></div>
+    </div>
+    ${list.map(c => `
+      <div class="city-row" data-id="${c.id}">
+        <input class="input" data-f="name_ar" value="${escapeAttr(c.name_ar)}" placeholder="${t("admin.city.name_ar")}">
+        <input class="input" data-f="name_en" value="${escapeAttr(c.name_en || "")}" placeholder="${t("admin.city.name_en")}">
+        <input class="input" data-f="fee" type="number" min="0" step="1" value="${Number(c.fee || 0)}">
+        <label class="toggle"><input type="checkbox" data-f="active" ${c.active !== false ? "checked" : ""}><span></span></label>
+        <div class="actions">
+          <button class="icon-btn-sm ok"     data-act="save-city">${t("admin.save")}</button>
+          <button class="icon-btn-sm danger" data-act="del-city">${t("admin.delete")}</button>
+        </div>
+      </div>`).join("")}
+  ` : `<p style="color:var(--muted); font-size:13px;">${t("admin.city.no_cities")}</p>`;
+
+  el.querySelectorAll(".city-row[data-id]").forEach(row => {
+    const id = row.dataset.id;
+    row.querySelector('[data-act="save-city"]').onclick = () => {
+      const name_ar = row.querySelector('[data-f="name_ar"]').value.trim();
+      const name_en = row.querySelector('[data-f="name_en"]').value.trim();
+      const fee     = Math.max(0, Number(row.querySelector('[data-f="fee"]').value) || 0);
+      const active  = row.querySelector('[data-f="active"]').checked;
+      if (!name_ar || !name_en) { showToast(t("admin.city.need_names")); return; }
+      CitiesAPI.save({ id, name_ar, name_en, fee, active });
+      showToast(t("admin.city.saved"));
+      fillFilters();
+      renderDelivery();
+    };
+    row.querySelector('[data-act="del-city"]').onclick = () => {
+      if (!confirm(t("admin.city.delete_confirm"))) return;
+      CitiesAPI.remove(id);
+      showToast(t("admin.city.deleted"));
+      renderCitiesAdmin();
+      fillFilters();
+      renderDelivery();
+    };
+  });
+}
+
+document.getElementById("addCityBtn")?.addEventListener("click", () => {
+  CitiesAPI.save({ name_ar: "مدينة جديدة", name_en: "New city", fee: 20, active: true });
+  renderCitiesAdmin();
+  fillFilters();
 });
 
 /* =====================================================

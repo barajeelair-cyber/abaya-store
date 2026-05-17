@@ -118,7 +118,8 @@ img { max-width: 100%; display: block; }
 }
 .logout-pill:hover { opacity: .92; transform: translateY(-1px); }
 
-.lang-toggle-admin {
+.lang-toggle-admin,
+.install-btn-admin {
   background: transparent;
   border: 1px solid var(--line);
   color: var(--muted);
@@ -127,8 +128,13 @@ img { max-width: 100%; display: block; }
   font-weight: 600; font-size: 12px;
   cursor: pointer;
   transition: all var(--t);
+  font-family: inherit;
+  width: 100%;
 }
-.lang-toggle-admin:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+.lang-toggle-admin:hover,
+.install-btn-admin:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+.install-btn-admin { background: rgba(184,146,54,.08); color: var(--gold); border-color: var(--gold); }
+.install-btn-admin:hover { background: var(--gold); color: #fff; }
 
 /* تعديلات LTR */
 html[dir="ltr"] .sidebar { border-left: none; border-right: 1px solid var(--line); }
@@ -304,6 +310,17 @@ tr:hover td { background: #fcfaf5; }
   margin-bottom: 8px; align-items: center;
 }
 .bank-row input { padding: 9px; }
+
+/* المدن */
+.city-row {
+  display: grid; grid-template-columns: 1.2fr 1.2fr 0.8fr auto auto; gap: 10px;
+  margin-bottom: 8px; align-items: center;
+}
+.city-row input { padding: 9px; }
+.city-row .toggle { justify-self: center; }
+@media (max-width: 700px) {
+  .city-row { grid-template-columns: 1fr; }
+}
 
 /* التصنيفات */
 .category-row {

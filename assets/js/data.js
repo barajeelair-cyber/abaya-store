@@ -417,6 +417,33 @@ const I18N = {
     "admin.txt.section.checkout": "صفحة الدفع",
     "admin.txt.section.footer": "التذييل",
     "admin.txt.section.tracking": "تتبع الطلب",
+
+    /* Admin: cities management */
+    "admin.settings.cities": "🚚 مدن التوصيل",
+    "admin.settings.add_city": "+ إضافة مدينة",
+    "admin.settings.cities_help": "عدّلي رسوم التوصيل لكل مدينة، أو أضيفي/احذفي مدن. تعطيل المدينة يخفيها من قائمة الزبون.",
+    "admin.city.name_ar": "الاسم بالعربية",
+    "admin.city.name_en": "الاسم بالإنجليزية",
+    "admin.city.fee": "رسوم التوصيل (₪)",
+    "admin.city.active": "مفعّلة",
+    "admin.city.no_cities": "لا توجد مدن. اضغطي \"إضافة مدينة\".",
+    "admin.city.saved": "تم حفظ المدينة ✓",
+    "admin.city.deleted": "تم حذف المدينة",
+    "admin.city.delete_confirm": "حذف هذه المدينة؟",
+    "admin.city.need_names": "أكملي الاسم بالعربية والإنجليزية",
+
+    /* PWA */
+    "pwa.install": "📲 تثبيت التطبيق",
+    "pwa.install_full": "تثبيت تطبيق عبايات أمل",
+    "pwa.install_admin": "تثبيت تطبيق الإدارة",
+    "pwa.ios_title": "تثبيت على iPhone",
+    "pwa.ios_step1": "اضغطي زر المشاركة في Safari ⬆️",
+    "pwa.ios_step2": "اختاري \"إضافة إلى الشاشة الرئيسية\"",
+    "pwa.ios_step3": "اضغطي \"إضافة\" في الأعلى",
+    "pwa.android_title": "تثبيت التطبيق",
+    "pwa.android_body": "اضغطي \"تثبيت\" عند ظهور النافذة لتظهر أيقونة التطبيق على شاشتك الرئيسية.",
+    "pwa.installed": "✓ التطبيق مثبَّت بالفعل",
+    "pwa.close": "إغلاق",
   },
 
   en: {
@@ -822,6 +849,33 @@ const I18N = {
     "admin.txt.section.checkout": "Checkout",
     "admin.txt.section.footer": "Footer",
     "admin.txt.section.tracking": "Order tracking",
+
+    /* Admin: cities management */
+    "admin.settings.cities": "🚚 Delivery Cities",
+    "admin.settings.add_city": "+ Add city",
+    "admin.settings.cities_help": "Edit delivery fees per city, or add/remove cities. Deactivating a city hides it from customer dropdown.",
+    "admin.city.name_ar": "Arabic name",
+    "admin.city.name_en": "English name",
+    "admin.city.fee": "Delivery fee (₪)",
+    "admin.city.active": "Active",
+    "admin.city.no_cities": "No cities. Click \"Add city\".",
+    "admin.city.saved": "City saved ✓",
+    "admin.city.deleted": "City deleted",
+    "admin.city.delete_confirm": "Delete this city?",
+    "admin.city.need_names": "Fill in both Arabic and English names",
+
+    /* PWA */
+    "pwa.install": "📲 Install App",
+    "pwa.install_full": "Install Amal Abayas app",
+    "pwa.install_admin": "Install Admin app",
+    "pwa.ios_title": "Install on iPhone",
+    "pwa.ios_step1": "Tap the Share button in Safari ⬆️",
+    "pwa.ios_step2": "Select \"Add to Home Screen\"",
+    "pwa.ios_step3": "Tap \"Add\" at the top",
+    "pwa.android_title": "Install App",
+    "pwa.android_body": "Tap \"Install\" when the prompt appears so the app icon appears on your home screen.",
+    "pwa.installed": "✓ App already installed",
+    "pwa.close": "Close",
   },
 };
 
@@ -932,6 +986,7 @@ function loadDB() {
       /* migrations  —  أضِف الحقول الجديدة لقواعد البيانات القديمة */
       if (!db.settings.categories) db.settings.categories = defaultCategories();
       if (!db.settings.textOverrides) db.settings.textOverrides = { ar: {}, en: {} };
+      if (!db.settings.cities) db.settings.cities = defaultCities();
       return db;
     } catch (e) { /* corrupt */ }
   }
@@ -950,6 +1005,23 @@ function defaultCategories() {
     { id: "occasions", name_ar: "عبايات مناسبات", name_en: "Occasion Abayas",  active: true },
     { id: "black",     name_ar: "عبايات سوداء",   name_en: "Black Abayas",     active: true },
     { id: "open",      name_ar: "عبايات مفتوحة",  name_en: "Open Abayas",      active: true },
+  ];
+}
+
+function defaultCities() {
+  return [
+    { id: "gaza",       name_ar: "مدينة غزة",  name_en: "Gaza City",     fee: 15, active: true },
+    { id: "north",      name_ar: "شمال غزة",   name_en: "North Gaza",    fee: 20, active: true },
+    { id: "jabalia",    name_ar: "جباليا",     name_en: "Jabalia",       fee: 20, active: true },
+    { id: "beitlahia",  name_ar: "بيت لاهيا",  name_en: "Beit Lahia",    fee: 25, active: true },
+    { id: "beithanoun", name_ar: "بيت حانون",  name_en: "Beit Hanoun",   fee: 25, active: true },
+    { id: "nuseirat",   name_ar: "النصيرات",   name_en: "Nuseirat",      fee: 20, active: true },
+    { id: "bureij",     name_ar: "البريج",     name_en: "Bureij",        fee: 20, active: true },
+    { id: "maghazi",    name_ar: "المغازي",    name_en: "Maghazi",       fee: 20, active: true },
+    { id: "zawaida",    name_ar: "الزوايدة",   name_en: "Zawayda",       fee: 22, active: true },
+    { id: "deirbalah",  name_ar: "دير البلح",  name_en: "Deir al-Balah", fee: 20, active: true },
+    { id: "khanyounis", name_ar: "خان يونس",   name_en: "Khan Younis",   fee: 25, active: true },
+    { id: "rafah",      name_ar: "رفح",        name_en: "Rafah",         fee: 30, active: true },
   ];
 }
 
@@ -1043,6 +1115,7 @@ function seedData() {
         { id: uid(), code: "AMAL20",    type: "percent", value: 20, minOrder: 300, active: true, usedCount: 0 },
       ],
       categories: defaultCategories(),
+      cities: defaultCities(),
       textOverrides: { ar: {}, en: {} },
       admin: { username: "admin", password: "admin123" },
     },
@@ -1166,6 +1239,36 @@ const SettingsAPI = {
   removeBank(id) {
     const db = loadDB();
     db.settings.bankAccounts = db.settings.bankAccounts.filter(b => b.id !== id);
+    saveDB(db);
+  },
+};
+
+/* =========================================================
+   CitiesAPI  —  مدن التوصيل قابلة للتحرير
+========================================================= */
+const CitiesAPI = {
+  list() { return SettingsAPI.get().cities || []; },
+  active() { return this.list().filter(c => c.active !== false); },
+  save(city) {
+    const db = loadDB();
+    db.settings.cities = db.settings.cities || [];
+    if (city.id && db.settings.cities.find(c => c.id === city.id)) {
+      const idx = db.settings.cities.findIndex(c => c.id === city.id);
+      db.settings.cities[idx] = { ...db.settings.cities[idx], ...city };
+    } else {
+      if (!city.id) {
+        city.id = (city.name_en || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || uid();
+      }
+      if (city.active === undefined) city.active = true;
+      if (city.fee === undefined) city.fee = 0;
+      db.settings.cities.push(city);
+    }
+    saveDB(db);
+    return city;
+  },
+  remove(id) {
+    const db = loadDB();
+    db.settings.cities = (db.settings.cities || []).filter(c => c.id !== id);
     saveDB(db);
   },
 };
@@ -1314,9 +1417,19 @@ const AuthAPI = {
 ========================================================= */
 const Utils = {
   cityById(id) {
-    const c = GAZA_CITIES.find(x => x.id === id);
-    if (!c) return null;
-    return { ...c, name: t("city." + id) };
+    const cities = SettingsAPI.get().cities || [];
+    const c = cities.find(x => x.id === id);
+    if (!c) {
+      /* fallback إلى المصفوفة الأصلية في حال عدم الترحيل */
+      const legacy = GAZA_CITIES.find(x => x.id === id);
+      if (!legacy) return null;
+      return { ...legacy, name: t("city." + id) };
+    }
+    const lang = getLang();
+    return {
+      id: c.id, fee: Number(c.fee || 0), active: c.active !== false,
+      name: (lang === "en" && c.name_en) ? c.name_en : c.name_ar,
+    };
   },
   categoryById(id) {
     if (id === "all") return { id: "all", name: t("category.all") };
@@ -1356,7 +1469,7 @@ const Utils = {
 /* جعل كل شيء متاحاً للنوافذ */
 Object.assign(window, {
   ProductsAPI, OrdersAPI, SettingsAPI, CouponsAPI,
-  CategoriesAPI, TextOverridesAPI, AuthAPI, Utils,
+  CategoriesAPI, CitiesAPI, TextOverridesAPI, AuthAPI, Utils,
   GAZA_CITIES, CATEGORIES, ORDER_STATUSES,
   LOW_STOCK_THRESHOLD, DEFAULT_SIZES, DEFAULT_COLORS,
   t, getLang, setLang, applyTranslations, I18N,

@@ -1,0 +1,28 @@
+{
+  "name": "Amal · Abaya and More",
+  "short_name": "Amal",
+  "description": "عبايات وأكثر تجدينها لدى عبايات أمل · تشكيلة فاخرة من العبايات بتوصيل لكل مدن قطاع غزة.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "lang": "ar",
+  "dir": "rtl",
+  "categories": ["shopping", "lifestyle"],
+  "icons": [
+    {
+      "src": "assets/img/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/img/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

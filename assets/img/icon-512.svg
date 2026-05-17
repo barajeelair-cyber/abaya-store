@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Amal Abaya and more">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&amp;family=Cormorant:wght@300&amp;display=swap');
+      .bg     { fill: #0a0a0a; }
+      .stroke { fill: none; stroke: #d4af37; stroke-width: 3; }
+      .amal   { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 180px; fill: #f4f1ea; }
+      .tag    { font-family: 'Cormorant', serif; font-weight: 300; font-size: 38px; fill: #d4af37; letter-spacing: 2px; }
+    </style>
+  </defs>
+  <rect class="bg" width="512" height="512" rx="100"/>
+  <rect class="stroke" x="36" y="36" width="440" height="440" rx="80"/>
+  <text x="256" y="280" class="amal" text-anchor="middle">Amal</text>
+  <text x="256" y="340" class="tag"  text-anchor="middle">Abaya and more</text>
+</svg>

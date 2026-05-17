@@ -7,6 +7,14 @@
 
   <link rel="icon" type="image/svg+xml" href="assets/img/logo.svg" />
   <link rel="alternate icon" href="assets/img/logo.svg" />
+
+  <!-- PWA -->
+  <link rel="manifest" href="admin-manifest.json" />
+  <meta name="theme-color" content="#111111" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Amal Admin" />
+  <link rel="apple-touch-icon" href="assets/img/icon-512.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@500;700&display=swap" rel="stylesheet">
@@ -71,6 +79,7 @@
     </nav>
     <div class="sidebar-foot">
       <div class="admin-info" id="adminInfo">admin@amal-abaya.loc</div>
+      <button id="installBtnAdmin" class="install-btn-admin" data-i18n="pwa.install">📲 تثبيت التطبيق</button>
       <button id="langToggleAdmin" class="lang-toggle-admin">English / العربية</button>
       <button id="logoutBtn" class="logout-pill" data-i18n="admin.logout">🚪 تسجيل خروج</button>
     </div>
@@ -310,6 +319,18 @@
         <div id="couponsList"></div>
       </div>
 
+      <!-- إدارة مدن التوصيل -->
+      <div class="panel">
+        <div class="panel-head">
+          <h2 data-i18n="admin.settings.cities">🚚 مدن التوصيل</h2>
+          <button class="btn gold" id="addCityBtn" data-i18n="admin.settings.add_city">+ إضافة مدينة</button>
+        </div>
+        <p class="sub" data-i18n="admin.settings.cities_help" style="margin: 0 0 10px;">
+          عدّلي رسوم التوصيل لكل مدينة، أو أضيفي/احذفي مدن. تعطيل المدينة يخفيها من قائمة الزبون.
+        </p>
+        <div id="citiesList"></div>
+      </div>
+
       <!-- إدارة التصنيفات -->
       <div class="panel">
         <div class="panel-head">
@@ -429,6 +450,19 @@
       <button class="btn gold" id="printInvoiceBtn" data-i18n="admin.order.print">🖨️ طباعة الفاتورة</button>
       <button class="btn ghost" id="closeOrderModal" data-i18n="admin.order.close">إغلاق</button>
     </div>
+  </div>
+</div>
+
+<!-- iOS install modal -->
+<div class="modal" id="iosInstallModal">
+  <div class="modal-box" style="max-width:420px; text-align:center;">
+    <h3 data-i18n="pwa.ios_title">تثبيت على iPhone</h3>
+    <div style="text-align:right; margin: 18px 0;">
+      <p style="margin:10px 0;">1️⃣ <span data-i18n="pwa.ios_step1">اضغطي زر المشاركة في Safari ⬆️</span></p>
+      <p style="margin:10px 0;">2️⃣ <span data-i18n="pwa.ios_step2">اختاري "إضافة إلى الشاشة الرئيسية"</span></p>
+      <p style="margin:10px 0;">3️⃣ <span data-i18n="pwa.ios_step3">اضغطي "إضافة" في الأعلى</span></p>
+    </div>
+    <button class="btn" id="iosInstallClose" data-i18n="pwa.close">إغلاق</button>
   </div>
 </div>
 

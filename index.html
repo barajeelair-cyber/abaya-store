@@ -9,6 +9,14 @@
   <link rel="icon" type="image/svg+xml" href="assets/img/logo.svg" />
   <link rel="alternate icon" href="assets/img/logo.svg" />
 
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Amal" />
+  <link rel="apple-touch-icon" href="assets/img/icon-512.svg" />
+
   <!-- Open Graph (Facebook / WhatsApp / Telegram) -->
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Amal — Abaya and More" />
@@ -39,6 +47,7 @@
       <a href="#" id="whatsappLink" target="_blank" rel="noopener">💬 <span data-i18n="contact.whatsapp">واتساب</span>: <span id="whatsappText">—</span></a>
       <a href="#" id="instagramLink" target="_blank" rel="noopener">📷 <span data-i18n="contact.instagram">إنستغرام</span>: <span id="instagramText">—</span></a>
       <a href="#" id="trackOrderLink" data-i18n="contact.track">📦 تتبع طلبي</a>
+      <button class="install-btn" id="installBtn" type="button" data-i18n="pwa.install">📲 تثبيت التطبيق</button>
       <button class="lang-toggle" id="langToggle" type="button">EN / عربي</button>
     </div>
   </div>
@@ -208,6 +217,19 @@
       <h3 data-i18n="success.title">تم استلام طلبك بنجاح!</h3>
       <p class="sub" data-i18n="success.body">طلبك الآن بانتظار تأكيد الدفع من قِبَل الإدارة، وسنتواصل معكِ قريباً عبر الجوال أو الواتساب.</p>
       <button class="btn-gold" id="successOk" data-i18n="success.btn">شكراً لكِ</button>
+    </div>
+  </div>
+
+  <!-- ============ Modal تعليمات iOS ============ -->
+  <div class="modal" id="iosInstallModal">
+    <div class="modal-box" style="max-width:420px; text-align:center;">
+      <h3 data-i18n="pwa.ios_title">تثبيت على iPhone</h3>
+      <div style="text-align:right; margin: 18px 0;">
+        <p style="margin:10px 0;">1️⃣ <span data-i18n="pwa.ios_step1">اضغطي زر المشاركة في Safari ⬆️</span></p>
+        <p style="margin:10px 0;">2️⃣ <span data-i18n="pwa.ios_step2">اختاري "إضافة إلى الشاشة الرئيسية"</span></p>
+        <p style="margin:10px 0;">3️⃣ <span data-i18n="pwa.ios_step3">اضغطي "إضافة" في الأعلى</span></p>
+      </div>
+      <button class="btn-gold" id="iosInstallClose" data-i18n="pwa.close">إغلاق</button>
     </div>
   </div>
 
