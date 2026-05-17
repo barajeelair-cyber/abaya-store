@@ -133,6 +133,7 @@ function seedData() {
       contact: {
         phone: "+970 59 0000000",
         whatsapp: "+970 59 0000000",
+        instagram: "amal.abaya",
       },
       bankAccounts: [
         {

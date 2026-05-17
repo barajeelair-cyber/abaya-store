@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 280" xmlns:xlink="http://www.w3.org/1999/xlink" role="img" aria-label="Amal — Abaya and more">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&amp;family=Cormorant:ital,wght@0,300;0,400;0,500;1,300&amp;display=swap');
+      .logo-main {
+        font-family: 'Cormorant Garamond', 'Cormorant', 'Times New Roman', serif;
+        font-weight: 600;
+        font-size: 160px;
+        fill: currentColor;
+        letter-spacing: -2px;
+      }
+      .logo-tag {
+        font-family: 'Cormorant', 'Cormorant Garamond', serif;
+        font-weight: 300;
+        font-size: 44px;
+        fill: currentColor;
+        letter-spacing: 1px;
+      }
+      .logo-tm {
+        font-family: 'Cormorant Garamond', serif;
+        font-weight: 400;
+        font-size: 18px;
+        fill: currentColor;
+      }
+    </style>
+  </defs>
+
+  <!-- TM mark -->
+  <text x="120" y="62" class="logo-tm" text-anchor="middle">
+    <tspan>™</tspan>
+  </text>
+
+  <!-- Main wordmark: Amal -->
+  <text x="300" y="170" class="logo-main" text-anchor="middle">Amal</text>
+
+  <!-- Tagline: Abaya and more -->
+  <text x="300" y="230" class="logo-tag" text-anchor="middle">Abaya and more</text>
+</svg>

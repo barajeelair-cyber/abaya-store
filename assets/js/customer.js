@@ -46,16 +46,106 @@ function applySettings() {
 
   const phoneText = s.contact?.phone || "";
   const waText    = s.contact?.whatsapp || "";
+  const igHandle  = (s.contact?.instagram || "").replace(/^@/, "");
   const tel       = (phoneText || "").replace(/[^\d+]/g, "");
   const waNumber  = (waText || "").replace(/[^\d]/g, "");
 
   $("phoneText").textContent    = phoneText;
   $("whatsappText").textContent = waText;
+  $("instagramText").textContent = igHandle ? "@" + igHandle : "";
   $("footerPhoneText").textContent = phoneText;
   if (tel)      $("phoneLink").href       = `tel:${tel}`;
   if (waNumber) $("whatsappLink").href    = `https://wa.me/${waNumber}`;
+  if (igHandle) {
+    $("instagramLink").href = `https://instagram.com/${igHandle}`;
+    $("footerIg").href      = `https://instagram.com/${igHandle}`;
+  } else {
+    $("instagramLink").style.display = "none";
+    $("footerIg").style.display = "none";
+  }
   if (tel)      $("footerPhone").href     = `tel:${tel}`;
   if (waNumber) $("footerWa").href        = `https://wa.me/${waNumber}`;
+}
+
+/* ---------- تتبع الطلب ---------- */
+function openTrackModal() {
+  document.getElementById("trackInput").value = "";
+  document.getElementById("trackResult").innerHTML = "";
+  document.getElementById("trackModal").classList.add("open");
+}
+function closeTrackModal() { document.getElementById("trackModal").classList.remove("open"); }
+
+function trackOrder() {
+  const codeInput = (document.getElementById("trackInput").value || "").trim().toUpperCase();
+  const result = document.getElementById("trackResult");
+  if (!codeInput) { result.innerHTML = ""; return; }
+
+  /* الرمز يأتي بصيغة AMA-XXXXXX أو فقط XXXXXX */
+  const wanted = codeInput.replace(/^AMA-?/, "");
+  const order = OrdersAPI.list().find(o =>
+    String(o.id).slice(-6).toUpperCase() === wanted
+  );
+
+  if (!order) {
+    result.innerHTML = `
+      <div class="bank-card" style="border-color:var(--danger); text-align:center;">
+        <p style="color:var(--danger); margin:0;">❌ لم نجد طلباً بهذا الرمز.<br><small style="color:var(--muted)">تأكدي من الرمز أو تواصلي معنا عبر الواتساب.</small></p>
+      </div>`;
+    return;
+  }
+
+  const statusInfo = Utils.statusInfo(order.status);
+  const steps = ["awaiting", "pending", "shipped", "delivered"];
+  const isCancelled = order.status === "cancelled";
+  const currentStepIdx = steps.indexOf(order.status);
+
+  const itemsHtml = order.items.map(it => `
+    <div style="display:flex; justify-content:space-between; padding:4px 0; font-size:13px;">
+      <span>${escapeHtml(it.name)}  —  ${escapeHtml(it.color)} · ${escapeHtml(it.size)} × ${it.qty}</span>
+      <span>${Utils.fmt(it.price * it.qty)}</span>
+    </div>`).join("");
+
+  const stepsHtml = isCancelled
+    ? `<div style="text-align:center; color:var(--danger); padding:14px 0; font-weight:700;">⛔ الطلب ملغي</div>`
+    : `
+      <div class="track-steps">
+        ${steps.map((s, i) => {
+          const done = i <= currentStepIdx;
+          const label = Utils.statusInfo(s).label;
+          return `<div class="step ${done ? 'done' : ''}">
+            <div class="dot">${done ? '✓' : i + 1}</div>
+            <div class="label">${label}</div>
+          </div>`;
+        }).join('<div class="line ' + (currentStepIdx > 0 ? 'done' : '') + '"></div>')}
+      </div>`;
+
+  result.innerHTML = `
+    <div class="bank-card" style="background: linear-gradient(135deg, #1a1408, #0c0c0c);">
+      <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+        <span style="color:var(--muted)">رقم الطلب</span>
+        <strong style="color:var(--gold-2)">AMA-${String(order.id).slice(-6).toUpperCase()}</strong>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+        <span style="color:var(--muted)">الحالة الحالية</span>
+        <strong style="color:var(--gold-2)">${statusInfo.label}</strong>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+        <span style="color:var(--muted)">التاريخ</span>
+        <strong>${Utils.formatDate(order.createdAt)}</strong>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+        <span style="color:var(--muted)">المدينة</span>
+        <strong>${escapeHtml(order.cityName)}</strong>
+      </div>
+      ${stepsHtml}
+      <div style="border-top:1px dashed var(--line); margin-top:10px; padding-top:8px;">
+        ${itemsHtml}
+        <div style="display:flex; justify-content:space-between; margin-top:8px; padding-top:8px; border-top:1px dashed var(--line);">
+          <strong>الإجمالي</strong>
+          <strong style="color:var(--gold-2)">${Utils.fmt(order.total)}</strong>
+        </div>
+      </div>
+    </div>`;
 }
 
 function $(id) { return document.getElementById(id); }
@@ -497,6 +587,16 @@ function escapeHtml(s) {
   }[c]));
 }
 function truncate(s, n) { s = s || ""; return s.length > n ? s.slice(0, n) + "…" : s; }
+
+/* تتبع الطلب  —  ربط الأحداث */
+document.getElementById("trackOrderLink").addEventListener("click", (e) => {
+  e.preventDefault(); openTrackModal();
+});
+document.getElementById("trackSearchBtn").onclick = trackOrder;
+document.getElementById("trackCloseBtn").onclick  = closeTrackModal;
+document.getElementById("trackInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") { e.preventDefault(); trackOrder(); }
+});
 
 /* =========================================================
    إقلاع

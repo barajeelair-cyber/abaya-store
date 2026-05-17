@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="عبايات أمل · Amal Abaya and More">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&amp;family=Cormorant:ital,wght@0,300;0,400&amp;family=Tajawal:wght@500;700&amp;display=swap');
+      .bg     { fill: #0a0a0a; }
+      .accent { fill: #d4af37; }
+      .text   { fill: #f4f1ea; }
+      .muted  { fill: #b5ad9c; }
+      .amal   { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 220px; }
+      .tag    { font-family: 'Cormorant', serif; font-weight: 300; font-size: 60px; letter-spacing: 2px; }
+      .ar     { font-family: 'Tajawal', sans-serif; font-weight: 700; font-size: 40px; }
+      .sub    { font-family: 'Tajawal', sans-serif; font-weight: 500; font-size: 24px; letter-spacing: 1px; }
+    </style>
+    <radialGradient id="glow" cx="50%" cy="40%" r="60%">
+      <stop offset="0%"  stop-color="#d4af37" stop-opacity=".18"/>
+      <stop offset="70%" stop-color="#0a0a0a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect class="bg" width="1200" height="630"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <!-- Thin gold line top & bottom -->
+  <rect class="accent" x="80" y="80" width="1040" height="2"/>
+  <rect class="accent" x="80" y="548" width="1040" height="2"/>
+
+  <!-- Main wordmark "Amal" -->
+  <text x="600" y="320" class="amal text" text-anchor="middle">Amal</text>
+
+  <!-- English tagline -->
+  <text x="600" y="380" class="tag muted" text-anchor="middle">Abaya and more</text>
+
+  <!-- Arabic name -->
+  <text x="600" y="460" class="ar accent" text-anchor="middle">عبايات أمل</text>
+
+  <!-- Arabic sub -->
+  <text x="600" y="510" class="sub muted" text-anchor="middle">عبايات وأكثر · توصيل لكل مدن غزة</text>
+</svg>

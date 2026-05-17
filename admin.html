@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>لوحة الإدارة  —  عبايات أمل</title>
+  <title>لوحة الإدارة · Amal Abaya and More</title>
 
-  <link rel="icon" href="assets/img/logo.png" />
+  <link rel="icon" type="image/svg+xml" href="assets/img/logo.svg" />
+  <link rel="alternate icon" href="assets/img/logo.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@500;700&display=swap" rel="stylesheet">
@@ -19,7 +20,7 @@
 ============================================ -->
 <div id="loginScreen" class="login-wrap" style="display:none;">
   <div class="login-card">
-    <img src="assets/img/logo.png" alt="عبايات أمل" class="logo-img"
+    <img src="assets/img/logo.svg" alt="عبايات أمل" class="logo-img"
          decoding="sync" loading="eager" fetchpriority="high"
          onerror="this.style.display='none'">
     <h2>لوحة الإدارة</h2>
@@ -49,7 +50,7 @@
 
   <aside class="sidebar">
     <div class="brand">
-      <img src="assets/img/logo.png" alt="عبايات أمل" class="logo-img"
+      <img src="assets/img/logo.svg" alt="عبايات أمل" class="logo-img"
            decoding="sync" loading="eager" fetchpriority="high"
            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
       <div class="brand-text-wrap" style="display:none;">
@@ -250,6 +251,17 @@
             <label>رقم الواتساب</label>
             <input type="tel" name="whatsapp" id="cfgWa" placeholder="+970 59 1234567" />
           </div>
+          <div class="field">
+            <label>اسم حساب إنستغرام (بدون @)</label>
+            <input type="text" id="cfgIg" placeholder="amal.abaya" />
+          </div>
+          <div class="field">
+            <label>إشعار صوتي عند وصول طلب جديد</label>
+            <label class="toggle" style="padding:10px 0;">
+              <input type="checkbox" id="cfgSound" />
+              <span>تشغيل صوت تنبيه</span>
+            </label>
+          </div>
           <div class="field" style="grid-column: 1/-1;">
             <label>عنوان الصفحة (Headline)</label>
             <input type="text" id="cfgHeadline" placeholder="عبايات وأكثر تجدينها لدى عبايات أمل" />
@@ -369,6 +381,7 @@
       <select id="orderStatusSelect" class="input" style="flex:1; min-width:200px;"></select>
       <button class="btn" id="saveOrderStatus">تحديث الحالة</button>
       <button class="btn ok" id="verifyPaymentBtn" style="display:none;">✓ تأكيد الدفع</button>
+      <button class="btn gold" id="printInvoiceBtn">🖨️ طباعة الفاتورة</button>
       <button class="btn ghost" id="closeOrderModal">إغلاق</button>
     </div>
   </div>

@@ -740,16 +740,20 @@ function applyContactSettings() {
   const s = SettingsAPI.get();
   document.getElementById("cfgPhone").value    = s.contact?.phone || "";
   document.getElementById("cfgWa").value       = s.contact?.whatsapp || "";
+  document.getElementById("cfgIg").value       = s.contact?.instagram || "";
   document.getElementById("cfgHeadline").value = s.headline || "";
+  document.getElementById("cfgSound").checked  = s.soundEnabled !== false;
 }
 document.getElementById("contactForm").onsubmit = (e) => {
   e.preventDefault();
   SettingsAPI.save({
     contact: {
-      phone:    document.getElementById("cfgPhone").value.trim(),
-      whatsapp: document.getElementById("cfgWa").value.trim(),
+      phone:     document.getElementById("cfgPhone").value.trim(),
+      whatsapp:  document.getElementById("cfgWa").value.trim(),
+      instagram: document.getElementById("cfgIg").value.trim().replace(/^@/, ""),
     },
     headline: document.getElementById("cfgHeadline").value.trim(),
+    soundEnabled: document.getElementById("cfgSound").checked,
   });
   showToast("تم حفظ المعلومات");
 };
@@ -895,7 +899,170 @@ function renderAdminInfo() {
 }
 
 window.addEventListener("storage", (e) => {
-  if (e.key === "abaya_amal_v2") refreshAll();
+  if (e.key === "abaya_amal_v2") { refreshAll(); checkForNewOrders(); }
+});
+
+/* =====================================================
+   إشعار صوتي + وميض التبويب عند طلب جديد
+===================================================== */
+let lastSeenOrdersCount = 0;
+let originalTitle = document.title;
+let titleFlashTimer = null;
+
+function chime() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    const playNote = (freq, t, dur) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, ctx.currentTime + t);
+      gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + dur);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(ctx.currentTime + t);
+      osc.stop(ctx.currentTime + t + dur + 0.05);
+    };
+    /* G5 → C6 */
+    playNote(784, 0,    0.25);
+    playNote(1046.5, 0.18, 0.35);
+    setTimeout(() => ctx.close(), 800);
+  } catch (e) {}
+}
+
+function flashTitle() {
+  clearInterval(titleFlashTimer);
+  let alt = true;
+  titleFlashTimer = setInterval(() => {
+    document.title = alt ? "🔔 طلب جديد!" : originalTitle;
+    alt = !alt;
+  }, 900);
+  const stop = () => {
+    if (!document.hidden) {
+      clearInterval(titleFlashTimer);
+      document.title = originalTitle;
+      document.removeEventListener("visibilitychange", stop);
+      window.removeEventListener("focus", stop);
+    }
+  };
+  document.addEventListener("visibilitychange", stop);
+  window.addEventListener("focus", stop);
+}
+
+function checkForNewOrders() {
+  const orders = OrdersAPI.list();
+  const count = orders.length;
+  if (lastSeenOrdersCount === 0) { lastSeenOrdersCount = count; return; }
+  if (count > lastSeenOrdersCount) {
+    const soundOn = SettingsAPI.get().soundEnabled !== false;
+    if (soundOn) chime();
+    flashTitle();
+    showToast(`🔔 ${count - lastSeenOrdersCount} طلب جديد!`);
+  }
+  lastSeenOrdersCount = count;
+}
+
+setInterval(checkForNewOrders, 5000);
+
+/* =====================================================
+   طباعة الفاتورة
+===================================================== */
+function printInvoice(orderId) {
+  const o = OrdersAPI.list().find(x => x.id === orderId);
+  if (!o) return;
+  const s = SettingsAPI.get();
+  const code = orderCode(o.id);
+
+  const itemsRows = o.items.map(it => `
+    <tr>
+      <td>${escapeHtml(it.name)}<br><small style="color:#666;">${escapeHtml(it.color)} · ${escapeHtml(it.size)}</small></td>
+      <td style="text-align:center;">${it.qty}</td>
+      <td style="text-align:left;">${Utils.fmt(it.price)}</td>
+      <td style="text-align:left;">${Utils.fmt(it.price * it.qty)}</td>
+    </tr>`).join("");
+
+  const win = window.open("", "_blank", "width=800,height=900");
+  win.document.write(`<!DOCTYPE html>
+  <html lang="ar" dir="rtl"><head>
+    <meta charset="UTF-8">
+    <title>فاتورة ${code}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cormorant+Garamond:wght@600&display=swap" rel="stylesheet">
+    <style>
+      * { box-sizing: border-box; }
+      body { font-family: 'Tajawal', sans-serif; padding: 30px; color: #1a1a1a; background: #fff; }
+      .head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #000; padding-bottom: 16px; margin-bottom: 20px; }
+      .brand { font-family: 'Cormorant Garamond', serif; font-size: 42px; font-weight: 600; letter-spacing: -1px; }
+      .brand-sub { color: #777; font-size: 13px; margin-top: 2px; }
+      .invoice-info { text-align: left; font-size: 13px; }
+      .invoice-info .code { font-size: 18px; font-weight: 700; }
+      h3 { margin: 18px 0 8px; font-size: 15px; color: #555; }
+      table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 14px; }
+      th, td { padding: 10px 8px; border-bottom: 1px solid #eee; text-align: right; }
+      th { background: #f7f5f0; }
+      .totals { margin-top: 14px; }
+      .totals .row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
+      .totals .row.grand { border-top: 2px solid #000; margin-top: 8px; padding-top: 10px; font-weight: 800; font-size: 18px; }
+      .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; margin-bottom: 6px; font-size: 14px; }
+      .meta-grid div { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #eee; }
+      .meta-grid span { color: #777; }
+      footer { margin-top: 36px; text-align: center; color: #777; font-size: 12px; border-top: 1px solid #eee; padding-top: 14px; }
+      @media print { body { padding: 0; } }
+    </style>
+  </head><body>
+    <div class="head">
+      <div>
+        <div class="brand">Amal</div>
+        <div class="brand-sub">Abaya and more · عبايات أمل</div>
+        ${s.contact?.phone ? `<div style="font-size:12px; color:#777; margin-top:6px;">📞 ${escapeHtml(s.contact.phone)}</div>` : ""}
+        ${s.contact?.whatsapp ? `<div style="font-size:12px; color:#777;">💬 ${escapeHtml(s.contact.whatsapp)}</div>` : ""}
+        ${s.contact?.instagram ? `<div style="font-size:12px; color:#777;">📷 @${escapeHtml(s.contact.instagram)}</div>` : ""}
+      </div>
+      <div class="invoice-info">
+        <div class="code">فاتورة ${code}</div>
+        <div style="color:#777; margin-top:4px;">${Utils.formatDate(o.createdAt)}</div>
+        <div style="margin-top:6px; padding:4px 10px; background:#000; color:#fff; border-radius:999px; display:inline-block; font-size:12px;">
+          ${Utils.statusInfo(o.status).label}
+        </div>
+      </div>
+    </div>
+
+    <h3>بيانات الزبونة</h3>
+    <div class="meta-grid">
+      <div><span>الاسم</span><strong>${escapeHtml(o.customer.name)}</strong></div>
+      <div><span>الجوال</span><strong dir="ltr">${escapeHtml(o.customer.phone)}</strong></div>
+      <div><span>المدينة</span><strong>${escapeHtml(o.cityName)}</strong></div>
+      <div><span>الحي/الشارع</span><strong>${escapeHtml(o.customer.area)}</strong></div>
+      ${o.customer.notes ? `<div style="grid-column:1/-1;"><span>ملاحظات</span><strong>${escapeHtml(o.customer.notes)}</strong></div>` : ""}
+    </div>
+
+    <h3>المنتجات</h3>
+    <table>
+      <thead><tr><th>المنتج</th><th style="text-align:center;">الكمية</th><th style="text-align:left;">السعر</th><th style="text-align:left;">الإجمالي</th></tr></thead>
+      <tbody>${itemsRows}</tbody>
+    </table>
+
+    <div class="totals">
+      <div class="row"><span>المجموع الفرعي</span><span>${Utils.fmt(o.subtotal)}</span></div>
+      ${o.savings > 0 ? `<div class="row"><span>خصم المنتجات</span><span>− ${Utils.fmt(o.savings)}</span></div>` : ""}
+      ${o.couponDiscount > 0 ? `<div class="row"><span>كود الخصم (${escapeHtml(o.couponCode || "")})</span><span>− ${Utils.fmt(o.couponDiscount)}</span></div>` : ""}
+      <div class="row"><span>التوصيل</span><span>${Utils.fmt(o.deliveryFee)}</span></div>
+      <div class="row grand"><span>الإجمالي</span><span>${Utils.fmt(o.total)}</span></div>
+    </div>
+
+    <footer>
+      شكراً لتسوقكِ من <strong>Amal · Abaya and more</strong>  ·  عبايات أمل · توصيل لكل مدن قطاع غزة
+    </footer>
+
+    <script>setTimeout(() => window.print(), 400);<\/script>
+  </body></html>`);
+  win.document.close();
+}
+
+document.getElementById("printInvoiceBtn")?.addEventListener("click", () => {
+  if (currentOrderId) printInvoice(currentOrderId);
 });
 
 /* أدوات */

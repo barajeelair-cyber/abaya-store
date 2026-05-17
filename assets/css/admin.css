@@ -49,17 +49,9 @@ img { max-width: 100%; display: block; }
   box-shadow: 0 20px 50px rgba(0,0,0,.08);
 }
 .login-card img.logo-img {
-  height: 220px; max-width: 100%; width: auto; margin: 0 auto 22px;
+  height: 140px; max-width: 90%; width: auto; margin: 0 auto 18px;
   object-fit: contain;
-  background: #000;
-  border-radius: 16px;
-  box-shadow: 0 12px 32px rgba(0,0,0,.18);
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: auto;
-  -ms-interpolation-mode: bicubic;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transform: translateZ(0);
+  /* لوجو نظيف بدون خلفية - تصميم Apple-like */
 }
 .login-card h2 { margin: 0 0 6px; }
 .login-card .sub { color: var(--muted); margin: 0 0 22px; font-size: 14px; }
@@ -85,17 +77,9 @@ img { max-width: 100%; display: block; }
 .brand-title { font-size: 18px; font-weight: 800; }
 .brand-sub { font-size: 12px; color: var(--muted); font-weight: 500; margin-top: 2px; }
 .brand img.logo-img {
-  height: 130px; max-width: 100%; width: auto;
+  height: 90px; max-width: 100%; width: auto;
   object-fit: contain;
-  background: #000;
-  border-radius: 12px;
-  box-shadow: 0 6px 16px rgba(0,0,0,.14);
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: auto;
-  -ms-interpolation-mode: bicubic;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transform: translateZ(0);
+  /* اللوجو أسود طبيعي على الخلفية البيضاء  —  بدون أي تأثيرات */
 }
 .brand .dot { width: 12px; height: 12px; border-radius: 50%;
   background: linear-gradient(135deg, var(--gold-2), var(--gold)); }

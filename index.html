@@ -3,9 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>عبايات أمل  —  عبايات وأكثر</title>
+  <title>عبايات أمل · Amal — Abaya and More</title>
+  <meta name="description" content="عبايات أمل · Amal Abaya and More — تشكيلة فاخرة من العبايات بتوصيل لكل مدن قطاع غزة." />
 
-  <link rel="icon" href="assets/img/logo.png" />
+  <link rel="icon" type="image/svg+xml" href="assets/img/logo.svg" />
+  <link rel="alternate icon" href="assets/img/logo.svg" />
+
+  <!-- Open Graph (Facebook / WhatsApp / Telegram) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Amal — Abaya and More" />
+  <meta property="og:title" content="عبايات أمل · Amal — Abaya and More" />
+  <meta property="og:description" content="عبايات وأكثر تجدينها لدى عبايات أمل · تشكيلة فاخرة من العبايات بتوصيل لكل مدن قطاع غزة." />
+  <meta property="og:image" content="assets/img/og-image.svg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="ar_PS" />
+
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="عبايات أمل · Amal — Abaya and More" />
+  <meta name="twitter:description" content="عبايات وأكثر تجدينها لدى عبايات أمل · توصيل لكل مدن قطاع غزة." />
+  <meta name="twitter:image" content="assets/img/og-image.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@500;700&display=swap" rel="stylesheet">
@@ -19,6 +37,8 @@
     <div class="contact-inner">
       <a href="#" id="phoneLink">📞 <span id="phoneText">—</span></a>
       <a href="#" id="whatsappLink" target="_blank" rel="noopener">💬 واتساب: <span id="whatsappText">—</span></a>
+      <a href="#" id="instagramLink" target="_blank" rel="noopener">📷 إنستغرام: <span id="instagramText">—</span></a>
+      <a href="#" id="trackOrderLink">📦 تتبع طلبي</a>
     </div>
   </div>
 
@@ -26,7 +46,7 @@
   <header class="navbar">
     <div class="nav-inner">
       <a href="#" class="brand">
-        <img src="assets/img/logo.png" alt="عبايات أمل" class="logo-img"
+        <img src="assets/img/logo.svg" alt="عبايات أمل" class="logo-img"
              decoding="sync" loading="eager" fetchpriority="high"
              onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
         <span class="brand-text" style="display:none;">عبايات <em>أمل</em></span>
@@ -67,6 +87,7 @@
     <div class="contact-row">
       <a href="#" id="footerPhone">📞 <span id="footerPhoneText">—</span></a>
       <a href="#" id="footerWa" target="_blank" rel="noopener">💬 واتساب</a>
+      <a href="#" id="footerIg" target="_blank" rel="noopener">📷 إنستغرام</a>
     </div>
     <p>© <span id="year"></span> <span class="gold">عبايات أمل</span>  —  جميع الحقوق محفوظة. صُنع بحبٍّ في قطاع غزة.</p>
   </footer>
@@ -158,6 +179,24 @@
                   style="border:1px solid var(--line); padding:0 18px; border-radius:999px;">إلغاء</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ============ Modal تتبع الطلب ============ -->
+  <div class="modal" id="trackModal">
+    <div class="modal-box">
+      <h3>📦 تتبع طلبي</h3>
+      <p class="sub">أدخلي رمز الطلب الذي وصلكِ (مثل AMA-XXXXXX) لمعرفة حالته.</p>
+      <div class="field">
+        <label>رمز الطلب</label>
+        <input type="text" id="trackInput" placeholder="AMA-XXXXXX" autocomplete="off" style="text-transform:uppercase;" />
+      </div>
+      <div style="display:flex; gap:10px; margin-bottom:14px;">
+        <button class="checkout-btn" id="trackSearchBtn" style="flex:1;">بحث</button>
+        <button class="icon-btn" id="trackCloseBtn"
+                style="border:1px solid var(--line); padding:0 18px; border-radius:999px;">إغلاق</button>
+      </div>
+      <div id="trackResult"></div>
     </div>
   </div>
 

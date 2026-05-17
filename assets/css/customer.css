@@ -76,14 +76,10 @@ button { font-family: inherit; cursor: pointer; }
   font-size: 26px; font-weight: 800; letter-spacing: .5px;
 }
 .brand img.logo-img {
-  height: 110px; width: auto; max-width: 260px;
+  height: 80px; width: auto; max-width: 240px;
   object-fit: contain;
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: auto;
-  -ms-interpolation-mode: bicubic;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transform: translateZ(0);
+  /* اللوجو أسود الأصل  —  نقلبه إلى أبيض/كريمي ليناسب الخلفية السوداء */
+  filter: invert(1) brightness(1.08);
 }
 .brand-text {
   background: linear-gradient(135deg, var(--gold-2), var(--gold), var(--gold-soft));
@@ -421,6 +417,37 @@ button { font-family: inherit; cursor: pointer; }
 .summary .row { display: flex; justify-content: space-between; margin-bottom: 6px; color: var(--muted); font-size: 14px; }
 .summary .row.discount { color: var(--success); }
 .summary .row.total { color: var(--gold-2); font-weight: 700; font-size: 17px; margin-top: 6px; }
+
+/* خطوات تتبع الطلب */
+.track-steps {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 14px 0; padding: 14px 4px;
+  gap: 4px;
+}
+.track-steps .step {
+  flex: 0 0 auto; display: flex; flex-direction: column; align-items: center;
+  gap: 6px; min-width: 60px;
+}
+.track-steps .step .dot {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: #1a1a1a; color: var(--muted);
+  border: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+  transition: all var(--t);
+}
+.track-steps .step.done .dot {
+  background: var(--gold); color: #000; border-color: var(--gold);
+  box-shadow: 0 0 12px rgba(212,175,55,.4);
+}
+.track-steps .step .label {
+  font-size: 11px; color: var(--muted); text-align: center; line-height: 1.2;
+}
+.track-steps .step.done .label { color: var(--gold-2); font-weight: 600; }
+.track-steps .line {
+  flex: 1; height: 2px; background: var(--line); margin-top: -22px;
+}
+.track-steps .line.done { background: var(--gold); }
 
 /* رسالة نجاح الطلب */
 .success-card {
