@@ -20,25 +20,26 @@
 ============================================ -->
 <div id="loginScreen" class="login-wrap" style="display:none;">
   <div class="login-card">
-    <img src="assets/img/logo.svg" alt="عبايات أمل" class="logo-img"
+    <img src="assets/img/logo.svg" alt="Amal Abayas" class="logo-img"
          decoding="sync" loading="eager" fetchpriority="high"
          onerror="this.style.display='none'">
-    <h2>لوحة الإدارة</h2>
-    <p class="sub">عبايات أمل  —  تسجيل الدخول</p>
+    <h2 data-i18n="admin.login.title">لوحة الإدارة</h2>
+    <p class="sub" data-i18n="admin.login.sub">عبايات أمل  —  تسجيل الدخول</p>
     <form id="loginForm">
       <div class="field">
-        <label>اسم المستخدم</label>
+        <label data-i18n="admin.login.username">اسم المستخدم</label>
         <input type="text" name="username" required autocomplete="username" />
       </div>
       <div class="field">
-        <label>كلمة المرور</label>
+        <label data-i18n="admin.login.password">كلمة المرور</label>
         <input type="password" name="password" required autocomplete="current-password" />
       </div>
-      <button type="submit" class="btn" style="width:100%; padding:12px;">دخول</button>
+      <button type="submit" class="btn" style="width:100%; padding:12px;" data-i18n="admin.login.signin">دخول</button>
       <div class="login-error" id="loginError"></div>
       <p class="sub" style="margin-top:14px; font-size:12px;">
-        الافتراضي: <strong>admin</strong> / <strong>admin123</strong>  —  غيّريه من الإعدادات.
+        <span data-i18n="admin.login.default">الافتراضي:</span> <strong>admin</strong> / <strong>admin123</strong>  —  <span data-i18n="admin.login.change_hint">غيّريه من الإعدادات.</span>
       </p>
+      <button type="button" class="lang-toggle-admin" id="langToggleLogin" style="margin-top:14px;">English / العربية</button>
     </form>
   </div>
 </div>
@@ -50,27 +51,28 @@
 
   <aside class="sidebar">
     <div class="brand">
-      <img src="assets/img/logo.svg" alt="عبايات أمل" class="logo-img"
+      <img src="assets/img/logo.svg" alt="Amal Abayas" class="logo-img"
            decoding="sync" loading="eager" fetchpriority="high"
            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
       <div class="brand-text-wrap" style="display:none;">
-        <div class="brand-title">عبايات أمل</div>
-        <div class="brand-sub">لوحة عبايات أمل</div>
+        <div class="brand-title" data-i18n="brand.full">عبايات أمل</div>
+        <div class="brand-sub"   data-i18n="admin.brand.sub">لوحة عبايات أمل</div>
       </div>
     </div>
     <nav class="menu">
-      <button class="menu-item active" data-page="dashboard">📊 لوحة القيادة</button>
-      <button class="menu-item" data-page="products">👗 المنتجات</button>
-      <button class="menu-item" data-page="inventory">📦 المخزون <span class="badge" id="lowStockBadge" style="display:none">0</span></button>
-      <button class="menu-item" data-page="orders">🧾 الطلبات <span class="badge" id="pendingBadge" style="display:none">0</span></button>
-      <button class="menu-item" data-page="delivery">🚚 التوصيل</button>
-      <button class="menu-item" data-page="customers">👥 العملاء</button>
-      <button class="menu-item" data-page="settings">⚙️ الإعدادات</button>
-      <a class="menu-item" href="index.html" target="_blank">🛍️ عرض المتجر</a>
+      <button class="menu-item active" data-page="dashboard" data-i18n="admin.menu.dashboard">📊 لوحة القيادة</button>
+      <button class="menu-item" data-page="products" data-i18n="admin.menu.products">👗 المنتجات</button>
+      <button class="menu-item" data-page="inventory"><span data-i18n="admin.menu.inventory">📦 المخزون</span> <span class="badge" id="lowStockBadge" style="display:none">0</span></button>
+      <button class="menu-item" data-page="orders"><span data-i18n="admin.menu.orders">🧾 الطلبات</span> <span class="badge" id="pendingBadge" style="display:none">0</span></button>
+      <button class="menu-item" data-page="delivery"  data-i18n="admin.menu.delivery">🚚 التوصيل</button>
+      <button class="menu-item" data-page="customers" data-i18n="admin.menu.customers">👥 العملاء</button>
+      <button class="menu-item" data-page="settings"  data-i18n="admin.menu.settings">⚙️ الإعدادات</button>
+      <a class="menu-item" href="index.html" target="_blank" data-i18n="admin.menu.view_store">🛍️ عرض المتجر</a>
     </nav>
     <div class="sidebar-foot">
       <div class="admin-info" id="adminInfo">admin@amal-abaya.loc</div>
-      <button id="logoutBtn" class="logout-pill">🚪 تسجيل خروج</button>
+      <button id="langToggleAdmin" class="lang-toggle-admin">English / العربية</button>
+      <button id="logoutBtn" class="logout-pill" data-i18n="admin.logout">🚪 تسجيل خروج</button>
     </div>
   </aside>
 
@@ -79,25 +81,25 @@
     <!-- ====== لوحة القيادة ====== -->
     <section class="page active" id="page-dashboard">
       <div class="topbar">
-        <div><h1>لوحة القيادة</h1></div>
+        <div><h1 data-i18n="admin.dash.title">لوحة القيادة</h1></div>
         <div class="date-display" id="dateDisplay">—</div>
       </div>
       <div class="cards-row" id="statsRow"></div>
 
       <div class="panel">
         <div class="panel-head">
-          <h2>الطلبات  —  <span id="ordersCountDash">0</span></h2>
-          <button class="btn ghost" data-goto="orders">عرض الكل</button>
+          <h2><span data-i18n="admin.dash.orders">الطلبات</span>  —  <span id="ordersCountDash">0</span></h2>
+          <button class="btn ghost" data-goto="orders" data-i18n="admin.dash.view_all">عرض الكل</button>
         </div>
         <table>
           <thead>
             <tr>
-              <th>الرمز</th>
-              <th>الزبون</th>
-              <th>المدينة</th>
-              <th>القطع</th>
-              <th>المجموع</th>
-              <th>الطلبات</th>
+              <th data-i18n="admin.col.code">الرمز</th>
+              <th data-i18n="admin.col.customer">الزبون</th>
+              <th data-i18n="admin.col.city">المدينة</th>
+              <th data-i18n="admin.col.pieces">القطع</th>
+              <th data-i18n="admin.col.total">المجموع</th>
+              <th data-i18n="admin.col.status">الطلبات</th>
             </tr>
           </thead>
           <tbody id="recentOrders"></tbody>
@@ -105,9 +107,9 @@
       </div>
 
       <div class="panel">
-        <div class="panel-head"><h2>الطلبات حسب المدينة</h2></div>
+        <div class="panel-head"><h2 data-i18n="admin.dash.city_stats">الطلبات حسب المدينة</h2></div>
         <table>
-          <thead><tr><th>المدينة</th><th>عدد الطلبات</th><th>الإجمالي</th></tr></thead>
+          <thead><tr><th data-i18n="admin.col.city">المدينة</th><th data-i18n="admin.col.orders_count">عدد الطلبات</th><th data-i18n="admin.col.total_amount">الإجمالي</th></tr></thead>
           <tbody id="cityStatsBody"></tbody>
         </table>
       </div>
@@ -116,22 +118,28 @@
     <!-- ====== المنتجات ====== -->
     <section class="page" id="page-products">
       <div class="topbar">
-        <div><h1>المنتجات</h1><div class="sub">إضافة، تعديل، وحذف العبايات</div></div>
-        <button class="btn" id="addProductBtn">+ إضافة منتج جديد</button>
+        <div><h1 data-i18n="admin.products.title">المنتجات</h1><div class="sub" data-i18n="admin.products.sub">إضافة، تعديل، وحذف العبايات</div></div>
+        <button class="btn" id="addProductBtn" data-i18n="admin.products.add">+ إضافة منتج جديد</button>
       </div>
 
       <div class="panel">
         <div class="panel-head">
-          <input class="input" id="searchProducts" placeholder="🔎 ابحثي عن منتج..." style="width: 280px;">
+          <input class="input" id="searchProducts" data-i18n-placeholder="admin.products.search" style="width: 280px;">
           <select id="filterCategory" class="input">
-            <option value="">كل التصنيفات</option>
+            <option value="" data-i18n="admin.products.all_categories">كل التصنيفات</option>
           </select>
         </div>
         <table>
           <thead>
             <tr>
-              <th>الصورة</th><th>الاسم</th><th>التصنيف</th><th>السعر</th>
-              <th>الخصم</th><th>الألوان</th><th>المخزون</th><th>إجراءات</th>
+              <th data-i18n="admin.col.image">الصورة</th>
+              <th data-i18n="admin.col.name">الاسم</th>
+              <th data-i18n="admin.col.category">التصنيف</th>
+              <th data-i18n="admin.col.price">السعر</th>
+              <th data-i18n="admin.col.discount">الخصم</th>
+              <th data-i18n="admin.col.colors">الألوان</th>
+              <th data-i18n="admin.col.stock">المخزون</th>
+              <th data-i18n="admin.col.actions">إجراءات</th>
             </tr>
           </thead>
           <tbody id="productsTable"></tbody>
@@ -142,13 +150,13 @@
     <!-- ====== المخزون ====== -->
     <section class="page" id="page-inventory">
       <div class="topbar">
-        <div><h1>المخزون</h1><div class="sub">تنبيهات عند نزول إجمالي المخزون عن <span id="threshold">5</span></div></div>
+        <div><h1 data-i18n="admin.inv.title">المخزون</h1><div class="sub"><span data-i18n="admin.inv.sub">تنبيهات عند نزول إجمالي المخزون عن</span> <span id="threshold">5</span></div></div>
       </div>
 
       <div class="panel">
-        <div class="panel-head"><h2>القطع التي تحتاج إلى تجديد</h2></div>
+        <div class="panel-head"><h2 data-i18n="admin.inv.section">القطع التي تحتاج إلى تجديد</h2></div>
         <table>
-          <thead><tr><th>المنتج</th><th>الإجمالي</th><th>الحالة</th><th>التركيبات</th></tr></thead>
+          <thead><tr><th data-i18n="admin.col.name">المنتج</th><th data-i18n="admin.inv.total">الإجمالي</th><th data-i18n="admin.inv.status">الحالة</th><th data-i18n="admin.inv.variants">التركيبات</th></tr></thead>
           <tbody id="inventoryTable"></tbody>
         </table>
       </div>
@@ -157,22 +165,27 @@
     <!-- ====== الطلبات ====== -->
     <section class="page" id="page-orders">
       <div class="topbar">
-        <div><h1>الطلبات</h1><div class="sub">إدارة الطلبات وتحديث حالاتها</div></div>
+        <div><h1 data-i18n="admin.orders.title">الطلبات</h1><div class="sub" data-i18n="admin.orders.sub">إدارة الطلبات وتحديث حالاتها</div></div>
       </div>
       <div class="panel">
         <div class="panel-head">
           <div class="tools">
-            <select id="filterCity" class="input"><option value="">كل المدن</option></select>
-            <select id="filterStatus" class="input"><option value="">كل الحالات</option></select>
+            <select id="filterCity" class="input"><option value="" data-i18n="admin.orders.all_cities">كل المدن</option></select>
+            <select id="filterStatus" class="input"><option value="" data-i18n="admin.orders.all_statuses">كل الحالات</option></select>
           </div>
-          <div style="color:var(--muted); font-size:14px;">إجمالي: <strong id="ordersCount">0</strong></div>
+          <div style="color:var(--muted); font-size:14px;"><span data-i18n="admin.orders.count">إجمالي:</span> <strong id="ordersCount">0</strong></div>
         </div>
         <table>
           <thead>
             <tr>
-              <th>#</th><th>الزبونة</th><th>الجوال</th>
-              <th>المدينة</th><th>الإجمالي</th><th>الحالة</th>
-              <th>التاريخ</th><th>تفاصيل</th>
+              <th data-i18n="admin.col.code">#</th>
+              <th data-i18n="admin.col.customer">الزبونة</th>
+              <th data-i18n="admin.col.phone">الجوال</th>
+              <th data-i18n="admin.col.city">المدينة</th>
+              <th data-i18n="admin.col.total">الإجمالي</th>
+              <th data-i18n="admin.col.status">الحالة</th>
+              <th data-i18n="admin.col.date">التاريخ</th>
+              <th data-i18n="admin.col.details">تفاصيل</th>
             </tr>
           </thead>
           <tbody id="ordersTable"></tbody>
@@ -183,7 +196,7 @@
     <!-- ====== التوصيل ====== -->
     <section class="page" id="page-delivery">
       <div class="topbar">
-        <div><h1>التوصيل</h1><div class="sub">إدارة الطلبات الجاهزة للشحن والتوصيل</div></div>
+        <div><h1 data-i18n="admin.delivery.title">التوصيل</h1><div class="sub" data-i18n="admin.delivery.sub">إدارة الطلبات الجاهزة للشحن والتوصيل</div></div>
         <div class="date-display" id="dateDisplayDelivery">—</div>
       </div>
 
@@ -191,16 +204,21 @@
 
       <div class="panel">
         <div class="panel-head">
-          <h2>الطلبات قيد التوصيل</h2>
+          <h2 data-i18n="admin.delivery.in_progress">الطلبات قيد التوصيل</h2>
           <select id="deliveryCityFilter" class="input">
-            <option value="">كل المدن</option>
+            <option value="" data-i18n="admin.orders.all_cities">كل المدن</option>
           </select>
         </div>
         <table>
           <thead>
             <tr>
-              <th>الرمز</th><th>الزبون</th><th>المدينة</th>
-              <th>القطع</th><th>المجموع</th><th>الحالة</th><th>إجراء سريع</th>
+              <th data-i18n="admin.col.code">الرمز</th>
+              <th data-i18n="admin.col.customer">الزبون</th>
+              <th data-i18n="admin.col.city">المدينة</th>
+              <th data-i18n="admin.col.pieces">القطع</th>
+              <th data-i18n="admin.col.total">المجموع</th>
+              <th data-i18n="admin.col.status">الحالة</th>
+              <th data-i18n="admin.delivery.quick_action">إجراء سريع</th>
             </tr>
           </thead>
           <tbody id="deliveryTable"></tbody>
@@ -211,7 +229,7 @@
     <!-- ====== العملاء ====== -->
     <section class="page" id="page-customers">
       <div class="topbar">
-        <div><h1>العملاء</h1><div class="sub">قائمة العملاء وسجل طلباتهم</div></div>
+        <div><h1 data-i18n="admin.customers.title">العملاء</h1><div class="sub" data-i18n="admin.customers.sub">قائمة العملاء وسجل طلباتهم</div></div>
         <div class="date-display" id="dateDisplayCustomers">—</div>
       </div>
 
@@ -219,14 +237,18 @@
 
       <div class="panel">
         <div class="panel-head">
-          <h2>قائمة العملاء  —  <span id="customersCount">0</span></h2>
-          <input class="input" id="searchCustomers" placeholder="🔎 ابحثي بالاسم أو الجوال..." style="width: 280px;">
+          <h2><span data-i18n="admin.customers.list">قائمة العملاء</span>  —  <span id="customersCount">0</span></h2>
+          <input class="input" id="searchCustomers" data-i18n-placeholder="admin.customers.search" style="width: 280px;">
         </div>
         <table>
           <thead>
             <tr>
-              <th>الاسم</th><th>الجوال</th><th>المدينة</th>
-              <th>عدد الطلبات</th><th>إجمالي الإنفاق</th><th>آخر طلب</th>
+              <th data-i18n="admin.col.name">الاسم</th>
+              <th data-i18n="admin.col.phone">الجوال</th>
+              <th data-i18n="admin.col.city">المدينة</th>
+              <th data-i18n="admin.col.orders_count">عدد الطلبات</th>
+              <th data-i18n="admin.customers.total_spent">إجمالي الإنفاق</th>
+              <th data-i18n="admin.customers.last_order">آخر طلب</th>
             </tr>
           </thead>
           <tbody id="customersTable"></tbody>
@@ -237,65 +259,65 @@
     <!-- ====== الإعدادات ====== -->
     <section class="page" id="page-settings">
       <div class="topbar">
-        <div><h1>الإعدادات</h1><div class="sub">معلومات التواصل والحسابات البنكية والأمان</div></div>
+        <div><h1 data-i18n="admin.settings.title">الإعدادات</h1><div class="sub" data-i18n="admin.settings.sub">معلومات التواصل والحسابات البنكية والأمان</div></div>
       </div>
 
       <div class="panel">
-        <div class="panel-head"><h2>📞 معلومات التواصل</h2></div>
+        <div class="panel-head"><h2 data-i18n="admin.settings.contact">📞 معلومات التواصل</h2></div>
         <form id="contactForm" class="row-2">
           <div class="field">
-            <label>رقم الاتصال</label>
+            <label data-i18n="admin.settings.phone">رقم الاتصال</label>
             <input type="tel" name="phone" id="cfgPhone" placeholder="+970 59 1234567" />
           </div>
           <div class="field">
-            <label>رقم الواتساب</label>
+            <label data-i18n="admin.settings.whatsapp">رقم الواتساب</label>
             <input type="tel" name="whatsapp" id="cfgWa" placeholder="+970 59 1234567" />
           </div>
           <div class="field">
-            <label>اسم حساب إنستغرام (بدون @)</label>
+            <label data-i18n="admin.settings.instagram">اسم حساب إنستغرام (بدون @)</label>
             <input type="text" id="cfgIg" placeholder="amal.abaya" />
           </div>
           <div class="field">
-            <label>إشعار صوتي عند وصول طلب جديد</label>
+            <label data-i18n="admin.settings.sound">إشعار صوتي عند وصول طلب جديد</label>
             <label class="toggle" style="padding:10px 0;">
               <input type="checkbox" id="cfgSound" />
-              <span>تشغيل صوت تنبيه</span>
+              <span data-i18n="admin.settings.sound_toggle">تشغيل صوت تنبيه</span>
             </label>
           </div>
           <div class="field" style="grid-column: 1/-1;">
-            <label>عنوان الصفحة (Headline)</label>
+            <label data-i18n="admin.settings.headline">عنوان الصفحة (Headline)</label>
             <input type="text" id="cfgHeadline" placeholder="عبايات وأكثر تجدينها لدى عبايات أمل" />
           </div>
           <div style="grid-column: 1/-1;">
-            <button type="submit" class="btn">حفظ معلومات التواصل</button>
+            <button type="submit" class="btn" data-i18n="admin.settings.save_contact">حفظ معلومات التواصل</button>
           </div>
         </form>
       </div>
 
       <div class="panel">
         <div class="panel-head">
-          <h2>🏦 الحسابات البنكية</h2>
-          <button class="btn gold" id="addBankBtn">+ إضافة حساب</button>
+          <h2 data-i18n="admin.settings.banks">🏦 الحسابات البنكية</h2>
+          <button class="btn gold" id="addBankBtn" data-i18n="admin.settings.add_bank">+ إضافة حساب</button>
         </div>
         <div id="banksList"></div>
       </div>
 
       <div class="panel">
         <div class="panel-head">
-          <h2>🎟️ أكواد الخصم</h2>
-          <button class="btn gold" id="addCouponBtn">+ إضافة كود</button>
+          <h2 data-i18n="admin.settings.coupons">🎟️ أكواد الخصم</h2>
+          <button class="btn gold" id="addCouponBtn" data-i18n="admin.settings.add_coupon">+ إضافة كود</button>
         </div>
         <div id="couponsList"></div>
       </div>
 
       <div class="panel">
-        <div class="panel-head"><h2>🔒 تغيير كلمة المرور</h2></div>
+        <div class="panel-head"><h2 data-i18n="admin.settings.password">🔒 تغيير كلمة المرور</h2></div>
         <form id="pwdForm" class="row-3">
-          <div class="field"><label>الكلمة الحالية</label><input type="password" name="current" required /></div>
-          <div class="field"><label>الكلمة الجديدة</label><input type="password" name="next" required minlength="4" /></div>
-          <div class="field"><label>تأكيد الجديدة</label><input type="password" name="confirm" required /></div>
+          <div class="field"><label data-i18n="admin.settings.pwd_current">الكلمة الحالية</label><input type="password" name="current" required /></div>
+          <div class="field"><label data-i18n="admin.settings.pwd_new">الكلمة الجديدة</label><input type="password" name="next" required minlength="4" /></div>
+          <div class="field"><label data-i18n="admin.settings.pwd_confirm">تأكيد الجديدة</label><input type="password" name="confirm" required /></div>
           <div style="grid-column: 1/-1;">
-            <button type="submit" class="btn">تحديث كلمة المرور</button>
+            <button type="submit" class="btn" data-i18n="admin.settings.pwd_update">تحديث كلمة المرور</button>
           </div>
         </form>
       </div>
@@ -309,52 +331,52 @@
 ============================================ -->
 <div class="modal" id="productModal">
   <div class="modal-box">
-    <h3 id="productModalTitle">إضافة منتج</h3>
-    <p class="sub">معلومات المنتج، ألوانه (لكلٍ صورته)، والمخزون لكل تركيبة لون+مقاس.</p>
+    <h3 id="productModalTitle" data-i18n="admin.product.add_title">إضافة منتج</h3>
+    <p class="sub" data-i18n="admin.product.sub">معلومات المنتج، ألوانه (لكلٍ صورته)، والمخزون لكل تركيبة لون+مقاس.</p>
     <form id="productForm">
       <input type="hidden" name="id" />
 
       <div class="row-3">
         <div class="field">
-          <label>اسم المنتج</label>
+          <label data-i18n="admin.product.field.name">اسم المنتج</label>
           <input type="text" name="name" required />
         </div>
         <div class="field">
-          <label>التصنيف</label>
+          <label data-i18n="admin.product.field.category">التصنيف</label>
           <select name="category" id="formCategory" required></select>
         </div>
         <div class="field">
-          <label>السعر (₪)</label>
+          <label data-i18n="admin.product.field.price">السعر (₪)</label>
           <input type="number" name="price" min="0" step="1" required />
         </div>
       </div>
 
       <div class="row-2">
         <div class="field">
-          <label>الخصم % (اختياري)</label>
+          <label data-i18n="admin.product.field.discount">الخصم % (اختياري)</label>
           <input type="number" name="discount" min="0" max="90" step="1" value="0" />
         </div>
         <div class="field">
-          <label>المقاسات (افصلي بفاصلة)</label>
+          <label data-i18n="admin.product.field.sizes">المقاسات (افصلي بفاصلة)</label>
           <input type="text" name="sizes" id="sizesInput" placeholder="S, M, L, XL" />
         </div>
       </div>
 
       <div class="field">
-        <label>الوصف</label>
+        <label data-i18n="admin.product.field.description">الوصف</label>
         <textarea name="description" rows="2"></textarea>
       </div>
 
       <!-- الألوان مع رفع الصور -->
       <div class="section-block">
-        <h4>الألوان والصور  <button type="button" class="btn ghost" id="addColorBtn">+ إضافة لون</button></h4>
+        <h4><span data-i18n="admin.product.colors_section">الألوان والصور</span>  <button type="button" class="btn ghost" id="addColorBtn" data-i18n="admin.product.add_color">+ إضافة لون</button></h4>
         <div id="colorsContainer"></div>
       </div>
 
       <!-- جدول المخزون لكل تركيبة -->
       <div class="section-block">
-        <h4>المخزون لكل تركيبة (لون × مقاس)
-          <button type="button" class="btn ghost" id="rebuildStockBtn">↻ إعادة بناء الجدول</button>
+        <h4><span data-i18n="admin.product.stock_section">المخزون لكل تركيبة (لون × مقاس)</span>
+          <button type="button" class="btn ghost" id="rebuildStockBtn" data-i18n="admin.product.rebuild">↻ إعادة بناء الجدول</button>
         </h4>
         <div style="overflow-x:auto;">
           <table class="stock-grid" id="stockGrid"></table>
@@ -362,8 +384,8 @@
       </div>
 
       <div class="form-actions">
-        <button type="submit" class="btn">حفظ</button>
-        <button type="button" class="btn ghost" id="cancelProduct">إلغاء</button>
+        <button type="submit" class="btn" data-i18n="admin.product.save">حفظ</button>
+        <button type="button" class="btn ghost" id="cancelProduct" data-i18n="admin.product.cancel">إلغاء</button>
       </div>
     </form>
   </div>
@@ -374,15 +396,15 @@
 ============================================ -->
 <div class="modal" id="orderModal">
   <div class="modal-box">
-    <h3>تفاصيل الطلب</h3>
-    <p class="sub">معلومات الزبونة، القطع المطلوبة، وصورة التحويل</p>
+    <h3 data-i18n="admin.order.detail_title">تفاصيل الطلب</h3>
+    <p class="sub" data-i18n="admin.order.detail_sub">معلومات الزبونة، القطع المطلوبة، وصورة التحويل</p>
     <div id="orderModalBody"></div>
     <div class="form-actions" style="flex-wrap:wrap;">
       <select id="orderStatusSelect" class="input" style="flex:1; min-width:200px;"></select>
-      <button class="btn" id="saveOrderStatus">تحديث الحالة</button>
-      <button class="btn ok" id="verifyPaymentBtn" style="display:none;">✓ تأكيد الدفع</button>
-      <button class="btn gold" id="printInvoiceBtn">🖨️ طباعة الفاتورة</button>
-      <button class="btn ghost" id="closeOrderModal">إغلاق</button>
+      <button class="btn" id="saveOrderStatus" data-i18n="admin.order.update_status">تحديث الحالة</button>
+      <button class="btn ok" id="verifyPaymentBtn" style="display:none;" data-i18n="admin.order.verify_payment">✓ تأكيد الدفع</button>
+      <button class="btn gold" id="printInvoiceBtn" data-i18n="admin.order.print">🖨️ طباعة الفاتورة</button>
+      <button class="btn ghost" id="closeOrderModal" data-i18n="admin.order.close">إغلاق</button>
     </div>
   </div>
 </div>

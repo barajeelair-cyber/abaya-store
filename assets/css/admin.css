@@ -118,6 +118,23 @@ img { max-width: 100%; display: block; }
 }
 .logout-pill:hover { opacity: .92; transform: translateY(-1px); }
 
+.lang-toggle-admin {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-weight: 600; font-size: 12px;
+  cursor: pointer;
+  transition: all var(--t);
+}
+.lang-toggle-admin:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* تعديلات LTR */
+html[dir="ltr"] .sidebar { border-left: none; border-right: 1px solid var(--line); }
+html[dir="ltr"] th, html[dir="ltr"] td { text-align: left; }
+html[dir="ltr"] .menu-item { text-align: left; }
+
 .date-display {
   color: var(--muted); font-size: 14px; font-weight: 500;
   padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px;

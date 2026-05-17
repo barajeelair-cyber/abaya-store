@@ -22,7 +22,7 @@ $loginForm.onsubmit = (e) => {
     $loginError.textContent = "";
     showApp();
   } else {
-    $loginError.textContent = "اسم المستخدم أو كلمة المرور غير صحيحة";
+    $loginError.textContent = t("admin.login.error");
   }
 };
 document.getElementById("logoutBtn").onclick = () => {
@@ -33,13 +33,44 @@ document.getElementById("logoutBtn").onclick = () => {
    إقلاع الواجهة بعد الدخول
 ===================================================== */
 function bootApp() {
+  applyTranslations();
   fillCategorySelects();
   fillFilters();
   refreshAll();
   applyContactSettings();
   renderBanksList();
   renderCouponsList();
+  updateLangButtons();
 }
+
+/* تبديل اللغة */
+function updateLangButtons() {
+  const label = getLang() === "ar" ? "English" : "العربية";
+  ["langToggleLogin", "langToggleAdmin"].forEach(id => {
+    const b = document.getElementById(id);
+    if (b) b.textContent = label;
+  });
+}
+function toggleLang() {
+  const next = getLang() === "ar" ? "en" : "ar";
+  setLang(next);
+  applyTranslations();
+  updateLangButtons();
+  if ($appShell.style.display !== "none") {
+    fillCategorySelects();
+    fillFilters();
+    refreshAll();
+    applyContactSettings();
+    renderBanksList();
+    renderCouponsList();
+  }
+}
+document.getElementById("langToggleLogin")?.addEventListener("click", toggleLang);
+document.getElementById("langToggleAdmin")?.addEventListener("click", toggleLang);
+
+/* تطبيق الترجمة في شاشة الدخول قبل الإقلاع */
+applyTranslations();
+updateLangButtons();
 
 /* تنقل الصفحات */
 document.querySelectorAll(".menu-item[data-page]").forEach(b =>
@@ -74,7 +105,8 @@ function isToday(iso) {
 
 function renderDateDisplay() {
   const d = new Date();
-  const txt = d.toLocaleDateString("ar-EG", { weekday: "long", day: "numeric", month: "long" });
+  const locale = getLang() === "ar" ? "ar-EG" : "en-US";
+  const txt = d.toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long" });
   ["dateDisplay", "dateDisplayDelivery", "dateDisplayCustomers"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.textContent = txt;
@@ -99,24 +131,24 @@ function renderStats() {
 
   document.getElementById("statsRow").innerHTML = `
     <div class="stat">
-      <div class="label">طلبات اليوم</div>
+      <div class="label">${t("admin.stat.today_orders")}</div>
       <div class="value">${todayCount}</div>
-      <div class="hint">${todayCount ? "طلب جديد اليوم" : "لا توجد طلبات اليوم بعد"}</div>
+      <div class="hint">${todayCount ? todayCount + " " + t("admin.stat.today_orders_hint") : t("admin.stat.today_orders_none")}</div>
     </div>
     <div class="stat">
-      <div class="label">مبيعات اليوم</div>
+      <div class="label">${t("admin.stat.today_sales")}</div>
       <div class="value">${Utils.fmt(todaySales)}</div>
-      <div class="hint">من الطلبات المؤكدة</div>
+      <div class="hint">${t("admin.stat.today_sales_hint")}</div>
     </div>
     <div class="stat">
-      <div class="label">إجمالي المنتجات</div>
+      <div class="label">${t("admin.stat.total_products")}</div>
       <div class="value">${products.length}</div>
-      <div class="hint">${products.length ? "في الكتالوج" : "لا منتجات"}</div>
+      <div class="hint">${products.length ? t("admin.stat.products_in_catalog") : t("admin.stat.products_none")}</div>
     </div>
     <div class="stat ${lowStock ? "danger" : ""}">
-      <div class="label">تنبيه مخزون</div>
+      <div class="label">${t("admin.stat.stock_alert")}</div>
       <div class="value">${lowStock}</div>
-      <div class="hint">${lowStock ? "قطع قاربت على النفاد" : "كل شيء جيد"}</div>
+      <div class="hint">${lowStock ? t("admin.stat.stock_alert_hint") : t("admin.stat.stock_ok")}</div>
     </div>`;
 
   /* شارات */
@@ -137,14 +169,14 @@ function renderCityStats() {
   const orders = OrdersAPI.list();
   const map = {};
   orders.forEach(o => {
-    if (!map[o.cityId]) map[o.cityId] = { name: o.cityName, count: 0, total: 0 };
+    if (!map[o.cityId]) map[o.cityId] = { cityId: o.cityId, count: 0, total: 0 };
     map[o.cityId].count++;
     if (o.status !== "cancelled") map[o.cityId].total += (o.total || 0);
   });
   const rows = Object.values(map).sort((a, b) => b.count - a.count);
   document.getElementById("cityStatsBody").innerHTML = rows.length
-    ? rows.map(r => `<tr><td>${r.name}</td><td>${r.count}</td><td>${Utils.fmt(r.total)}</td></tr>`).join("")
-    : `<tr><td colspan="3" style="text-align:center; color:var(--muted)">لا توجد طلبات بعد.</td></tr>`;
+    ? rows.map(r => `<tr><td>${escapeHtml(Utils.cityById(r.cityId)?.name || r.cityId)}</td><td>${r.count}</td><td>${Utils.fmt(r.total)}</td></tr>`).join("")
+    : `<tr><td colspan="3" style="text-align:center; color:var(--muted)">${t("admin.dash.no_orders")}</td></tr>`;
 }
 
 function orderCode(id) { return "AMA-" + String(id).slice(-6).toUpperCase(); }
@@ -160,12 +192,12 @@ function renderRecentOrders() {
             <div class="cust-name">${escapeHtml(o.customer.name)}</div>
             <div class="cust-sub" dir="ltr">${escapeHtml(o.customer.phone)}</div>
           </td>
-          <td>${escapeHtml(o.cityName)}</td>
+          <td>${escapeHtml(Utils.cityById(o.cityId)?.name || o.cityName)}</td>
           <td>${itemsCount(o)}</td>
           <td>${Utils.fmt(o.total)}</td>
           <td><span class="pill ${o.status}">${Utils.statusInfo(o.status).label}</span></td>
         </tr>`).join("")
-    : `<tr><td colspan="6" style="text-align:center; color:var(--muted); padding:20px;">لا توجد طلبات بعد.</td></tr>`;
+    : `<tr><td colspan="6" style="text-align:center; color:var(--muted); padding:20px;">${t("admin.dash.no_orders")}</td></tr>`;
 
   document.querySelectorAll("#recentOrders tr[data-id]").forEach(tr => {
     tr.onclick = () => openOrderModal(tr.dataset.id);
@@ -185,9 +217,9 @@ const $stockGrid    = document.getElementById("stockGrid");
 
 function fillCategorySelects() {
   const opts = CATEGORIES.filter(c => c.id !== "all")
-                  .map(c => `<option value="${c.id}">${c.name}</option>`).join("");
+                  .map(c => `<option value="${c.id}">${t("category." + c.id)}</option>`).join("");
   document.getElementById("formCategory").innerHTML = opts;
-  $filterCat.innerHTML = `<option value="">كل التصنيفات</option>` + opts;
+  $filterCat.innerHTML = `<option value="">${t("admin.products.all_categories")}</option>` + opts;
 }
 
 let workingColors = []; /* في وقت تحرير المنتج */
@@ -397,13 +429,13 @@ function renderProductsTable() {
           <td>${stockPill(total)}</td>
           <td>
             <div class="actions">
-              <button class="icon-btn-sm" data-act="edit" data-id="${p.id}">تعديل</button>
-              <button class="icon-btn-sm danger" data-act="del" data-id="${p.id}">حذف</button>
+              <button class="icon-btn-sm" data-act="edit" data-id="${p.id}">${getLang() === "ar" ? "تعديل" : "Edit"}</button>
+              <button class="icon-btn-sm danger" data-act="del" data-id="${p.id}">${t("admin.delete")}</button>
             </div>
           </td>
         </tr>`;
       }).join("")
-    : `<tr><td colspan="8" style="text-align:center; color:var(--muted); padding:30px;">لا توجد منتجات.</td></tr>`;
+    : `<tr><td colspan="8" style="text-align:center; color:var(--muted); padding:30px;">${t("admin.products.none")}</td></tr>`;
 
   document.querySelectorAll("#productsTable button[data-act]").forEach(b => {
     b.onclick = () => {
@@ -421,8 +453,8 @@ $searchInput.oninput = renderProductsTable;
 $filterCat.onchange = renderProductsTable;
 
 function stockPill(stock) {
-  if (stock === 0) return `<span class="pill lowstock">نفد</span>`;
-  if (stock <= LOW_STOCK_THRESHOLD) return `<span class="pill lowstock">منخفض (${stock})</span>`;
+  if (stock === 0) return `<span class="pill lowstock">${t("admin.stock.out")}</span>`;
+  if (stock <= LOW_STOCK_THRESHOLD) return `<span class="pill lowstock">${t("admin.stock.low")} (${stock})</span>`;
   return `<span class="pill ok">${stock}</span>`;
 }
 
@@ -493,11 +525,11 @@ const $verifyBtn    = document.getElementById("verifyPaymentBtn");
 let currentOrderId = null;
 
 function fillFilters() {
-  $filterCity.innerHTML = `<option value="">كل المدن</option>` +
-    GAZA_CITIES.map(c => `<option value="${c.id}">${c.name}</option>`).join("");
-  $filterStatus.innerHTML = `<option value="">كل الحالات</option>` +
-    ORDER_STATUSES.map(s => `<option value="${s.id}">${s.label}</option>`).join("");
-  $orderStatus.innerHTML = ORDER_STATUSES.map(s => `<option value="${s.id}">${s.label}</option>`).join("");
+  $filterCity.innerHTML = `<option value="">${t("admin.orders.all_cities")}</option>` +
+    GAZA_CITIES.map(c => `<option value="${c.id}">${t("city." + c.id)}</option>`).join("");
+  $filterStatus.innerHTML = `<option value="">${t("admin.orders.all_statuses")}</option>` +
+    ORDER_STATUSES.map(s => `<option value="${s.id}">${t("status." + s.id)}</option>`).join("");
+  $orderStatus.innerHTML = ORDER_STATUSES.map(s => `<option value="${s.id}">${t("status." + s.id)}</option>`).join("");
 }
 $filterCity.onchange   = renderOrders;
 $filterStatus.onchange = renderOrders;
@@ -519,13 +551,13 @@ function renderOrders() {
             <div class="cust-sub" dir="ltr">${escapeHtml(o.customer.phone)}</div>
           </td>
           <td dir="ltr" style="text-align:right;">${escapeHtml(o.customer.phone)}</td>
-          <td>${escapeHtml(o.cityName)}</td>
+          <td>${escapeHtml(Utils.cityById(o.cityId)?.name || o.cityName)}</td>
           <td>${Utils.fmt(o.total)}</td>
           <td><span class="pill ${o.status}">${Utils.statusInfo(o.status).label}</span></td>
           <td>${Utils.formatDate(o.createdAt)}</td>
-          <td><button class="icon-btn-sm" data-id="${o.id}">عرض</button></td>
+          <td><button class="icon-btn-sm" data-id="${o.id}">${t("admin.order.view")}</button></td>
         </tr>`).join("")
-    : `<tr><td colspan="8" style="text-align:center; color:var(--muted); padding:30px;">لا توجد طلبات.</td></tr>`;
+    : `<tr><td colspan="8" style="text-align:center; color:var(--muted); padding:30px;">${t("admin.orders.none")}</td></tr>`;
 
   document.querySelectorAll("#ordersTable button[data-id]").forEach(b =>
     b.onclick = () => openOrderModal(b.dataset.id)
@@ -551,38 +583,40 @@ function renderDelivery() {
 
   document.getElementById("deliveryStats").innerHTML = `
     <div class="stat">
-      <div class="label">جاهز للشحن</div>
+      <div class="label">${t("admin.delivery.ready_ship")}</div>
       <div class="value">${readyToShip}</div>
-      <div class="hint">قيد المعالجة</div>
+      <div class="hint">${t("status.pending")}</div>
     </div>
     <div class="stat warn">
-      <div class="label">قيد التوصيل</div>
+      <div class="label">${t("admin.delivery.in_transit")}</div>
       <div class="value">${inTransit}</div>
-      <div class="hint">تم الشحن</div>
+      <div class="hint">${t("status.shipped")}</div>
     </div>
     <div class="stat">
-      <div class="label">تم التوصيل</div>
+      <div class="label">${t("admin.delivery.delivered")}</div>
       <div class="value">${delivered}</div>
-      <div class="hint">طلبات مكتملة</div>
+      <div class="hint">${t("admin.delivery.completed")}</div>
     </div>
     <div class="stat">
-      <div class="label">مدن نشطة</div>
+      <div class="label">${t("admin.delivery.active_cities")}</div>
       <div class="value">${cityCount}</div>
-      <div class="hint">في الشحنة الحالية</div>
+      <div class="hint">${t("admin.delivery.in_shipment")}</div>
     </div>`;
 
   /* ملء قائمة المدن */
   const $dCity = document.getElementById("deliveryCityFilter");
-  if ($dCity && $dCity.options.length <= 1) {
-    $dCity.innerHTML = `<option value="">كل المدن</option>` +
-      GAZA_CITIES.map(c => `<option value="${c.id}">${c.name}</option>`).join("");
+  if ($dCity) {
+    const curr = $dCity.value;
+    $dCity.innerHTML = `<option value="">${t("admin.orders.all_cities")}</option>` +
+      GAZA_CITIES.map(c => `<option value="${c.id}">${t("city." + c.id)}</option>`).join("");
+    $dCity.value = curr;
     $dCity.onchange = renderDelivery;
   }
 
   document.getElementById("deliveryTable").innerHTML = delivOrders.length
     ? delivOrders.map(o => {
         const nextStatus = o.status === "pending" ? "shipped" : "delivered";
-        const nextLabel  = o.status === "pending" ? "↑ شحن الآن" : "✓ تم التوصيل";
+        const nextLabel  = o.status === "pending" ? t("admin.delivery.ship_now") : t("admin.delivery.mark_delivered");
         return `
         <tr>
           <td><span class="order-code">${orderCode(o.id)}</span></td>
@@ -590,19 +624,19 @@ function renderDelivery() {
             <div class="cust-name">${escapeHtml(o.customer.name)}</div>
             <div class="cust-sub" dir="ltr">${escapeHtml(o.customer.phone)}</div>
           </td>
-          <td>${escapeHtml(o.cityName)}<br><small style="color:var(--muted)">${escapeHtml(o.customer.area)}</small></td>
+          <td>${escapeHtml(Utils.cityById(o.cityId)?.name || o.cityName)}<br><small style="color:var(--muted)">${escapeHtml(o.customer.area)}</small></td>
           <td>${itemsCount(o)}</td>
           <td>${Utils.fmt(o.total)}</td>
           <td><span class="pill ${o.status}">${Utils.statusInfo(o.status).label}</span></td>
           <td><button class="icon-btn-sm ok" data-quick="${o.id}" data-next="${nextStatus}">${nextLabel}</button></td>
         </tr>`;
       }).join("")
-    : `<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:30px;">لا توجد طلبات قيد التوصيل حالياً.</td></tr>`;
+    : `<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:30px;">${t("admin.delivery.none")}</td></tr>`;
 
   document.querySelectorAll("button[data-quick]").forEach(b => {
     b.onclick = () => {
       OrdersAPI.updateStatus(b.dataset.quick, b.dataset.next);
-      showToast("تم تحديث الحالة ✓");
+      showToast(t("admin.delivery.updated"));
       refreshAll();
     };
   });
@@ -619,10 +653,10 @@ function aggregateCustomers() {
     if (!map[key]) map[key] = {
       name: o.customer.name, phone: o.customer.phone,
       orderCount: 0, totalSpent: 0,
-      cities: new Set(), lastOrder: o.createdAt,
+      cityIds: new Set(), lastOrder: o.createdAt,
     };
     map[key].orderCount++;
-    map[key].cities.add(o.cityName);
+    map[key].cityIds.add(o.cityId);
     if (o.status !== "cancelled") map[key].totalSpent += (o.total || 0);
     if (new Date(o.createdAt) > new Date(map[key].lastOrder)) map[key].lastOrder = o.createdAt;
   });
@@ -641,24 +675,24 @@ function renderCustomers() {
 
   document.getElementById("customersStats").innerHTML = `
     <div class="stat">
-      <div class="label">إجمالي العملاء</div>
+      <div class="label">${t("admin.customers.total")}</div>
       <div class="value">${customers.length}</div>
-      <div class="hint">عميل فريد</div>
+      <div class="hint">${t("admin.customers.unique")}</div>
     </div>
     <div class="stat">
-      <div class="label">عملاء متكررون</div>
+      <div class="label">${t("admin.customers.repeat")}</div>
       <div class="value">${repeat}</div>
-      <div class="hint">طلبوا أكثر من مرة</div>
+      <div class="hint">${t("admin.customers.repeat_hint")}</div>
     </div>
     <div class="stat">
-      <div class="label">إجمالي الإنفاق</div>
+      <div class="label">${t("admin.customers.total_spent")}</div>
       <div class="value">${Utils.fmt(totalSpent)}</div>
-      <div class="hint">من كل العملاء</div>
+      <div class="hint">${t("admin.customers.spent_hint")}</div>
     </div>
     <div class="stat">
-      <div class="label">متوسط الطلب</div>
+      <div class="label">${t("admin.customers.avg")}</div>
       <div class="value">${customers.length ? Utils.fmt(Math.round(totalSpent / customers.reduce((s,c)=>s+c.orderCount,0) || 1)) : "0 ₪"}</div>
-      <div class="hint">قيمة الطلب الواحد</div>
+      <div class="hint">${t("admin.customers.avg_hint")}</div>
     </div>`;
 
   document.getElementById("customersCount").textContent = filtered.length;
@@ -667,12 +701,12 @@ function renderCustomers() {
         <tr>
           <td><div class="cust-name">${escapeHtml(c.name)}</div></td>
           <td dir="ltr" style="text-align:right;">${escapeHtml(c.phone)}</td>
-          <td>${[...c.cities].map(escapeHtml).join(" · ")}</td>
+          <td>${[...c.cityIds].map(id => escapeHtml(Utils.cityById(id)?.name || id)).join(" · ")}</td>
           <td>${c.orderCount}</td>
           <td>${Utils.fmt(c.totalSpent)}</td>
           <td>${Utils.formatDate(c.lastOrder)}</td>
         </tr>`).join("")
-    : `<tr><td colspan="6" style="text-align:center; color:var(--muted); padding:30px;">لا يوجد عملاء بعد.</td></tr>`;
+    : `<tr><td colspan="6" style="text-align:center; color:var(--muted); padding:30px;">${t("admin.customers.none")}</td></tr>`;
 }
 
 document.addEventListener("input", (e) => {
@@ -690,28 +724,30 @@ function openOrderModal(id) {
       <span>${Utils.fmt(it.price * it.qty)}</span>
     </div>`).join("");
 
-  const proofHtml = o.paymentProof
-    ? `<div class="proof"><strong>صورة التحويل:</strong><br>
-         <a href="${o.paymentProof}" target="_blank"><img src="${o.paymentProof}" alt="إيصال التحويل"></a></div>`
-    : `<div class="proof" style="color:var(--danger)"><strong>⚠️ لا توجد صورة تحويل مرفقة</strong></div>`;
+
+  const cityName = Utils.cityById(o.cityId)?.name || o.cityName;
+  const proofLabel  = t("admin.order.proof");
+  const noProof     = t("admin.order.no_proof");
 
   $orderBody.innerHTML = `
     <div class="order-detail">
-      <div class="line"><span>رقم الطلب</span><strong>#${o.id.slice(-6)}</strong></div>
-      <div class="line"><span>الحالة</span><strong><span class="pill ${o.status}">${Utils.statusInfo(o.status).label}</span></strong></div>
-      <div class="line"><span>الاسم</span><strong>${escapeHtml(o.customer.name)}</strong></div>
-      <div class="line"><span>الجوال</span><strong dir="ltr">${escapeHtml(o.customer.phone)}</strong></div>
-      <div class="line"><span>المدينة</span><strong>${escapeHtml(o.cityName)}</strong></div>
-      <div class="line"><span>الحي/الشارع</span><strong>${escapeHtml(o.customer.area)}</strong></div>
-      ${o.customer.notes ? `<div class="line"><span>ملاحظات</span><strong>${escapeHtml(o.customer.notes)}</strong></div>` : ""}
-      <div class="line"><span>التاريخ</span><strong>${Utils.formatDate(o.createdAt)}</strong></div>
-      <div class="items"><strong>المنتجات:</strong>${itemsHtml}</div>
-      <div class="line" style="margin-top:8px;"><span>المجموع الفرعي</span><strong>${Utils.fmt(o.subtotal)}</strong></div>
-      ${o.savings > 0 ? `<div class="line"><span>خصم المنتجات</span><strong style="color:var(--ok)">− ${Utils.fmt(o.savings)}</strong></div>` : ""}
-      ${o.couponDiscount > 0 ? `<div class="line"><span>كود الخصم (${escapeHtml(o.couponCode || "")})</span><strong style="color:var(--ok)">− ${Utils.fmt(o.couponDiscount)}</strong></div>` : ""}
-      <div class="line"><span>التوصيل</span><strong>${Utils.fmt(o.deliveryFee)}</strong></div>
-      <div class="line"><span>الإجمالي</span><strong style="color:var(--gold)">${Utils.fmt(o.total)}</strong></div>
-      ${proofHtml}
+      <div class="line"><span>${t("admin.order.code_label")}</span><strong>${orderCode(o.id)}</strong></div>
+      <div class="line"><span>${t("admin.order.status_label")}</span><strong><span class="pill ${o.status}">${Utils.statusInfo(o.status).label}</span></strong></div>
+      <div class="line"><span>${t("admin.order.name")}</span><strong>${escapeHtml(o.customer.name)}</strong></div>
+      <div class="line"><span>${t("admin.order.phone")}</span><strong dir="ltr">${escapeHtml(o.customer.phone)}</strong></div>
+      <div class="line"><span>${t("admin.order.city")}</span><strong>${escapeHtml(cityName)}</strong></div>
+      <div class="line"><span>${t("admin.order.area")}</span><strong>${escapeHtml(o.customer.area)}</strong></div>
+      ${o.customer.notes ? `<div class="line"><span>${t("admin.order.notes")}</span><strong>${escapeHtml(o.customer.notes)}</strong></div>` : ""}
+      <div class="line"><span>${t("admin.order.date")}</span><strong>${Utils.formatDate(o.createdAt)}</strong></div>
+      <div class="items"><strong>${t("admin.order.products")}</strong>${itemsHtml}</div>
+      <div class="line" style="margin-top:8px;"><span>${t("admin.order.subtotal")}</span><strong>${Utils.fmt(o.subtotal)}</strong></div>
+      ${o.savings > 0 ? `<div class="line"><span>${t("admin.order.discount_products")}</span><strong style="color:var(--ok)">− ${Utils.fmt(o.savings)}</strong></div>` : ""}
+      ${o.couponDiscount > 0 ? `<div class="line"><span>${t("admin.order.coupon")} (${escapeHtml(o.couponCode || "")})</span><strong style="color:var(--ok)">− ${Utils.fmt(o.couponDiscount)}</strong></div>` : ""}
+      <div class="line"><span>${t("admin.order.delivery")}</span><strong>${Utils.fmt(o.deliveryFee)}</strong></div>
+      <div class="line"><span>${t("admin.order.total")}</span><strong style="color:var(--gold)">${Utils.fmt(o.total)}</strong></div>
+      ${o.paymentProof
+        ? `<div class="proof"><strong>${proofLabel}</strong><br><a href="${o.paymentProof}" target="_blank"><img src="${o.paymentProof}" alt=""></a></div>`
+        : `<div class="proof" style="color:var(--danger)"><strong>${noProof}</strong></div>`}
     </div>`;
   $orderStatus.value = o.status;
   $verifyBtn.style.display = o.status === "awaiting" ? "inline-block" : "none";
@@ -722,14 +758,14 @@ document.getElementById("saveOrderStatus").onclick = () => {
   if (!currentOrderId) return;
   OrdersAPI.updateStatus(currentOrderId, $orderStatus.value);
   $orderModal.classList.remove("open");
-  showToast("تم تحديث حالة الطلب");
+  showToast(t("admin.order.status_updated"));
   refreshAll();
 };
 $verifyBtn.onclick = () => {
   if (!currentOrderId) return;
   OrdersAPI.updateStatus(currentOrderId, "pending");
   $orderModal.classList.remove("open");
-  showToast("تم تأكيد الدفع، الطلب الآن قيد المعالجة");
+  showToast(t("admin.order.payment_verified"));
   refreshAll();
 };
 
@@ -960,7 +996,7 @@ function checkForNewOrders() {
     const soundOn = SettingsAPI.get().soundEnabled !== false;
     if (soundOn) chime();
     flashTitle();
-    showToast(`🔔 ${count - lastSeenOrdersCount} طلب جديد!`);
+    showToast(`🔔 ${count - lastSeenOrdersCount} ${t("admin.order.new_alert")}`);
   }
   lastSeenOrdersCount = count;
 }

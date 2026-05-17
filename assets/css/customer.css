@@ -56,6 +56,26 @@ button { font-family: inherit; cursor: pointer; }
 }
 .contact-bar a:hover { color: #fff; }
 
+.lang-toggle {
+  background: transparent;
+  border: 1px solid var(--gold-soft);
+  color: var(--gold-2);
+  padding: 4px 14px;
+  border-radius: 999px;
+  font-size: 12px; font-weight: 700;
+  letter-spacing: .5px;
+  cursor: pointer;
+  transition: all var(--t);
+}
+.lang-toggle:hover { background: var(--gold); color: #000; border-color: var(--gold); }
+
+/* تعديلات اتجاه LTR */
+html[dir="ltr"] body { line-height: 1.55; }
+html[dir="ltr"] .cart-drawer { right: auto; left: 0; transform: translateX(-100%); border-right: none; border-left: 1px solid var(--line); }
+html[dir="ltr"] .cart-drawer.open { transform: translateX(0); }
+html[dir="ltr"] .nav-links a::after { right: auto; left: 0; }
+html[dir="ltr"] .brand-text em { font-style: italic; }
+
 /* =========================================================
    شريط علوي
 ========================================================= */

@@ -36,9 +36,10 @@
   <div class="contact-bar">
     <div class="contact-inner">
       <a href="#" id="phoneLink">📞 <span id="phoneText">—</span></a>
-      <a href="#" id="whatsappLink" target="_blank" rel="noopener">💬 واتساب: <span id="whatsappText">—</span></a>
-      <a href="#" id="instagramLink" target="_blank" rel="noopener">📷 إنستغرام: <span id="instagramText">—</span></a>
-      <a href="#" id="trackOrderLink">📦 تتبع طلبي</a>
+      <a href="#" id="whatsappLink" target="_blank" rel="noopener">💬 <span data-i18n="contact.whatsapp">واتساب</span>: <span id="whatsappText">—</span></a>
+      <a href="#" id="instagramLink" target="_blank" rel="noopener">📷 <span data-i18n="contact.instagram">إنستغرام</span>: <span id="instagramText">—</span></a>
+      <a href="#" id="trackOrderLink" data-i18n="contact.track">📦 تتبع طلبي</a>
+      <button class="lang-toggle" id="langToggle" type="button">EN / عربي</button>
     </div>
   </div>
 
@@ -52,12 +53,12 @@
         <span class="brand-text" style="display:none;">عبايات <em>أمل</em></span>
       </a>
       <nav class="nav-links">
-        <a href="#products">المنتجات</a>
-        <a href="#categoriesBar">التصنيفات</a>
-        <a href="admin.html">لوحة الإدارة</a>
+        <a href="#products"      data-i18n="nav.products">المنتجات</a>
+        <a href="#categoriesBar" data-i18n="nav.categories">التصنيفات</a>
+        <a href="admin.html"     data-i18n="nav.admin">لوحة الإدارة</a>
       </nav>
-      <button class="cart-btn" id="openCart" aria-label="فتح السلة">
-        🛍️ <span>عربة التسوق</span>
+      <button class="cart-btn" id="openCart" aria-label="cart">
+        🛍️ <span data-i18n="nav.cart">عربة التسوق</span>
         <span class="cart-badge" id="cartBadge">0</span>
       </button>
     </div>
@@ -65,9 +66,9 @@
 
   <!-- ============ Hero ============ -->
   <section class="hero">
-    <h1 id="headlineText">عبايات وأكثر تجدينها لدى عبايات أمل</h1>
-    <p>تشكيلة منتقاة من العبايات الفاخرة، عملية ومناسبات وسوداء ومفتوحة. توصيل لكل مدن قطاع غزة.</p>
-    <a href="#products" class="btn-gold">تسوّقي الآن</a>
+    <h1 id="headlineText" data-i18n="hero.headline">عبايات وأكثر تجدينها لدى عبايات أمل</h1>
+    <p data-i18n="hero.sub">تشكيلة منتقاة من العبايات الفاخرة، عملية ومناسبات وسوداء ومفتوحة. توصيل لكل مدن قطاع غزة.</p>
+    <a href="#products" class="btn-gold" data-i18n="hero.cta">تسوّقي الآن</a>
   </section>
 
   <!-- ============ التصنيفات ============ -->
@@ -76,7 +77,7 @@
   <!-- ============ المنتجات ============ -->
   <section class="section" id="products">
     <div class="section-title">
-      <h2 id="categoryTitle">تشكيلتنا</h2>
+      <h2 id="categoryTitle" data-i18n="section.collection">تشكيلتنا</h2>
       <div class="line"></div>
     </div>
     <div class="grid" id="productsGrid"></div>
@@ -86,10 +87,10 @@
   <footer class="footer">
     <div class="contact-row">
       <a href="#" id="footerPhone">📞 <span id="footerPhoneText">—</span></a>
-      <a href="#" id="footerWa" target="_blank" rel="noopener">💬 واتساب</a>
-      <a href="#" id="footerIg" target="_blank" rel="noopener">📷 إنستغرام</a>
+      <a href="#" id="footerWa" target="_blank" rel="noopener">💬 <span data-i18n="contact.whatsapp">واتساب</span></a>
+      <a href="#" id="footerIg" target="_blank" rel="noopener">📷 <span data-i18n="contact.instagram">إنستغرام</span></a>
     </div>
-    <p>© <span id="year"></span> <span class="gold">عبايات أمل</span>  —  جميع الحقوق محفوظة. صُنع بحبٍّ في قطاع غزة.</p>
+    <p>© <span id="year"></span> <span class="gold">Amal · عبايات أمل</span>  —  <span data-i18n="footer.copyright">جميع الحقوق محفوظة. صُنع بحبٍّ في قطاع غزة.</span></p>
   </footer>
 
   <!-- ============ Modal تفاصيل المنتج ============ -->
@@ -103,80 +104,80 @@
 
   <!-- ============ درج السلة ============ -->
   <div class="cart-overlay" id="cartOverlay"></div>
-  <aside class="cart-drawer" id="cartDrawer" aria-label="سلة المشتريات">
+  <aside class="cart-drawer" id="cartDrawer" aria-label="cart">
     <div class="cart-head">
-      <h3>🛍️ عربة التسوق</h3>
-      <button class="icon-btn" id="closeCart" aria-label="إغلاق">✕</button>
+      <h3 data-i18n="cart.title">🛍️ عربة التسوق</h3>
+      <button class="icon-btn" id="closeCart" aria-label="close">✕</button>
     </div>
     <div class="cart-body" id="cartBody"></div>
     <div class="cart-foot">
-      <div class="row"><span>المجموع الفرعي</span><span id="subTotal">0 ₪</span></div>
-      <button class="checkout-btn" id="goCheckout" disabled>إتمام الطلب</button>
+      <div class="row"><span data-i18n="cart.subtotal">المجموع الفرعي</span><span id="subTotal">0 ₪</span></div>
+      <button class="checkout-btn" id="goCheckout" disabled data-i18n="cart.checkout">إتمام الطلب</button>
     </div>
   </aside>
 
   <!-- ============ Modal إتمام الطلب ============ -->
   <div class="modal" id="checkoutModal">
     <div class="modal-box">
-      <h3>إتمام الطلب</h3>
-      <p class="sub">املئي بياناتك، حوّلي المبلغ على أحد الحسابات، ثم ارفعي صورة التحويل.</p>
+      <h3 data-i18n="checkout.title">إتمام الطلب</h3>
+      <p class="sub" data-i18n="checkout.sub">املئي بياناتك، حوّلي المبلغ على أحد الحسابات، ثم ارفعي صورة التحويل.</p>
 
       <form id="checkoutForm" novalidate>
         <div class="row-2">
           <div class="field">
-            <label>الاسم الكامل</label>
+            <label data-i18n="checkout.name">الاسم الكامل</label>
             <input type="text" name="name" required />
           </div>
           <div class="field">
-            <label>رقم الجوال</label>
+            <label data-i18n="checkout.phone">رقم الجوال</label>
             <input type="tel" name="phone" pattern="[0-9+\s]{7,}" required />
           </div>
         </div>
 
         <div class="row-2">
           <div class="field">
-            <label>المدينة / المنطقة</label>
+            <label data-i18n="checkout.city">المدينة / المنطقة</label>
             <select name="city" id="citySelect" required></select>
           </div>
           <div class="field">
-            <label>الحي / الشارع</label>
-            <input type="text" name="area" placeholder="حي الرمال - شارع عمر المختار" required />
+            <label data-i18n="checkout.area">الحي / الشارع</label>
+            <input type="text" name="area" data-i18n-placeholder="checkout.area_placeholder" required />
           </div>
         </div>
 
         <div class="field">
-          <label>ملاحظات (اختياري)</label>
-          <textarea name="notes" rows="2" placeholder="معلم قريب، وقت تواصل مفضل..."></textarea>
+          <label data-i18n="checkout.notes">ملاحظات (اختياري)</label>
+          <textarea name="notes" rows="2" data-i18n-placeholder="checkout.notes_placeholder"></textarea>
         </div>
 
         <!-- كود الخصم -->
-        <label class="opt-label" style="display:block; margin: 4px 0 8px;">🎟️ هل لديكِ كود خصم؟</label>
+        <label class="opt-label" style="display:block; margin: 4px 0 8px;" data-i18n="checkout.coupon_q">🎟️ هل لديكِ كود خصم؟</label>
         <div class="coupon-row">
-          <input type="text" id="couponInput" placeholder="أدخلي الكود (مثل WELCOME10)" autocomplete="off">
-          <button type="button" id="applyCouponBtn">تطبيق</button>
+          <input type="text" id="couponInput" data-i18n-placeholder="checkout.coupon_placeholder" autocomplete="off">
+          <button type="button" id="applyCouponBtn" data-i18n="checkout.apply">تطبيق</button>
         </div>
         <div id="couponStatus" class="coupon-status"></div>
 
         <div class="summary" id="checkoutSummary"></div>
 
         <!-- الحسابات البنكية -->
-        <label class="opt-label" style="display:block; margin: 16px 0 8px;">💳 حوّلي المبلغ على أحد الحسابات التالية:</label>
+        <label class="opt-label" style="display:block; margin: 16px 0 8px;" data-i18n="checkout.banks">💳 حوّلي المبلغ على أحد الحسابات التالية:</label>
         <div id="bankAccountsList"></div>
 
         <!-- رفع صورة التحويل -->
-        <label class="opt-label" style="display:block; margin: 16px 0 8px;">📸 ارفعي صورة التحويل (مطلوبة لتأكيد الطلب):</label>
+        <label class="opt-label" style="display:block; margin: 16px 0 8px;" data-i18n="checkout.proof">📸 ارفعي صورة التحويل (مطلوبة لتأكيد الطلب):</label>
         <label class="upload-zone" id="proofZone">
           <input type="file" id="proofInput" accept="image/*" />
           <div class="uz-icon">⬆️</div>
-          <div>اسحبي الصورة هنا أو انقري للاختيار</div>
-          <div style="font-size:12px; margin-top:4px;">PNG / JPG  —  حتى 3 ميجا</div>
+          <div data-i18n="checkout.upload_hint">اسحبي الصورة هنا أو انقري للاختيار</div>
+          <div style="font-size:12px; margin-top:4px;" data-i18n="checkout.upload_hint_2">PNG / JPG  —  حتى 3 ميجا</div>
         </label>
         <div id="proofPreview"></div>
 
         <div style="display:flex; gap:10px; margin-top: 16px;">
-          <button type="submit" class="checkout-btn" style="flex:1;" id="submitOrderBtn">تأكيد الطلب</button>
+          <button type="submit" class="checkout-btn" style="flex:1;" id="submitOrderBtn" data-i18n="checkout.confirm">تأكيد الطلب</button>
           <button type="button" class="icon-btn" id="cancelCheckout"
-                  style="border:1px solid var(--line); padding:0 18px; border-radius:999px;">إلغاء</button>
+                  style="border:1px solid var(--line); padding:0 18px; border-radius:999px;" data-i18n="checkout.cancel">إلغاء</button>
         </div>
       </form>
     </div>
@@ -185,16 +186,16 @@
   <!-- ============ Modal تتبع الطلب ============ -->
   <div class="modal" id="trackModal">
     <div class="modal-box">
-      <h3>📦 تتبع طلبي</h3>
-      <p class="sub">أدخلي رمز الطلب الذي وصلكِ (مثل AMA-XXXXXX) لمعرفة حالته.</p>
+      <h3 data-i18n="track.title">📦 تتبع طلبي</h3>
+      <p class="sub" data-i18n="track.sub">أدخلي رمز الطلب الذي وصلكِ (مثل AMA-XXXXXX) لمعرفة حالته.</p>
       <div class="field">
-        <label>رمز الطلب</label>
+        <label data-i18n="track.code">رمز الطلب</label>
         <input type="text" id="trackInput" placeholder="AMA-XXXXXX" autocomplete="off" style="text-transform:uppercase;" />
       </div>
       <div style="display:flex; gap:10px; margin-bottom:14px;">
-        <button class="checkout-btn" id="trackSearchBtn" style="flex:1;">بحث</button>
+        <button class="checkout-btn" id="trackSearchBtn" style="flex:1;" data-i18n="track.search">بحث</button>
         <button class="icon-btn" id="trackCloseBtn"
-                style="border:1px solid var(--line); padding:0 18px; border-radius:999px;">إغلاق</button>
+                style="border:1px solid var(--line); padding:0 18px; border-radius:999px;" data-i18n="track.close">إغلاق</button>
       </div>
       <div id="trackResult"></div>
     </div>
@@ -204,9 +205,9 @@
   <div class="modal" id="successModal">
     <div class="modal-box success-card">
       <div class="icon">✅</div>
-      <h3>تم استلام طلبك بنجاح!</h3>
-      <p class="sub">طلبك الآن بانتظار تأكيد الدفع من قِبَل الإدارة، وسنتواصل معكِ قريباً عبر الجوال أو الواتساب.</p>
-      <button class="btn-gold" id="successOk">شكراً لكِ</button>
+      <h3 data-i18n="success.title">تم استلام طلبك بنجاح!</h3>
+      <p class="sub" data-i18n="success.body">طلبك الآن بانتظار تأكيد الدفع من قِبَل الإدارة، وسنتواصل معكِ قريباً عبر الجوال أو الواتساب.</p>
+      <button class="btn-gold" id="successOk" data-i18n="success.btn">شكراً لكِ</button>
     </div>
   </div>
 

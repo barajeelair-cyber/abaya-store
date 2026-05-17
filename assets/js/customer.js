@@ -41,8 +41,12 @@ const $pdContent  = document.getElementById("pdetailsContent");
 
 /* ---------- تطبيق إعدادات المتجر ---------- */
 function applySettings() {
+  applyTranslations();
   const s = SettingsAPI.get();
-  document.getElementById("headlineText").textContent = s.headline || "عبايات وأكثر تجدينها لدى عبايات أمل";
+  /* لا نُجبر headline على ما حفظه الأدمن إذا كان المستخدم بدّل اللغة - فقط استخدم الحفظ في AR */
+  if (getLang() === "ar" && s.headline) {
+    document.getElementById("headlineText").textContent = s.headline;
+  }
 
   const phoneText = s.contact?.phone || "";
   const waText    = s.contact?.whatsapp || "";
@@ -89,7 +93,7 @@ function trackOrder() {
   if (!order) {
     result.innerHTML = `
       <div class="bank-card" style="border-color:var(--danger); text-align:center;">
-        <p style="color:var(--danger); margin:0;">❌ لم نجد طلباً بهذا الرمز.<br><small style="color:var(--muted)">تأكدي من الرمز أو تواصلي معنا عبر الواتساب.</small></p>
+        <p style="color:var(--danger); margin:0;">${t("track.not_found")}<br><small style="color:var(--muted)">${t("track.not_found_hint")}</small></p>
       </div>`;
     return;
   }
@@ -106,7 +110,7 @@ function trackOrder() {
     </div>`).join("");
 
   const stepsHtml = isCancelled
-    ? `<div style="text-align:center; color:var(--danger); padding:14px 0; font-weight:700;">⛔ الطلب ملغي</div>`
+    ? `<div style="text-align:center; color:var(--danger); padding:14px 0; font-weight:700;">${t("track.cancelled")}</div>`
     : `
       <div class="track-steps">
         ${steps.map((s, i) => {
@@ -119,29 +123,31 @@ function trackOrder() {
         }).join('<div class="line ' + (currentStepIdx > 0 ? 'done' : '') + '"></div>')}
       </div>`;
 
+  const cityName = Utils.cityById(order.cityId)?.name || order.cityName;
+
   result.innerHTML = `
     <div class="bank-card" style="background: linear-gradient(135deg, #1a1408, #0c0c0c);">
       <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-        <span style="color:var(--muted)">رقم الطلب</span>
+        <span style="color:var(--muted)">${t("track.code_label")}</span>
         <strong style="color:var(--gold-2)">AMA-${String(order.id).slice(-6).toUpperCase()}</strong>
       </div>
       <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-        <span style="color:var(--muted)">الحالة الحالية</span>
+        <span style="color:var(--muted)">${t("track.status_now")}</span>
         <strong style="color:var(--gold-2)">${statusInfo.label}</strong>
       </div>
       <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-        <span style="color:var(--muted)">التاريخ</span>
+        <span style="color:var(--muted)">${t("track.date")}</span>
         <strong>${Utils.formatDate(order.createdAt)}</strong>
       </div>
       <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-        <span style="color:var(--muted)">المدينة</span>
-        <strong>${escapeHtml(order.cityName)}</strong>
+        <span style="color:var(--muted)">${t("track.city")}</span>
+        <strong>${escapeHtml(cityName)}</strong>
       </div>
       ${stepsHtml}
       <div style="border-top:1px dashed var(--line); margin-top:10px; padding-top:8px;">
         ${itemsHtml}
         <div style="display:flex; justify-content:space-between; margin-top:8px; padding-top:8px; border-top:1px dashed var(--line);">
-          <strong>الإجمالي</strong>
+          <strong>${t("checkout.total")}</strong>
           <strong style="color:var(--gold-2)">${Utils.fmt(order.total)}</strong>
         </div>
       </div>
@@ -156,13 +162,13 @@ function $(id) { return document.getElementById(id); }
 function renderCategories() {
   $catsBar.innerHTML = CATEGORIES.map(c => `
     <button class="cat-pill ${c.id === currentCategory ? "active" : ""}" data-id="${c.id}">
-      ${c.name}
+      ${t("category." + c.id)}
     </button>`).join("");
   $catsBar.querySelectorAll(".cat-pill").forEach(b => {
     b.onclick = () => {
       currentCategory = b.dataset.id;
       const cat = Utils.categoryById(currentCategory);
-      $catTitle.textContent = cat.id === "all" ? "تشكيلتنا" : cat.name;
+      $catTitle.textContent = cat.id === "all" ? t("section.collection") : cat.name;
       renderCategories();
       renderProducts();
     };
@@ -189,9 +195,9 @@ function renderProducts() {
     return `
       <article class="card" data-id="${p.id}">
         <div class="img-wrap">
-          ${out ? `<span class="badge badge-out">نفد المخزون</span>` : ""}
-          ${low && !out ? `<span class="badge badge-low">قطع محدودة</span>` : ""}
-          ${hasDiscount ? `<span class="badge badge-discount">خصم ${p.discount}%</span>` : ""}
+          ${out ? `<span class="badge badge-out">${t("product.out_of_stock")}</span>` : ""}
+          ${low && !out ? `<span class="badge badge-low">${t("product.limited")}</span>` : ""}
+          ${hasDiscount ? `<span class="badge badge-discount">${t("product.discount_label")} ${p.discount}%</span>` : ""}
           <img src="${escapeHtml(cover)}" alt="${escapeHtml(p.name)}" loading="lazy" />
         </div>
         <div class="card-body">
@@ -203,12 +209,12 @@ function renderProducts() {
               <span class="price">${Utils.fmt(final)}</span>
             </div>
             <button class="view-btn" ${out ? "disabled" : ""}>
-              ${out ? "غير متوفر" : "عرض"}
+              ${out ? t("product.unavailable") : t("product.view")}
             </button>
           </div>
         </div>
       </article>`;
-  }).join("") : `<p style="grid-column:1/-1; text-align:center; color:var(--muted); padding:50px 0;">لا توجد منتجات في هذا التصنيف بعد.</p>`;
+  }).join("") : `<p style="grid-column:1/-1; text-align:center; color:var(--muted); padding:50px 0;">${t("section.no_products")}</p>`;
 
   $grid.querySelectorAll(".card").forEach(card => {
     card.querySelector(".view-btn")?.addEventListener("click", () => openProductModal(card.dataset.id));
@@ -263,25 +269,25 @@ function renderProductModal() {
       <div class="price-block">
         ${hasDiscount ? `<span class="price-old">${Utils.fmt(p.price)}</span>` : ""}
         <span class="price">${Utils.fmt(finalPrice)}</span>
-        ${hasDiscount ? `<span class="badge badge-discount" style="position:static">خصم ${p.discount}%</span>` : ""}
+        ${hasDiscount ? `<span class="badge badge-discount" style="position:static">${t("product.discount_label")} ${p.discount}%</span>` : ""}
       </div>
 
-      <div class="opt-label">اللون:</div>
+      <div class="opt-label">${t("product.color")}</div>
       <div class="colors-row" id="colorsRow">${colorsHtml}</div>
 
-      <div class="opt-label">المقاس:</div>
+      <div class="opt-label">${t("product.size")}</div>
       <div class="sizes-row" id="sizesRow">${sizesHtml}</div>
 
       ${variantStock !== null
         ? `<div class="stock-line ${variantStock <= LOW_STOCK_THRESHOLD ? "low" : ""}">
-             ${variantStock === 0 ? "نفد هذا المقاس" : "متوفر: " + variantStock + " قطعة"}
+             ${variantStock === 0 ? t("product.size_out") : t("product.stock_available") + " " + variantStock + " " + t("product.stock_piece")}
            </div>`
-        : `<div class="stock-line">اختاري المقاس لمعرفة المتوفر</div>`
+        : `<div class="stock-line">${t("product.stock_choose_size")}</div>`
       }
 
       <div class="pdetails-actions">
         <button class="btn-gold" id="addToCartBtn" ${!selectedSize || variantStock === 0 ? "disabled" : ""}>
-          أضيفي إلى العربة
+          ${t("product.add_to_cart")}
         </button>
       </div>
     </div>`;
@@ -308,12 +314,12 @@ function addCurrentToCart() {
   if (!currentProduct || !selectedColor || !selectedSize) return;
   const p = currentProduct;
   const stk = ProductsAPI.variantStock(p, selectedColor, selectedSize);
-  if (stk <= 0) { showToast("نفد المخزون لهذه التركيبة"); return; }
+  if (stk <= 0) { showToast(t("cart.variant_out")); return; }
 
   const key = `${p.id}|${selectedColor}|${selectedSize}`;
   const existing = cart.get(key);
   const qty = existing ? existing.qty + 1 : 1;
-  if (qty > stk) { showToast("الكمية المتاحة أقل"); return; }
+  if (qty > stk) { showToast(t("cart.stock_less")); return; }
 
   const colorObj = p.colors.find(c => c.name === selectedColor);
   cart.set(key, {
@@ -330,7 +336,7 @@ function addCurrentToCart() {
   renderCart();
   closeProductModal();
   openCart();
-  showToast("تمت الإضافة إلى عربة التسوق ✨");
+  showToast(t("cart.add_success"));
 }
 
 /* =========================================================
@@ -343,7 +349,7 @@ function changeQty(key, delta) {
   const stk = ProductsAPI.variantStock(p, item.color, item.size);
   const next = item.qty + delta;
   if (next <= 0) cart.delete(key);
-  else if (next > stk) { showToast("لا يوجد كمية أكبر"); return; }
+  else if (next > stk) { showToast(t("cart.no_more")); return; }
   else item.qty = next;
   renderCart();
 }
@@ -358,7 +364,7 @@ function cartSavings() {
 
 function renderCart() {
   if (cart.size === 0) {
-    $cartBody.innerHTML = `<div class="cart-empty">عربة التسوق فارغة.<br/>اختاري ما يناسبك من التشكيلة.</div>`;
+    $cartBody.innerHTML = `<div class="cart-empty">${t("cart.empty")}<br/>${t("cart.empty_sub")}</div>`;
     $goCheckout.disabled = true;
   } else {
     $cartBody.innerHTML = [...cart.entries()].map(([key, it]) => `
@@ -400,8 +406,8 @@ $overlay.onclick   = closeCart;
 ========================================================= */
 function fillCities() {
   $citySel.innerHTML =
-    `<option value="" disabled selected>اختاري المدينة...</option>` +
-    GAZA_CITIES.map(c => `<option value="${c.id}">${c.name}  —  توصيل ${c.fee} ₪</option>`).join("");
+    `<option value="" disabled selected>${t("checkout.city_placeholder")}</option>` +
+    GAZA_CITIES.map(c => `<option value="${c.id}">${t("city." + c.id)}  —  ${t("checkout.delivery_to")} ${c.fee} ₪</option>`).join("");
 }
 
 function renderBankAccounts() {
@@ -409,22 +415,22 @@ function renderBankAccounts() {
   $bankList.innerHTML = banks.length ? banks.map(b => `
     <div class="bank-card">
       <h5>🏦 ${escapeHtml(b.bankName)}</h5>
-      <div class="row"><span>اسم الحساب</span><strong>${escapeHtml(b.accountName)}</strong></div>
+      <div class="row"><span>${t("checkout.bank_name")}</span><strong>${escapeHtml(b.accountName)}</strong></div>
       <div class="row">
-        <span>رقم الحساب</span>
+        <span>${t("checkout.bank_number")}</span>
         <strong>${escapeHtml(b.accountNumber)}</strong>
-        <button type="button" class="copy" data-copy="${escapeHtml(b.accountNumber)}">نسخ</button>
+        <button type="button" class="copy" data-copy="${escapeHtml(b.accountNumber)}">${t("checkout.copy")}</button>
       </div>
       <div class="row">
-        <span>IBAN</span>
+        <span>${t("checkout.bank_iban")}</span>
         <strong>${escapeHtml(b.iban)}</strong>
-        <button type="button" class="copy" data-copy="${escapeHtml(b.iban)}">نسخ</button>
+        <button type="button" class="copy" data-copy="${escapeHtml(b.iban)}">${t("checkout.copy")}</button>
       </div>
     </div>
-  `).join("") : `<p style="color:var(--muted); font-size:13px;">لا توجد حسابات بنكية مضافة. تواصلي مع الإدارة.</p>`;
+  `).join("") : `<p style="color:var(--muted); font-size:13px;">${t("checkout.no_banks")}</p>`;
 
   $bankList.querySelectorAll(".copy").forEach(b =>
-    b.onclick = () => { navigator.clipboard.writeText(b.dataset.copy); showToast("تم النسخ"); }
+    b.onclick = () => { navigator.clipboard.writeText(b.dataset.copy); showToast(t("checkout.copied")); }
   );
 }
 
@@ -444,12 +450,12 @@ function renderSummary() {
 
   const total = Math.max(0, sub + fee - couponDiscount);
   $summary.innerHTML = `
-    <div class="row"><span>عدد القطع</span><span>${[...cart.values()].reduce((n,it)=>n+it.qty,0)}</span></div>
-    <div class="row"><span>المجموع الفرعي</span><span>${Utils.fmt(sub)}</span></div>
-    ${saved > 0 ? `<div class="row discount"><span>خصم المنتجات</span><span>− ${Utils.fmt(saved)}</span></div>` : ""}
-    ${couponDiscount > 0 ? `<div class="row discount"><span>كود الخصم (${escapeHtml(appliedCoupon.code)})</span><span>− ${Utils.fmt(couponDiscount)}</span></div>` : ""}
-    <div class="row"><span>التوصيل ${city ? "(" + city.name + ")" : ""}</span><span>${Utils.fmt(fee)}</span></div>
-    <div class="row total"><span>الإجمالي</span><span>${Utils.fmt(total)}</span></div>
+    <div class="row"><span>${t("checkout.items_count")}</span><span>${[...cart.values()].reduce((n,it)=>n+it.qty,0)}</span></div>
+    <div class="row"><span>${t("checkout.subtotal")}</span><span>${Utils.fmt(sub)}</span></div>
+    ${saved > 0 ? `<div class="row discount"><span>${t("checkout.discount_products")}</span><span>− ${Utils.fmt(saved)}</span></div>` : ""}
+    ${couponDiscount > 0 ? `<div class="row discount"><span>${t("checkout.coupon_line")} (${escapeHtml(appliedCoupon.code)})</span><span>− ${Utils.fmt(couponDiscount)}</span></div>` : ""}
+    <div class="row"><span>${t("checkout.delivery")} ${city ? "(" + city.name + ")" : ""}</span><span>${Utils.fmt(fee)}</span></div>
+    <div class="row total"><span>${t("checkout.total")}</span><span>${Utils.fmt(total)}</span></div>
   `;
 }
 
@@ -466,11 +472,22 @@ function applyCoupon() {
   const v = CouponsAPI.validate(code, cartSubtotal());
   if (v.ok) {
     appliedCoupon = { code: v.coupon.code, discount: v.discount, coupon: v.coupon };
-    const label = v.coupon.type === "percent" ? `خصم ${v.coupon.value}%` : `خصم ${v.coupon.value} ₪`;
-    setCouponStatus(`✓ تم تطبيق الكود (${label})`, "ok");
+    const label = v.coupon.type === "percent"
+      ? `${v.coupon.value}% ${t("coupon.discount_percent")}`
+      : `${v.coupon.value} ₪`;
+    setCouponStatus(`${t("coupon.applied")} (${label})`, "ok");
   } else {
+    /* الرسالة من validate تأتي كنص ثابت بالعربي - نخريطها للترجمات */
+    const reasonMap = {
+      "الكود غير موجود": "coupon.not_found",
+      "هذا الكود غير مُفعَّل": "coupon.inactive",
+    };
+    const minReason = /الحد الأدنى/.test(v.reason);
+    let msg = v.reason;
+    if (reasonMap[v.reason]) msg = t(reasonMap[v.reason]);
+    else if (minReason) msg = `${t("coupon.min_order")} ${v.reason.match(/\d+/)?.[0] || ""} ₪`;
     appliedCoupon = null;
-    setCouponStatus("✕ " + v.reason, "err");
+    setCouponStatus("✕ " + msg, "err");
   }
   renderSummary();
 }
@@ -499,7 +516,7 @@ $citySel.onchange = renderSummary;
 $proofInput.onchange = async (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
-  if (file.size > 3 * 1024 * 1024) { showToast("حجم الصورة كبير (3 ميجا حد أقصى)"); return; }
+  if (file.size > 3 * 1024 * 1024) { showToast(t("checkout.image_too_big")); return; }
   paymentProof = await Utils.fileToDataURL(file);
   $proofPrev.innerHTML = `
     <div class="upload-preview">
@@ -528,8 +545,8 @@ $form.onsubmit = (e) => {
   e.preventDefault();
   const data = new FormData($form);
   const city = Utils.cityById(data.get("city"));
-  if (!city) { showToast("اختاري المدينة"); return; }
-  if (!paymentProof) { showToast("ارفعي صورة التحويل أولاً"); return; }
+  if (!city) { showToast(t("checkout.select_city")); return; }
+  if (!paymentProof) { showToast(t("checkout.upload_first")); return; }
 
   const items = [...cart.values()].map(it => ({
     productId: it.productId, name: it.name,
@@ -597,6 +614,30 @@ document.getElementById("trackCloseBtn").onclick  = closeTrackModal;
 document.getElementById("trackInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter") { e.preventDefault(); trackOrder(); }
 });
+
+/* =========================================================
+   تبديل اللغة
+========================================================= */
+function updateLangButton() {
+  const btn = document.getElementById("langToggle");
+  if (!btn) return;
+  /* الزر يعرض اللغة الأخرى (التي ستنتقلين إليها) */
+  btn.textContent = getLang() === "ar" ? "English" : "العربية";
+}
+document.getElementById("langToggle")?.addEventListener("click", () => {
+  const next = getLang() === "ar" ? "en" : "ar";
+  setLang(next);
+  updateLangButton();
+  applySettings();         /* يطبق التراجم على كل [data-i18n] */
+  renderCategories();
+  renderProducts();
+  renderCart();
+  /* أعد فتح المودالات المفتوحة لتترجم محتواها */
+  if ($checkout.classList.contains("open")) {
+    fillCities(); renderBankAccounts(); renderSummary();
+  }
+});
+updateLangButton();
 
 /* =========================================================
    إقلاع
