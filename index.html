@@ -42,7 +42,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@500;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="assets/css/customer.css?v=20260519b" />
+  <link rel="stylesheet" href="assets/css/customer.css?v=20260519c" />
 </head>
 <body>
 
@@ -316,6 +316,118 @@
     </div>
   </div>
 
+  <!-- ============ Modal دليل المقاسات ============ -->
+  <div class="modal" id="sizeGuideModal">
+    <div class="modal-box" style="max-width:780px;">
+      <button class="icon-btn" id="sizeGuideClose"
+              style="position:absolute; top:14px; left:14px;">✕</button>
+
+      <h3 data-i18n="sizeGuide.title">📏 دليل المقاسات</h3>
+      <p class="sub" data-i18n="sizeGuide.subtitle">احسبي مقاسك بدقة بمتر قماش (تيب) ثم قارنيه بالجدول.</p>
+
+      <div class="size-guide">
+        <!-- نموذج توضيحي  —  شكل أنثى مع خطوط القياس -->
+        <div class="size-figure">
+          <svg viewBox="0 0 220 460" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="figGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%"  stop-color="#1a1a1a"/>
+                <stop offset="100%" stop-color="#0a0a0a"/>
+              </linearGradient>
+            </defs>
+
+            <!-- خطوط القياس مع تسميات -->
+            <!-- 1) خط الصدر -->
+            <line x1="20" y1="120" x2="200" y2="120" stroke="var(--gold)" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="10" y="116" class="sg-label" data-i18n="sizeGuide.measure_chest">الصدر</text>
+            <circle cx="110" cy="120" r="3" fill="var(--gold)"/>
+
+            <!-- 2) خط الخصر -->
+            <line x1="20" y1="175" x2="200" y2="175" stroke="var(--gold)" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="10" y="171" class="sg-label" data-i18n="sizeGuide.measure_waist">الخصر</text>
+            <circle cx="110" cy="175" r="3" fill="var(--gold)"/>
+
+            <!-- 3) خط الأرداف -->
+            <line x1="20" y1="225" x2="200" y2="225" stroke="var(--gold)" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="10" y="221" class="sg-label" data-i18n="sizeGuide.measure_hips">الأرداف</text>
+            <circle cx="110" cy="225" r="3" fill="var(--gold)"/>
+
+            <!-- 4) سهم الطول الكلي على اليمين -->
+            <line x1="200" y1="60" x2="200" y2="440" stroke="var(--gold-2)" stroke-width="1.5"/>
+            <polygon points="195,60 200,52 205,60" fill="var(--gold-2)"/>
+            <polygon points="195,440 200,448 205,440" fill="var(--gold-2)"/>
+            <text x="215" y="250" class="sg-label-vert" transform="rotate(90 215 250)" data-i18n="sizeGuide.measure_length">الطول</text>
+
+            <!-- شكل العباية الأنثوي (silhouette) -->
+            <g fill="url(#figGrad)" stroke="var(--gold-soft)" stroke-width="1">
+              <!-- رأس -->
+              <circle cx="110" cy="40" r="20"/>
+              <!-- رقبة -->
+              <rect x="103" y="58" width="14" height="10"/>
+              <!-- جسم العباية: كتفين → خصر → أرداف → أسفل واسع -->
+              <path d="
+                M 78 75
+                Q 80 70  88 68
+                L 132 68
+                Q 140 70 142 75
+                L 158 118
+                Q 150 130 145 175
+                Q 140 200 138 225
+                L 165 440
+                L 55 440
+                L 82 225
+                Q 80 200 75 175
+                Q 70 130 62 118
+                Z" />
+              <!-- أكمام جانبية -->
+              <path d="M 78 75 L 60 130 L 50 175 L 62 178 L 75 130 Z"/>
+              <path d="M 142 75 L 160 130 L 170 175 L 158 178 L 145 130 Z"/>
+            </g>
+          </svg>
+        </div>
+
+        <!-- جدول المقاسات -->
+        <div class="size-table-wrap">
+          <table class="size-table">
+            <thead>
+              <tr>
+                <th data-i18n="sizeGuide.size">المقاس</th>
+                <th data-i18n="sizeGuide.chest_cm">الصدر</th>
+                <th data-i18n="sizeGuide.waist_cm">الخصر</th>
+                <th data-i18n="sizeGuide.hips_cm">الأرداف</th>
+                <th data-i18n="sizeGuide.length_cm">الطول</th>
+                <th data-i18n="sizeGuide.intl">دولي</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><th>XS</th><td>80–84</td><td>60–64</td><td>84–88</td><td>130</td><td>36 / 4</td></tr>
+              <tr><th>S</th> <td>84–88</td><td>64–68</td><td>88–92</td><td>135</td><td>38 / 6</td></tr>
+              <tr><th>M</th> <td>88–94</td><td>68–74</td><td>92–98</td><td>140</td><td>40 / 8–10</td></tr>
+              <tr><th>L</th> <td>94–100</td><td>74–80</td><td>98–104</td><td>145</td><td>44 / 12</td></tr>
+              <tr><th>XL</th><td>100–108</td><td>80–88</td><td>104–112</td><td>150</td><td>46 / 14</td></tr>
+              <tr><th>XXL</th><td>108–116</td><td>88–96</td><td>112–120</td><td>152</td><td>48 / 16</td></tr>
+              <tr><th>3XL</th><td>116–124</td><td>96–104</td><td>120–128</td><td>155</td><td>50 / 18</td></tr>
+            </tbody>
+          </table>
+          <p class="size-unit" data-i18n="sizeGuide.unit_note">جميع القياسات بالسنتيمتر (cm)</p>
+        </div>
+      </div>
+
+      <!-- نصائح القياس -->
+      <div class="size-tips">
+        <h4 data-i18n="sizeGuide.tips_title">💡 كيف تقيسين بدقة؟</h4>
+        <ul>
+          <li data-i18n="sizeGuide.tip1">استخدمي متر قماش (شريط قياس مرن) وقفي بشكل طبيعي.</li>
+          <li><strong data-i18n="sizeGuide.tip2_label">الصدر:</strong> <span data-i18n="sizeGuide.tip2">قيسي حول أعرض جزء من الصدر.</span></li>
+          <li><strong data-i18n="sizeGuide.tip3_label">الخصر:</strong> <span data-i18n="sizeGuide.tip3">قيسي عند أضيق نقطة (حول السرّة).</span></li>
+          <li><strong data-i18n="sizeGuide.tip4_label">الأرداف:</strong> <span data-i18n="sizeGuide.tip4">قيسي حول أعرض جزء من الأرداف.</span></li>
+          <li><strong data-i18n="sizeGuide.tip5_label">الطول:</strong> <span data-i18n="sizeGuide.tip5">من أعلى الكتف إلى الكعب.</span></li>
+          <li data-i18n="sizeGuide.tip6">إذا كان قياسك بين مقاسين، اختاري المقاس الأكبر للراحة.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
   <!-- ============ Modal تتبع الطلب ============ -->
   <div class="modal" id="trackModal">
     <div class="modal-box">
@@ -360,7 +472,7 @@
   <!-- ============ تنبيه ============ -->
   <div class="toast" id="toast">تمت الإضافة إلى السلة</div>
 
-  <script src="assets/js/data.js?v=20260519b"></script>
-  <script src="assets/js/customer.js?v=20260519b"></script>
+  <script src="assets/js/data.js?v=20260519c"></script>
+  <script src="assets/js/customer.js?v=20260519c"></script>
 </body>
 </html>

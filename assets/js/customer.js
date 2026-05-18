@@ -347,7 +347,10 @@ function renderProductModal() {
       <div class="opt-label">${t("product.color")}</div>
       <div class="colors-row" id="colorsRow">${colorsHtml}</div>
 
-      <div class="opt-label">${t("product.size")}</div>
+      <div class="opt-label opt-label-row">
+        <span>${t("product.size")}</span>
+        <button type="button" class="size-guide-link" id="openSizeGuideBtn">📏 ${t("sizeGuide.link")}</button>
+      </div>
       <div class="sizes-row" id="sizesRow">${sizesHtml}</div>
 
       ${variantStock !== null
@@ -388,6 +391,10 @@ function renderProductModal() {
   });
   const addBtn = $pdContent.querySelector("#addToCartBtn");
   if (addBtn) addBtn.onclick = () => addCurrentToCart();
+  /* رابط دليل المقاسات داخل نافذة المنتج */
+  $pdContent.querySelector("#openSizeGuideBtn")?.addEventListener("click", () => {
+    document.getElementById("sizeGuideModal")?.classList.add("open");
+  });
 }
 
 function addCurrentToCart() {
@@ -698,6 +705,10 @@ function escapeHtml(s) {
   }[c]));
 }
 function truncate(s, n) { s = s || ""; return s.length > n ? s.slice(0, n) + "…" : s; }
+
+/* دليل المقاسات  —  ربط زر الإغلاق */
+document.getElementById("sizeGuideClose")?.addEventListener("click", () =>
+  document.getElementById("sizeGuideModal")?.classList.remove("open"));
 
 /* تتبع الطلب  —  ربط الأحداث */
 document.getElementById("trackOrderLink")?.addEventListener("click", (e) => {

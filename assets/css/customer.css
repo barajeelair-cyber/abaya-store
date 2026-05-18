@@ -605,6 +605,91 @@ html[dir="ltr"] .brand-text em { font-style: italic; }
 }
 .auth-guest:hover { color: var(--gold-2); border-color: var(--gold-soft); }
 
+/* =========================================================
+   دليل المقاسات
+========================================================= */
+.opt-label-row {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 12px;
+}
+.size-guide-link {
+  background: transparent; border: 1px solid var(--gold-soft);
+  color: var(--gold-2); padding: 5px 12px; border-radius: 999px;
+  font-family: inherit; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all var(--t);
+}
+.size-guide-link:hover { background: var(--gold); color: #000; border-color: var(--gold); }
+
+.size-guide {
+  display: grid; grid-template-columns: 1fr 1.4fr; gap: 22px;
+  margin-top: 18px;
+  padding: 18px;
+  background: linear-gradient(135deg, #141414, #0c0c0c);
+  border: 1px solid var(--gold-soft);
+  border-radius: 12px;
+}
+.size-figure {
+  display: flex; align-items: center; justify-content: center;
+}
+.size-figure svg {
+  width: 100%; max-width: 240px; height: auto;
+}
+.sg-label {
+  font-family: "Tajawal", sans-serif; font-size: 11px;
+  font-weight: 600; fill: var(--gold-2);
+}
+.sg-label-vert {
+  font-family: "Tajawal", sans-serif; font-size: 11px;
+  font-weight: 600; fill: var(--gold-2);
+  text-anchor: middle;
+}
+
+.size-table-wrap { overflow-x: auto; }
+.size-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 13px; color: var(--text);
+}
+.size-table th, .size-table td {
+  padding: 8px 10px; border-bottom: 1px solid var(--line);
+  text-align: center;
+}
+.size-table thead th {
+  color: var(--gold-2); font-weight: 700;
+  border-bottom: 2px solid var(--gold-soft);
+}
+.size-table tbody th {
+  color: var(--gold); font-weight: 700;
+  background: rgba(212,175,55,.06);
+}
+.size-table tbody tr:hover td,
+.size-table tbody tr:hover th { background: rgba(212,175,55,.1); }
+.size-unit {
+  font-size: 11px; color: var(--muted);
+  text-align: center; margin-top: 8px;
+}
+
+.size-tips {
+  margin-top: 22px; padding: 16px 20px;
+  background: rgba(212,175,55,.06);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.size-tips h4 {
+  margin: 0 0 10px; color: var(--gold-2); font-size: 15px;
+}
+.size-tips ul {
+  margin: 0; padding-inline-start: 20px;
+  color: var(--muted); font-size: 13px; line-height: 1.9;
+}
+.size-tips ul li strong { color: var(--text); }
+
+@media (max-width: 640px) {
+  .size-guide { grid-template-columns: 1fr; }
+  .size-figure svg { max-width: 200px; }
+  .size-table { font-size: 12px; }
+  .size-table th, .size-table td { padding: 6px 6px; }
+}
+
 /* خطوات تتبع الطلب */
 .track-steps {
   display: flex; align-items: center; justify-content: space-between;
