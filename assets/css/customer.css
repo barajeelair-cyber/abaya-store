@@ -219,6 +219,34 @@ html[dir="ltr"] .brand-text em { font-style: italic; }
   background: linear-gradient(135deg, var(--gold-2), var(--gold));
   color: #000; border-color: var(--gold);
 }
+/* تبويبات خاصة: المفضلة + الأكثر مبيعاً */
+.cat-pill-fav {
+  background: rgba(217,83,79,.08); border-color: rgba(217,83,79,.4); color: #ff9a96;
+}
+.cat-pill-fav:hover { background: rgba(217,83,79,.2); color: #fff; }
+.cat-pill-fav.active {
+  background: linear-gradient(135deg, #ff7e7a, #d9534f); color: #fff; border-color: #d9534f;
+}
+.cat-pill-best {
+  background: rgba(255,140,0,.08); border-color: rgba(255,140,0,.4); color: #ffb066;
+}
+.cat-pill-best:hover { background: rgba(255,140,0,.2); color: #fff; }
+.cat-pill-best.active {
+  background: linear-gradient(135deg, #ffb066, #ff8c00); color: #000; border-color: #ff8c00;
+}
+
+/* زر القلب على بطاقة المنتج */
+.fav-btn {
+  position: absolute; top: 12px; left: 12px; z-index: 3;
+  background: rgba(0,0,0,.55); backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,.15); color: #fff;
+  width: 36px; height: 36px; border-radius: 50%;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all var(--t);
+  padding: 0;
+}
+.fav-btn:hover { background: rgba(217,83,79,.85); border-color: rgba(217,83,79,.85); transform: scale(1.08); }
+.fav-btn.active { background: linear-gradient(135deg, #ff7e7a, #d9534f); border-color: #d9534f; color: #fff; }
 
 /* =========================================================
    الفلاتر
@@ -620,6 +648,75 @@ html[dir="ltr"] .brand-text em { font-style: italic; }
 }
 .size-guide-link:hover { background: var(--gold); color: #000; border-color: var(--gold); }
 
+/* تبديل بين نظام المقاسات */
+.size-system-toggle {
+  display: flex; gap: 8px;
+  margin: 16px 0;
+  padding: 4px;
+  background: rgba(0,0,0,.4);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  width: fit-content;
+}
+.sst-btn {
+  background: transparent; color: var(--muted);
+  border: none; padding: 8px 18px; border-radius: 999px;
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all var(--t);
+}
+.sst-btn:hover { color: var(--gold-2); }
+.sst-btn.active {
+  background: linear-gradient(135deg, var(--gold-2), var(--gold));
+  color: #000;
+}
+
+/* الحاسبة التفاعلية */
+.size-calc {
+  background: linear-gradient(135deg, #1a1408, #0c0c0c);
+  border: 1px solid var(--gold-soft);
+  border-radius: 12px; padding: 18px;
+  margin-bottom: 16px;
+}
+.size-calc h4 {
+  margin: 0 0 12px; color: var(--gold-2); font-size: 16px;
+}
+.calc-row {
+  display: grid; grid-template-columns: repeat(3, 1fr) auto; gap: 10px;
+  align-items: end;
+}
+.calc-field label {
+  display: block; color: var(--muted); font-size: 12px; margin-bottom: 4px;
+}
+.calc-field input {
+  width: 100%; padding: 10px 12px;
+  background: #0c0c0c; border: 1px solid var(--line); color: var(--text);
+  border-radius: 8px; font-family: inherit; font-size: 14px;
+}
+.calc-field input:focus { outline: none; border-color: var(--gold); }
+.size-calc .btn-gold { padding: 10px 18px; font-size: 13px; white-space: nowrap; }
+.calc-result {
+  margin-top: 14px;
+}
+.calc-result-card {
+  display: inline-flex; align-items: center; gap: 12px;
+  background: rgba(212,175,55,.15);
+  border: 1px solid var(--gold);
+  border-radius: 10px; padding: 12px 22px;
+  animation: fadeUp .3s var(--t);
+}
+.calc-result-label { color: var(--muted); font-size: 13px; }
+.calc-result-size {
+  background: var(--gold); color: #000;
+  padding: 4px 14px; border-radius: 999px;
+  font-size: 18px; font-weight: 800;
+}
+.calc-result-meta { color: var(--gold-2); font-size: 12px; }
+
+@media (max-width: 700px) {
+  .calc-row { grid-template-columns: 1fr 1fr; }
+  .size-calc .btn-gold { grid-column: 1 / -1; }
+}
+
 .size-guide {
   display: grid; grid-template-columns: 1fr 1.4fr; gap: 22px;
   margin-top: 18px;
@@ -738,6 +835,75 @@ html[dir="ltr"] .brand-text em { font-style: italic; }
   transition: transform .5s var(--t);
 }
 .toast.show { transform: translate(50%, 0); }
+
+/* =========================================================
+   آراء العملاء
+========================================================= */
+.reviews-section { margin-top: 100px; }
+.reviews-sub { color: var(--muted); margin: 10px 0 14px; font-size: 14px; }
+.avg-rating-card {
+  display: inline-flex; align-items: center; gap: 18px;
+  background: linear-gradient(135deg, #1a1408, #0c0c0c);
+  border: 1px solid var(--gold-soft);
+  border-radius: 12px;
+  padding: 14px 24px; margin-top: 6px;
+}
+.avg-rating-card .avg-num { font-size: 32px; font-weight: 800; color: var(--gold-2); }
+.avg-rating-card .avg-num span { font-size: 16px; color: var(--muted); font-weight: 500; }
+.avg-rating-card .avg-meta { color: var(--muted); font-size: 13px; }
+
+.reviews-grid {
+  display: grid; gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+.review-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px; padding: 20px;
+  transition: transform var(--t), border-color var(--t);
+}
+.review-card:hover { transform: translateY(-3px); border-color: var(--gold-soft); }
+.review-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.review-avatar {
+  width: 42px; height: 42px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold-2), var(--gold-soft));
+  color: #000; font-weight: 800; font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+}
+.review-name { font-weight: 700; color: var(--text); font-size: 14px; }
+.review-name .verified {
+  font-size: 10px; font-weight: 600;
+  background: rgba(76,175,80,.15); color: var(--success);
+  padding: 2px 8px; border-radius: 999px; margin-inline-start: 6px;
+}
+.review-date { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.review-stars { margin-bottom: 8px; }
+.review-text {
+  color: var(--text); font-size: 14px; line-height: 1.7;
+  margin: 0; font-style: italic; opacity: .9;
+}
+
+/* =========================================================
+   معلومات الموقع
+========================================================= */
+.site-info-section { margin-top: 80px; }
+.site-info-grid {
+  display: grid; gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+.site-info-card {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 12px; padding: 22px;
+  transition: border-color var(--t);
+}
+.site-info-card:hover { border-color: var(--gold-soft); }
+.site-info-card h3 {
+  margin: 0 0 10px; font-size: 16px; color: var(--gold-2);
+  display: flex; align-items: center; gap: 8px;
+}
+.site-info-card p {
+  color: var(--muted); font-size: 14px; line-height: 1.8; margin: 0;
+}
 
 /* =========================================================
    تذييل

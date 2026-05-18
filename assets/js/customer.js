@@ -192,17 +192,33 @@ function $(id) { return document.getElementById(id); }
 ========================================================= */
 function renderCategories() {
   const cats = getActiveCategories();
-  $catsBar.innerHTML = cats.map(c => {
-    const info = Utils.categoryById(c.id);
-    return `<button class="cat-pill ${c.id === currentCategory ? "active" : ""}" data-id="${c.id}">
-      ${escapeHtml(info.name)}
-    </button>`;
-  }).join("");
+  /* تبويبات خاصة: المفضلة + الأكثر مبيعاً، تظهر أولاً */
+  const favCount = FavoritesAPI.count();
+  const specialTabs = [
+    { id: "__favorites__",  name: t("category.favorites") + (favCount ? ` (${favCount})` : ""), cls: "cat-pill-special cat-pill-fav" },
+    { id: "__bestseller__", name: t("category.bestseller"), cls: "cat-pill-special cat-pill-best" },
+  ];
+
+  $catsBar.innerHTML = [
+    ...specialTabs.map(s =>
+      `<button class="cat-pill ${s.cls} ${s.id === currentCategory ? "active" : ""}" data-id="${s.id}">${s.name}</button>`),
+    ...cats.map(c => {
+      const info = Utils.categoryById(c.id);
+      return `<button class="cat-pill ${c.id === currentCategory ? "active" : ""}" data-id="${c.id}">${escapeHtml(info.name)}</button>`;
+    })
+  ].join("");
+
   $catsBar.querySelectorAll(".cat-pill").forEach(b => {
     b.onclick = () => {
       currentCategory = b.dataset.id;
-      const cat = Utils.categoryById(currentCategory);
-      $catTitle.textContent = cat.id === "all" ? t("section.collection") : cat.name;
+      let title;
+      if (currentCategory === "__favorites__")       title = t("category.favorites");
+      else if (currentCategory === "__bestseller__") title = t("category.bestseller");
+      else {
+        const cat = Utils.categoryById(currentCategory);
+        title = cat.id === "all" ? t("section.collection") : cat.name;
+      }
+      $catTitle.textContent = title;
       renderCategories();
       renderProducts();
     };
@@ -236,7 +252,16 @@ function productMatchesFilters(p) {
 
 function renderProducts() {
   let products = ProductsAPI.list();
-  if (currentCategory !== "all") {
+  if (currentCategory === "__favorites__") {
+    const favs = FavoritesAPI.list();
+    products = products.filter(p => favs.includes(p.id));
+    if (products.length === 0) {
+      $grid.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:var(--muted); padding:50px 0;">${t("favorites.empty")}</p>`;
+      return;
+    }
+  } else if (currentCategory === "__bestseller__") {
+    products = products.filter(p => p.isBestseller);
+  } else if (currentCategory !== "all") {
     products = products.filter(p => p.category === currentCategory);
   }
   products = products.filter(productMatchesFilters);
@@ -249,8 +274,14 @@ function renderProducts() {
     const final = ProductsAPI.finalPrice(p);
     const hasDiscount = Number(p.discount) > 0;
 
+    const isFav = FavoritesAPI.has(p.id);
     return `
       <article class="card" data-id="${p.id}">
+        <button class="fav-btn ${isFav ? 'active' : ''}" data-fav="${p.id}" aria-label="favorite">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+        </button>
         <div class="img-wrap">
           ${out ? `<span class="badge badge-out">${t("product.out_of_stock")}</span>` : ""}
           ${low && !out ? `<span class="badge badge-low">${t("product.limited")}</span>` : ""}
@@ -276,8 +307,24 @@ function renderProducts() {
   $grid.querySelectorAll(".card").forEach(card => {
     card.querySelector(".view-btn")?.addEventListener("click", () => openProductModal(card.dataset.id));
     card.addEventListener("click", e => {
-      if (e.target.tagName !== "BUTTON") openProductModal(card.dataset.id);
+      /* تجاهل النقر إذا كان على زر (المفضلة أو العرض) */
+      if (e.target.closest("button")) return;
+      openProductModal(card.dataset.id);
     });
+  });
+  /* زر المفضلة */
+  $grid.querySelectorAll(".fav-btn").forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const pid = btn.dataset.fav;
+      const added = FavoritesAPI.toggle(pid);
+      btn.classList.toggle("active", added);
+      const svg = btn.querySelector("svg");
+      if (svg) svg.setAttribute("fill", added ? "currentColor" : "none");
+      showToast(t(added ? "favorites.added" : "favorites.removed"));
+      /* أعِد رسم التبويبات لتحديث العدد */
+      renderCategories();
+    };
   });
 }
 
@@ -706,9 +753,101 @@ function escapeHtml(s) {
 }
 function truncate(s, n) { s = s || ""; return s.length > n ? s.slice(0, n) + "…" : s; }
 
-/* دليل المقاسات  —  ربط زر الإغلاق */
+/* =========================================================
+   دليل المقاسات التفاعلي (نظام دولي/خليجي + حاسبة)
+========================================================= */
+let currentSizeSystem = "intl";
+
+function renderSizeTable() {
+  if (!window.SizeChartsAPI) return;
+  const charts = SizeChartsAPI.get();
+  const rows = charts[currentSizeSystem] || [];
+  const lang = getLang();
+  const tbl = document.getElementById("sizeTable");
+  if (!tbl) return;
+  const intlHeader = currentSizeSystem === "intl" ? "EU / US" : (lang === "en" ? "Intl" : "دولي");
+  tbl.innerHTML = `
+    <thead><tr>
+      <th>${t("sizeGuide.size")}</th>
+      <th>${t("sizeGuide.chest_cm")}</th>
+      <th>${t("sizeGuide.waist_cm")}</th>
+      <th>${t("sizeGuide.hips_cm")}</th>
+      <th>${t("sizeGuide.length_cm")}</th>
+      <th>${intlHeader}</th>
+    </tr></thead>
+    <tbody>
+      ${rows.map(r => `<tr><th>${escapeHtml(r.size)}</th><td>${escapeHtml(r.chest)}</td><td>${escapeHtml(r.waist)}</td><td>${escapeHtml(r.hips)}</td><td>${escapeHtml(r.length)}</td><td>${escapeHtml(r.intl)}</td></tr>`).join("")}
+    </tbody>`;
+  /* وصف ديناميكي */
+  const $desc = document.getElementById("sizeGuideDesc");
+  if ($desc) $desc.textContent = charts.description?.[lang] || charts.description?.ar || "";
+}
+
+function parseRange(rangeStr) {
+  /* "84–88" → {min:84, max:88} */
+  const m = String(rangeStr || "").match(/(\d+)\D+(\d+)/);
+  if (m) return { min: +m[1], max: +m[2] };
+  const n = parseInt(rangeStr, 10);
+  return isFinite(n) ? { min: n, max: n } : null;
+}
+
+function calculateSize(chest, waist, hips) {
+  const charts = SizeChartsAPI.get();
+  const rows = charts[currentSizeSystem] || [];
+  /* لكل صف، احسب درجة التطابق (كم قياس داخل النطاق) */
+  let best = null, bestScore = -1;
+  rows.forEach(r => {
+    let score = 0;
+    [["chest", chest], ["waist", waist], ["hips", hips]].forEach(([k, val]) => {
+      if (!val) return;
+      const rng = parseRange(r[k]);
+      if (!rng) return;
+      if (val >= rng.min - 1 && val <= rng.max + 1) score += 2;
+      else if (val < rng.min) score -= (rng.min - val) * 0.3;
+      else score -= (val - rng.max) * 0.3;
+    });
+    if (score > bestScore) { bestScore = score; best = r; }
+  });
+  return best;
+}
+
+document.querySelectorAll(".sst-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    currentSizeSystem = btn.dataset.system;
+    document.querySelectorAll(".sst-btn").forEach(b => b.classList.toggle("active", b === btn));
+    renderSizeTable();
+  });
+});
+
+document.getElementById("calcBtn")?.addEventListener("click", () => {
+  const chest = Number(document.getElementById("calcChest")?.value);
+  const waist = Number(document.getElementById("calcWaist")?.value);
+  const hips  = Number(document.getElementById("calcHips")?.value);
+  const $result = document.getElementById("calcResult");
+  if (!$result) return;
+  if (!chest && !waist && !hips) {
+    $result.innerHTML = `<p style="color:var(--muted)">${t("sizeGuide.calc_no_match")}</p>`;
+    return;
+  }
+  const match = calculateSize(chest, waist, hips);
+  if (match) {
+    $result.innerHTML = `
+      <div class="calc-result-card">
+        <span class="calc-result-label">${t("sizeGuide.calc_result")}</span>
+        <span class="calc-result-size">${escapeHtml(match.size)}</span>
+        <span class="calc-result-meta">${escapeHtml(match.intl)}</span>
+      </div>`;
+  } else {
+    $result.innerHTML = `<p style="color:var(--danger)">${t("sizeGuide.calc_no_match")}</p>`;
+  }
+});
+
+/* دليل المقاسات  —  ربط زر الإغلاق + ملء الجدول عند الفتح */
 document.getElementById("sizeGuideClose")?.addEventListener("click", () =>
   document.getElementById("sizeGuideModal")?.classList.remove("open"));
+
+/* رسم الجدول الأولي */
+renderSizeTable();
 
 /* تتبع الطلب  —  ربط الأحداث */
 document.getElementById("trackOrderLink")?.addEventListener("click", (e) => {
@@ -930,6 +1069,60 @@ if ($goCheckout && window.CustomersAPI) {
 }
 
 /* =========================================================
+   آراء العملاء + معلومات الموقع
+========================================================= */
+function starsHtml(rating, size) {
+  const sz = size || 16;
+  const r = Math.round(Number(rating) || 0);
+  return Array.from({length:5}, (_, i) =>
+    `<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="${i < r ? 'var(--gold)' : 'none'}" stroke="var(--gold)" stroke-width="1.4" style="vertical-align:middle;">
+      <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,10.26"/>
+    </svg>`).join("");
+}
+
+function renderReviews() {
+  if (!window.ReviewsAPI) return;
+  const reviews = ReviewsAPI.list();
+  const avg = ReviewsAPI.avgRating();
+  const $avg = document.getElementById("reviewsAvg");
+  if ($avg) {
+    $avg.innerHTML = reviews.length ? `
+      <div class="avg-rating-card">
+        <div class="avg-stars">${starsHtml(avg, 22)}</div>
+        <div class="avg-num">${avg.toFixed(1)}<span>/5</span></div>
+        <div class="avg-meta">${t("reviews.based_on")} ${reviews.length} ${t("reviews.review_count")}</div>
+      </div>` : "";
+  }
+  const $grid = document.getElementById("reviewsGrid");
+  if (!$grid) return;
+  $grid.innerHTML = reviews.map(r => `
+    <article class="review-card">
+      <div class="review-head">
+        <div class="review-avatar">${escapeHtml((r.name || "?").charAt(0))}</div>
+        <div>
+          <div class="review-name">${escapeHtml(r.name)}${r.verified ? ` <span class="verified">✓ ${t("reviews.verified")}</span>` : ""}</div>
+          <div class="review-date">${escapeHtml(r.date || "")}</div>
+        </div>
+      </div>
+      <div class="review-stars">${starsHtml(r.rating, 16)}</div>
+      <p class="review-text">"${escapeHtml(r.text)}"</p>
+    </article>
+  `).join("");
+}
+
+function renderSiteInfo() {
+  if (!window.SiteInfoAPI) return;
+  const info = SiteInfoAPI.get();
+  const lang = getLang();
+  const pick = (obj) => obj?.[lang] || obj?.ar || "";
+  const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+  set("siteAboutText",    pick(info.aboutUs));
+  set("siteShippingText", pick(info.shipping));
+  set("siteReturnText",   pick(info.returnPolicy));
+  set("siteFaqText",      pick(info.faq));
+}
+
+/* =========================================================
    لوحة الفلاتر
 ========================================================= */
 function uniqueProductValues(getter) {
@@ -943,18 +1136,25 @@ function uniqueProductValues(getter) {
 }
 
 function renderFilterChips() {
-  /* أقمشة */
+  const lang = getLang();
+  const lookupName = (item, prefix) => {
+    /* جرّب الترجمة أولاً (للعناصر الافتراضية)، ثم name_ar/name_en من DB */
+    const fromI18n = I18N[lang]?.[prefix + "." + item.id];
+    if (fromI18n) return fromI18n;
+    return (lang === "en" && item.name_en) ? item.name_en : (item.name_ar || item.id);
+  };
+  /* أقمشة - من DB */
   const fabricEl = document.getElementById("filterFabric");
   if (fabricEl) {
-    fabricEl.innerHTML = DEFAULT_FABRICS.map(f =>
-      `<button type="button" class="filter-chip ${filters.fabric.has(f.id) ? "active" : ""}" data-filter="fabric" data-id="${f.id}">${t("fabric." + f.id)}</button>`
+    fabricEl.innerHTML = FabricsAPI.list().map(f =>
+      `<button type="button" class="filter-chip ${filters.fabric.has(f.id) ? "active" : ""}" data-filter="fabric" data-id="${f.id}">${escapeHtml(lookupName(f, "fabric"))}</button>`
     ).join("");
   }
-  /* قَصّات */
+  /* قَصّات - من DB */
   const cutEl = document.getElementById("filterCut");
   if (cutEl) {
-    cutEl.innerHTML = DEFAULT_CUTS.map(c =>
-      `<button type="button" class="filter-chip ${filters.cut.has(c.id) ? "active" : ""}" data-filter="cut" data-id="${c.id}">${t("cut." + c.id)}</button>`
+    cutEl.innerHTML = CutsAPI.list().map(c =>
+      `<button type="button" class="filter-chip ${filters.cut.has(c.id) ? "active" : ""}" data-filter="cut" data-id="${c.id}">${escapeHtml(lookupName(c, "cut"))}</button>`
     ).join("");
   }
   /* ألوان (مستخرجة من المنتجات) */
@@ -1051,6 +1251,8 @@ document.getElementById("langToggle")?.addEventListener("click", () => {
   renderProducts();
   renderCart();
   updateAccountButton();   /* تحديث زر الحساب باللغة الجديدة */
+  renderReviews();
+  renderSiteInfo();
   /* أعد فتح المودالات المفتوحة لتترجم محتواها */
   if ($checkout?.classList.contains("open")) {
     fillCities(); renderBankAccounts(); renderSummary();
@@ -1068,6 +1270,8 @@ bindFilterControls();
 renderProducts();
 renderCart();
 updateAccountButton();
+renderReviews();
+renderSiteInfo();
 
 window.addEventListener("storage", (e) => {
   if (e.key === "abaya_amal_v2") {

@@ -105,6 +105,11 @@ function bootApp() {
   renderCouponsList();
   renderCategoriesAdmin();
   renderCitiesAdmin();
+  renderFabricsAdmin();
+  renderCutsAdmin();
+  renderReviewsAdmin();
+  renderSiteInfoEditor();
+  renderSizeChartsEditor();
   renderTextsEditor();
   updateLangButtons();
 }
@@ -1452,6 +1457,222 @@ document.getElementById("addCityBtn")?.addEventListener("click", () => {
   renderCitiesAdmin();
   fillFilters();
 });
+
+/* =====================================================
+   إدارة الأقمشة والقَصّات (مولّد عام)
+===================================================== */
+function buildLookupAdmin(api, listElId, addBtnId, defaultRow) {
+  return function render() {
+    const el = document.getElementById(listElId);
+    if (!el) return;
+    const items = api.list();
+    el.innerHTML = items.length ? `
+      <div class="category-row" style="font-weight:700; color:var(--muted); font-size:12px;">
+        <div>الاسم بالعربية</div><div>الاسم بالإنجليزية</div><div></div><div></div>
+      </div>
+      ${items.map(c => `
+        <div class="category-row" data-id="${c.id}">
+          <input class="input" data-f="name_ar" value="${escapeAttr(c.name_ar || "")}" placeholder="اسم بالعربية">
+          <input class="input" data-f="name_en" value="${escapeAttr(c.name_en || "")}" placeholder="English name">
+          <div></div>
+          <div class="actions">
+            <button class="icon-btn-sm ok"     data-act="save">${t("admin.save")}</button>
+            <button class="icon-btn-sm danger" data-act="del">${t("admin.delete")}</button>
+          </div>
+        </div>`).join("")}
+    ` : `<p style="color:var(--muted); font-size:13px;">لا توجد عناصر. اضغطي زر الإضافة.</p>`;
+
+    el.querySelectorAll(".category-row[data-id]").forEach(row => {
+      const id = row.dataset.id;
+      row.querySelector('[data-act="save"]').onclick = () => {
+        const name_ar = row.querySelector('[data-f="name_ar"]').value.trim();
+        const name_en = row.querySelector('[data-f="name_en"]').value.trim();
+        if (!name_ar || !name_en) { showToast("أكملي الاسم بالعربية والإنجليزية"); return; }
+        api.save({ id, name_ar, name_en });
+        render();
+        showToast("تم الحفظ ✓");
+      };
+      row.querySelector('[data-act="del"]').onclick = () => {
+        if (!confirm("حذف هذا العنصر؟")) return;
+        api.remove(id);
+        render();
+        showToast(t("admin.product.deleted"));
+      };
+    });
+
+    document.getElementById(addBtnId).onclick = () => {
+      api.save({ ...defaultRow });
+      render();
+    };
+  };
+}
+
+const renderFabricsAdmin = buildLookupAdmin(
+  FabricsAPI, "fabricsList", "addFabricBtn",
+  { name_ar: "قماش جديد", name_en: "New fabric" }
+);
+const renderCutsAdmin = buildLookupAdmin(
+  CutsAPI, "cutsList", "addCutBtn",
+  { name_ar: "قَصّة جديدة", name_en: "New cut" }
+);
+
+/* =====================================================
+   إدارة آراء العملاء
+===================================================== */
+function renderReviewsAdmin() {
+  const el = document.getElementById("reviewsList");
+  if (!el) return;
+  const reviews = ReviewsAPI.list();
+  el.innerHTML = reviews.length ? reviews.map(r => `
+    <div class="review-row" data-id="${r.id}" style="background:#fff; border:1px solid var(--line); border-radius:10px; padding:14px; margin-bottom:10px;">
+      <div class="row-2">
+        <div class="field">
+          <label>اسم العميلة</label>
+          <input class="input" data-f="name" value="${escapeAttr(r.name)}">
+        </div>
+        <div class="field">
+          <label>التقييم (1-5)</label>
+          <input class="input" type="number" min="1" max="5" data-f="rating" value="${Number(r.rating || 5)}">
+        </div>
+      </div>
+      <div class="row-2">
+        <div class="field">
+          <label>التاريخ</label>
+          <input class="input" type="date" data-f="date" value="${escapeAttr(r.date || "")}">
+        </div>
+        <div class="field">
+          <label class="toggle" style="padding:28px 0 0;"><input type="checkbox" data-f="verified" ${r.verified ? "checked" : ""}><span>مشترية موثّقة</span></label>
+        </div>
+      </div>
+      <div class="field">
+        <label>التعليق</label>
+        <textarea class="input" rows="2" data-f="text">${escapeHtml(r.text || "")}</textarea>
+      </div>
+      <div class="actions">
+        <button class="icon-btn-sm ok" data-act="save">${t("admin.save")}</button>
+        <button class="icon-btn-sm danger" data-act="del">${t("admin.delete")}</button>
+      </div>
+    </div>
+  `).join("") : `<p style="color:var(--muted); font-size:13px;">لا توجد مراجعات. اضغطي "+ إضافة رأي".</p>`;
+
+  el.querySelectorAll(".review-row[data-id]").forEach(row => {
+    const id = row.dataset.id;
+    row.querySelector('[data-act="save"]').onclick = () => {
+      const get = f => row.querySelector(`[data-f="${f}"]`);
+      ReviewsAPI.save({
+        id,
+        name: get("name").value.trim(),
+        rating: Math.max(1, Math.min(5, Number(get("rating").value) || 5)),
+        date: get("date").value,
+        verified: get("verified").checked,
+        text: get("text").value.trim(),
+      });
+      renderReviewsAdmin();
+      showToast("تم حفظ الرأي ✓");
+    };
+    row.querySelector('[data-act="del"]').onclick = () => {
+      if (!confirm("حذف هذا الرأي؟")) return;
+      ReviewsAPI.remove(id);
+      renderReviewsAdmin();
+      showToast(t("admin.product.deleted"));
+    };
+  });
+}
+document.getElementById("addReviewBtn")?.addEventListener("click", () => {
+  ReviewsAPI.save({
+    name: "زبونة جديدة",
+    rating: 5,
+    text: "اكتبي نص المراجعة هنا...",
+    date: new Date().toISOString().slice(0, 10),
+    verified: true,
+  });
+  renderReviewsAdmin();
+});
+
+/* =====================================================
+   محرر معلومات الموقع
+===================================================== */
+function renderSiteInfoEditor() {
+  const el = document.getElementById("siteInfoEditor");
+  if (!el) return;
+  const info = SiteInfoAPI.get();
+  const sections = [
+    { key: "aboutUs",       label: "✨ من نحن" },
+    { key: "shipping",      label: "🚚 الشحن والتوصيل" },
+    { key: "returnPolicy",  label: "♻️ سياسة الاستبدال" },
+    { key: "faq",           label: "💬 أسئلة شائعة" },
+  ];
+  el.innerHTML = sections.map(s => `
+    <div class="text-row" data-key="${s.key}">
+      <div class="text-label"><strong>${s.label}</strong></div>
+      <div class="text-inputs">
+        <div>
+          <label>🇸🇦 العربية</label>
+          <textarea data-f="ar" rows="3">${escapeHtml(info[s.key]?.ar || "")}</textarea>
+        </div>
+        <div>
+          <label>🇬🇧 English</label>
+          <textarea data-f="en" rows="3">${escapeHtml(info[s.key]?.en || "")}</textarea>
+        </div>
+      </div>
+      <div class="text-actions">
+        <button class="icon-btn-sm ok" data-act="save">${t("admin.save")}</button>
+      </div>
+    </div>
+  `).join("");
+
+  el.querySelectorAll(".text-row").forEach(row => {
+    const key = row.dataset.key;
+    row.querySelector('[data-act="save"]').onclick = () => {
+      const ar = row.querySelector('textarea[data-f="ar"]').value.trim();
+      const en = row.querySelector('textarea[data-f="en"]').value.trim();
+      const patch = {};
+      patch[key] = { ar, en };
+      SiteInfoAPI.update(patch);
+      showToast("تم الحفظ ✓");
+    };
+  });
+}
+
+/* =====================================================
+   محرر جداول المقاسات (الوصف فقط لتبسيط الواجهة)
+===================================================== */
+function renderSizeChartsEditor() {
+  const el = document.getElementById("sizeChartsEditor");
+  if (!el) return;
+  const charts = SizeChartsAPI.get();
+  el.innerHTML = `
+    <div class="text-row">
+      <div class="text-label"><strong>وصف دليل المقاسات (يظهر للزبونة)</strong></div>
+      <div class="text-inputs">
+        <div>
+          <label>🇸🇦 العربية</label>
+          <textarea id="sgDescAr" rows="3">${escapeHtml(charts.description?.ar || "")}</textarea>
+        </div>
+        <div>
+          <label>🇬🇧 English</label>
+          <textarea id="sgDescEn" rows="3">${escapeHtml(charts.description?.en || "")}</textarea>
+        </div>
+      </div>
+      <div class="text-actions">
+        <button class="icon-btn-sm ok" id="sgDescSave">${t("admin.save")}</button>
+      </div>
+    </div>
+    <p style="color:var(--muted); font-size:12px; margin-top:10px;">
+      ℹ️ القياسات في الجدول مبنية على المعايير العالمية والخليجية. لتعديل الأرقام مباشرة احفظي عبر:
+      <code>SizeChartsAPI.save({intl:[...], gulf:[...]})</code> من Console.
+    </p>`;
+
+  document.getElementById("sgDescSave")?.addEventListener("click", () => {
+    SizeChartsAPI.save({
+      description: {
+        ar: document.getElementById("sgDescAr").value.trim(),
+        en: document.getElementById("sgDescEn").value.trim(),
+      },
+    });
+    showToast("تم الحفظ ✓");
+  });
+}
 
 /* =====================================================
    محرر نصوص الواجهة

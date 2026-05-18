@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@500;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="assets/css/admin.css?v=20260519e" />
+  <link rel="stylesheet" href="assets/css/admin.css?v=20260519f" />
 </head>
 <body>
 
@@ -381,6 +381,54 @@
         <div id="categoriesList"></div>
       </div>
 
+      <!-- إدارة الأقمشة -->
+      <div class="panel">
+        <div class="panel-head">
+          <h2>🧵 الأقمشة</h2>
+          <button class="btn gold" id="addFabricBtn">+ إضافة قماش</button>
+        </div>
+        <p class="sub" style="margin: 0 0 10px;">أضيفي أو عدّلي أنواع الأقمشة التي تظهر في الفلاتر ونماذج المنتجات.</p>
+        <div id="fabricsList"></div>
+      </div>
+
+      <!-- إدارة القَصّات -->
+      <div class="panel">
+        <div class="panel-head">
+          <h2>✂️ القَصّات</h2>
+          <button class="btn gold" id="addCutBtn">+ إضافة قَصّة</button>
+        </div>
+        <p class="sub" style="margin: 0 0 10px;">أضيفي أو عدّلي قَصّات العبايات (كلوش، فراشة، بشت...).</p>
+        <div id="cutsList"></div>
+      </div>
+
+      <!-- إدارة آراء العملاء -->
+      <div class="panel">
+        <div class="panel-head">
+          <h2>⭐ آراء العملاء</h2>
+          <button class="btn gold" id="addReviewBtn">+ إضافة رأي</button>
+        </div>
+        <p class="sub" style="margin: 0 0 10px;">عدّلي أو احذفي مراجعات العميلات. تظهر في أسفل الصفحة الرئيسية.</p>
+        <div id="reviewsList"></div>
+      </div>
+
+      <!-- معلومات الموقع -->
+      <div class="panel">
+        <div class="panel-head">
+          <h2>ℹ️ معلومات الموقع</h2>
+        </div>
+        <p class="sub" style="margin: 0 0 12px;">عدّلي النصوص التي تظهر في قسم "عن عبايات أمل".</p>
+        <div id="siteInfoEditor"></div>
+      </div>
+
+      <!-- جداول المقاسات -->
+      <div class="panel">
+        <div class="panel-head">
+          <h2>📏 جداول المقاسات (دولي / خليجي)</h2>
+        </div>
+        <p class="sub" style="margin: 0 0 12px;">عدّلي وصف دليل المقاسات الذي يراه الزبون.</p>
+        <div id="sizeChartsEditor"></div>
+      </div>
+
       <!-- محرر نصوص الواجهة -->
       <div class="panel">
         <div class="panel-head">
@@ -527,7 +575,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="assets/js/data.js?v=20260519e"></script>
-<script src="assets/js/admin.js?v=20260519e"></script>
+<script src="assets/js/data.js?v=20260519f"></script>
+<script src="assets/js/admin.js?v=20260519f"></script>
 </body>
 </html>

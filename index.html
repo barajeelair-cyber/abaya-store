@@ -42,7 +42,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@500;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="assets/css/customer.css?v=20260519e" />
+  <link rel="stylesheet" href="assets/css/customer.css?v=20260519f" />
 </head>
 <body>
 
@@ -151,6 +151,43 @@
       <div class="line"></div>
     </div>
     <div class="grid" id="productsGrid"></div>
+  </section>
+
+  <!-- ============ قسم آراء العملاء ============ -->
+  <section class="section reviews-section" id="reviewsSection">
+    <div class="section-title">
+      <h2 data-i18n="reviews.title">آراء عميلاتنا</h2>
+      <div class="line"></div>
+      <p class="reviews-sub" data-i18n="reviews.subtitle">ما تقوله سيداتنا الجميلات عن تجربتهن مع عبايات أمل</p>
+      <div class="reviews-avg" id="reviewsAvg"></div>
+    </div>
+    <div class="reviews-grid" id="reviewsGrid"></div>
+  </section>
+
+  <!-- ============ قسم معلومات الموقع ============ -->
+  <section class="section site-info-section" id="siteInfoSection">
+    <div class="section-title">
+      <h2 data-i18n="siteInfo.title">عن عبايات أمل</h2>
+      <div class="line"></div>
+    </div>
+    <div class="site-info-grid">
+      <div class="site-info-card">
+        <h3>✨ <span data-i18n="siteInfo.about">من نحن</span></h3>
+        <p id="siteAboutText">—</p>
+      </div>
+      <div class="site-info-card">
+        <h3>🚚 <span data-i18n="siteInfo.shipping">الشحن والتوصيل</span></h3>
+        <p id="siteShippingText">—</p>
+      </div>
+      <div class="site-info-card">
+        <h3>♻️ <span data-i18n="siteInfo.return">سياسة الاستبدال</span></h3>
+        <p id="siteReturnText">—</p>
+      </div>
+      <div class="site-info-card">
+        <h3>💬 <span data-i18n="siteInfo.faq">أسئلة شائعة</span></h3>
+        <p id="siteFaqText">—</p>
+      </div>
+    </div>
   </section>
 
   <!-- ============ التذييل ============ -->
@@ -323,7 +360,34 @@
               style="position:absolute; top:14px; left:14px;">✕</button>
 
       <h3 data-i18n="sizeGuide.title">📏 دليل المقاسات</h3>
-      <p class="sub" data-i18n="sizeGuide.subtitle">احسبي مقاسك بدقة بمتر قماش (تيب) ثم قارنيه بالجدول.</p>
+      <p class="sub" id="sizeGuideDesc">احسبي مقاسك بدقة بمتر قماش (تيب) ثم قارنيه بالجدول.</p>
+
+      <!-- نظام المقاسات (دولي / خليجي) -->
+      <div class="size-system-toggle">
+        <button type="button" class="sst-btn active" data-system="intl" data-i18n="sizeGuide.system_intl">النظام الدولي</button>
+        <button type="button" class="sst-btn" data-system="gulf" data-i18n="sizeGuide.system_gulf">النظام الخليجي</button>
+      </div>
+
+      <!-- آلة حاسبة تفاعلية -->
+      <div class="size-calc">
+        <h4 data-i18n="sizeGuide.calc_title">🧮 احسبي مقاسك تلقائياً</h4>
+        <div class="calc-row">
+          <div class="calc-field">
+            <label data-i18n="sizeGuide.calc_chest">محيط الصدر (سم)</label>
+            <input type="number" id="calcChest" min="60" max="200" placeholder="92">
+          </div>
+          <div class="calc-field">
+            <label data-i18n="sizeGuide.calc_waist">محيط الخصر (سم)</label>
+            <input type="number" id="calcWaist" min="50" max="180" placeholder="72">
+          </div>
+          <div class="calc-field">
+            <label data-i18n="sizeGuide.calc_hips">محيط الأرداف (سم)</label>
+            <input type="number" id="calcHips" min="60" max="200" placeholder="96">
+          </div>
+          <button type="button" class="btn-gold" id="calcBtn" data-i18n="sizeGuide.calc_btn">اعرفي مقاسي</button>
+        </div>
+        <div class="calc-result" id="calcResult"></div>
+      </div>
 
       <div class="size-guide">
         <!-- نموذج توضيحي  —  شكل أنثى مع خطوط القياس -->
@@ -386,29 +450,9 @@
           </svg>
         </div>
 
-        <!-- جدول المقاسات -->
+        <!-- جدول المقاسات  —  يُملأ ديناميكياً من JS -->
         <div class="size-table-wrap">
-          <table class="size-table">
-            <thead>
-              <tr>
-                <th data-i18n="sizeGuide.size">المقاس</th>
-                <th data-i18n="sizeGuide.chest_cm">الصدر</th>
-                <th data-i18n="sizeGuide.waist_cm">الخصر</th>
-                <th data-i18n="sizeGuide.hips_cm">الأرداف</th>
-                <th data-i18n="sizeGuide.length_cm">الطول</th>
-                <th data-i18n="sizeGuide.intl">دولي</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><th>XS</th><td>80–84</td><td>60–64</td><td>84–88</td><td>130</td><td>36 / 4</td></tr>
-              <tr><th>S</th> <td>84–88</td><td>64–68</td><td>88–92</td><td>135</td><td>38 / 6</td></tr>
-              <tr><th>M</th> <td>88–94</td><td>68–74</td><td>92–98</td><td>140</td><td>40 / 8–10</td></tr>
-              <tr><th>L</th> <td>94–100</td><td>74–80</td><td>98–104</td><td>145</td><td>44 / 12</td></tr>
-              <tr><th>XL</th><td>100–108</td><td>80–88</td><td>104–112</td><td>150</td><td>46 / 14</td></tr>
-              <tr><th>XXL</th><td>108–116</td><td>88–96</td><td>112–120</td><td>152</td><td>48 / 16</td></tr>
-              <tr><th>3XL</th><td>116–124</td><td>96–104</td><td>120–128</td><td>155</td><td>50 / 18</td></tr>
-            </tbody>
-          </table>
+          <table class="size-table" id="sizeTable"></table>
           <p class="size-unit" data-i18n="sizeGuide.unit_note">جميع القياسات بالسنتيمتر (cm)</p>
         </div>
       </div>
@@ -472,7 +516,7 @@
   <!-- ============ تنبيه ============ -->
   <div class="toast" id="toast">تمت الإضافة إلى السلة</div>
 
-  <script src="assets/js/data.js?v=20260519e"></script>
-  <script src="assets/js/customer.js?v=20260519e"></script>
+  <script src="assets/js/data.js?v=20260519f"></script>
+  <script src="assets/js/customer.js?v=20260519f"></script>
 </body>
 </html>

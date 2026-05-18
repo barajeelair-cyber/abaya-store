@@ -43,6 +43,45 @@ const I18N = {
     "section.collection": "تشكيلتنا",
     "section.no_products": "لا توجد منتجات في هذا التصنيف بعد.",
 
+    /* Special quick-view tabs */
+    "category.favorites": "❤️ المفضلة",
+    "category.bestseller": "🔥 الأكثر مبيعاً",
+    "favorites.empty": "لا توجد عبايات في المفضلة بعد. اضغطي ♡ على أي منتج لإضافته.",
+    "favorites.added": "تمت الإضافة إلى المفضلة ❤️",
+    "favorites.removed": "تمت الإزالة من المفضلة",
+
+    /* Reviews */
+    "reviews.title": "آراء عميلاتنا",
+    "reviews.subtitle": "ما تقوله سيداتنا الجميلات عن تجربتهن مع عبايات أمل",
+    "reviews.verified": "مشترية موثّقة",
+    "reviews.write": "اكتبي رأيك",
+    "reviews.your_name": "اسمك",
+    "reviews.your_rating": "تقييمك",
+    "reviews.your_comment": "تعليقك",
+    "reviews.submit": "إرسال",
+    "reviews.thanks": "شكراً لرأيك! سيظهر بعد المراجعة.",
+    "reviews.avg_label": "متوسط التقييم",
+    "reviews.based_on": "بناءً على",
+    "reviews.review_count": "مراجعة",
+
+    /* Site info */
+    "siteInfo.title": "عن عبايات أمل",
+    "siteInfo.about": "من نحن",
+    "siteInfo.shipping": "الشحن والتوصيل",
+    "siteInfo.return": "سياسة الاستبدال",
+    "siteInfo.faq": "أسئلة شائعة",
+
+    /* Size guide additions */
+    "sizeGuide.system_intl": "النظام الدولي",
+    "sizeGuide.system_gulf": "النظام الخليجي",
+    "sizeGuide.calc_title": "🧮 احسبي مقاسك تلقائياً",
+    "sizeGuide.calc_chest": "محيط الصدر (سم)",
+    "sizeGuide.calc_waist": "محيط الخصر (سم)",
+    "sizeGuide.calc_hips": "محيط الأرداف (سم)",
+    "sizeGuide.calc_btn": "اعرفي مقاسي",
+    "sizeGuide.calc_result": "مقاسك المناسب",
+    "sizeGuide.calc_no_match": "أدخلي قياساتك أعلاه لمعرفة المقاس",
+
     /* Categories */
     "category.all": "الكل",
     "category.new": "الجديد",
@@ -597,6 +636,45 @@ const I18N = {
     /* Sections */
     "section.collection": "Our Collection",
     "section.no_products": "No products in this category yet.",
+
+    /* Special quick-view tabs */
+    "category.favorites": "❤️ Favorites",
+    "category.bestseller": "🔥 Bestsellers",
+    "favorites.empty": "No favorites yet. Tap ♡ on any product to add it.",
+    "favorites.added": "Added to favorites ❤️",
+    "favorites.removed": "Removed from favorites",
+
+    /* Reviews */
+    "reviews.title": "Customer Reviews",
+    "reviews.subtitle": "What our wonderful customers say about Amal Abayas",
+    "reviews.verified": "Verified buyer",
+    "reviews.write": "Write a review",
+    "reviews.your_name": "Your name",
+    "reviews.your_rating": "Your rating",
+    "reviews.your_comment": "Your comment",
+    "reviews.submit": "Submit",
+    "reviews.thanks": "Thanks! Your review will appear after moderation.",
+    "reviews.avg_label": "Average rating",
+    "reviews.based_on": "Based on",
+    "reviews.review_count": "reviews",
+
+    /* Site info */
+    "siteInfo.title": "About Amal Abayas",
+    "siteInfo.about": "About us",
+    "siteInfo.shipping": "Shipping & Delivery",
+    "siteInfo.return": "Return Policy",
+    "siteInfo.faq": "FAQ",
+
+    /* Size guide additions */
+    "sizeGuide.system_intl": "International",
+    "sizeGuide.system_gulf": "Gulf (Khaleeji)",
+    "sizeGuide.calc_title": "🧮 Calculate my size",
+    "sizeGuide.calc_chest": "Chest (cm)",
+    "sizeGuide.calc_waist": "Waist (cm)",
+    "sizeGuide.calc_hips": "Hips (cm)",
+    "sizeGuide.calc_btn": "Find my size",
+    "sizeGuide.calc_result": "Your size is",
+    "sizeGuide.calc_no_match": "Enter your measurements above to see your size",
 
     /* Categories */
     "category.all":         "All",
@@ -1237,6 +1315,12 @@ function loadDB() {
       if (!db.settings.customers) db.settings.customers = [];
       if (db.settings.heroBgOpacity === undefined) db.settings.heroBgOpacity = 0.55;
       if (db.settings.heroBgImage === undefined) db.settings.heroBgImage = "";
+      /* migrations جديدة: fabrics, cuts, reviews, siteInfo, sizeCharts */
+      if (!db.settings.fabrics)   db.settings.fabrics = DEFAULT_FABRICS.slice();
+      if (!db.settings.cuts)      db.settings.cuts    = DEFAULT_CUTS.slice();
+      if (!db.settings.reviews)   db.settings.reviews = defaultReviews();
+      if (!db.settings.siteInfo)  db.settings.siteInfo = defaultSiteInfo();
+      if (!db.settings.sizeCharts) db.settings.sizeCharts = defaultSizeCharts();
       return db;
     } catch (e) { /* corrupt */ }
   }
@@ -1276,6 +1360,73 @@ const DEFAULT_FABRICS = [
   { id: "summer",  name_ar: "قماش صيفي",  name_en: "Summer fabric" },
   { id: "winter",  name_ar: "قماش شتوي",  name_en: "Winter fabric" },
 ];
+
+/* مراجعات افتراضية لدعم الصفحة */
+function defaultReviews() {
+  return [
+    { id: uid(), name: "نور أبو رشيد", rating: 5, date: "2026-04-22", text: "العباية وصلت بحالة ممتازة، القماش فاخر والخياطة دقيقة. شكراً عبايات أمل!", verified: true },
+    { id: uid(), name: "ريم الأغا",     rating: 5, date: "2026-04-18", text: "أجمل عباية لبستها بحياتي. التطريز الذهبي تحفة فنية حقيقية. ممتنة جداً.", verified: true },
+    { id: uid(), name: "هبة شاهين",     rating: 4, date: "2026-04-10", text: "الجودة عالية، والمقاس مظبوط حسب الجدول. التوصيل أسرع مما توقعت.", verified: true },
+    { id: uid(), name: "سحر النجار",    rating: 5, date: "2026-03-29", text: "موظفات المتجر متعاونات جداً، ساعدوني في اختيار المقاس المناسب. تجربة رائعة.", verified: false },
+    { id: uid(), name: "علا حمدان",     rating: 5, date: "2026-03-15", text: "عباية المسائية مثل الصورة بالضبط. الحرير ناعم والتفصيل أنيق. سأطلب مرة ثانية بإذن الله.", verified: true },
+    { id: uid(), name: "آلاء البطنيجي", rating: 4, date: "2026-03-02", text: "أحببت العباية كثيراً، اللون والخامة كما هو موصوف. سعر مناسب للجودة.", verified: true },
+    { id: uid(), name: "مروى زقوت",     rating: 5, date: "2026-02-20", text: "خدمة ممتازة وتوصيل سريع لمدينة غزة. القماش ثقيل ومميز. أنصح بشدة.", verified: true },
+    { id: uid(), name: "ميسر اشتيوي",   rating: 5, date: "2026-02-08", text: "تشكيلة العبايات المفتوحة رائعة، طلبت اثنتين وكلاهما بمستوى عالٍ. شكراً للأخوات.", verified: false },
+  ];
+}
+
+/* معلومات الموقع الافتراضية */
+function defaultSiteInfo() {
+  return {
+    aboutUs: {
+      ar: "عبايات أمل علامة فلسطينية ولدت من شغف بالأناقة الراقية. نختار أجود الأقمشة ونحرص على تفاصيل التطريز اليدوي لتصل إليكِ عباية تليق بإطلالتك.",
+      en: "Amal Abayas is a Palestinian brand born from a passion for refined elegance. We hand-pick the finest fabrics and meticulously craft every embroidery to bring you an abaya worthy of you.",
+    },
+    shipping: {
+      ar: "نوصِّل لكل مدن قطاع غزة. الرسوم تختلف بحسب المدينة (15₪ - 30₪)، والتوصيل خلال 1-3 أيام عمل.",
+      en: "We deliver to all Gaza Strip cities. Fees vary by city (15-30 ILS), with delivery in 1-3 business days.",
+    },
+    returnPolicy: {
+      ar: "يمكنكِ استبدال أو إرجاع المنتج خلال 3 أيام من الاستلام بشرط أن يكون بحالته الأصلية وبدون استخدام.",
+      en: "You can exchange or return within 3 days of receipt provided the item is in original condition and unused.",
+    },
+    faq: {
+      ar: "تواصلي معنا عبر الواتساب لأي سؤال عن المقاس أو القماش أو التوصيل قبل الطلب.",
+      en: "Contact us on WhatsApp for any question about size, fabric, or delivery before ordering.",
+    },
+  };
+}
+
+/* جداول المقاسات (دولي + خليجي)، قابلة للتعديل */
+function defaultSizeCharts() {
+  return {
+    intl: [
+      { size: "XS",  chest: "80–84",   waist: "60–64",   hips: "84–88",    length: "130", intl: "36 / 4" },
+      { size: "S",   chest: "84–88",   waist: "64–68",   hips: "88–92",    length: "135", intl: "38 / 6" },
+      { size: "M",   chest: "88–94",   waist: "68–74",   hips: "92–98",    length: "140", intl: "40 / 8–10" },
+      { size: "L",   chest: "94–100",  waist: "74–80",   hips: "98–104",   length: "145", intl: "44 / 12" },
+      { size: "XL",  chest: "100–108", waist: "80–88",   hips: "104–112",  length: "150", intl: "46 / 14" },
+      { size: "XXL", chest: "108–116", waist: "88–96",   hips: "112–120",  length: "152", intl: "48 / 16" },
+      { size: "3XL", chest: "116–124", waist: "96–104",  hips: "120–128",  length: "155", intl: "50 / 18" },
+    ],
+    gulf: [
+      /* النظام الخليجي يستخدم أرقام (40-60) */
+      { size: "40", chest: "82–86",   waist: "62–66",   hips: "86–90",    length: "130", intl: "XS / 36" },
+      { size: "42", chest: "86–90",   waist: "66–70",   hips: "90–94",    length: "135", intl: "S / 38" },
+      { size: "44", chest: "90–94",   waist: "70–74",   hips: "94–98",    length: "140", intl: "M / 40" },
+      { size: "46", chest: "94–98",   waist: "74–78",   hips: "98–102",   length: "142", intl: "M-L / 42" },
+      { size: "48", chest: "98–104",  waist: "78–84",   hips: "102–108",  length: "145", intl: "L / 44" },
+      { size: "50", chest: "104–110", waist: "84–90",   hips: "108–114",  length: "148", intl: "XL / 46" },
+      { size: "52", chest: "110–116", waist: "90–96",   hips: "114–120",  length: "150", intl: "XXL / 48" },
+      { size: "54", chest: "116–122", waist: "96–102",  hips: "120–126",  length: "152", intl: "3XL / 50" },
+      { size: "56", chest: "122–128", waist: "102–108", hips: "126–132",  length: "155", intl: "3XL / 52" },
+    ],
+    description: {
+      ar: "اختاري نظام المقاسات (دولي أو خليجي) ثم قارني قياساتك بالجدول. عند الشك بين مقاسين، اختاري الأكبر.",
+      en: "Choose your sizing system (International or Gulf) then match your measurements to the table. When in doubt, size up.",
+    },
+  };
+}
 
 /* قَصّات العبايات */
 const DEFAULT_CUTS = [
@@ -1424,6 +1575,11 @@ function seedData() {
       ],
       categories: defaultCategories(),
       cities: defaultCities(),
+      fabrics: DEFAULT_FABRICS.slice(),
+      cuts: DEFAULT_CUTS.slice(),
+      reviews: defaultReviews(),
+      siteInfo: defaultSiteInfo(),
+      sizeCharts: defaultSizeCharts(),
       textOverrides: { ar: {}, en: {} },
       customers: [],
       admin: { username: "admin", password: "admin123" },
@@ -1563,6 +1719,120 @@ const SettingsAPI = {
     const db = loadDB();
     db.settings.bankAccounts = db.settings.bankAccounts.filter(b => b.id !== id);
     saveDB(db);
+  },
+};
+
+/* =========================================================
+   FabricsAPI / CutsAPI  —  أقمشة وقَصّات قابلة للتحرير
+========================================================= */
+function makeLookupAPI(key, defaults) {
+  return {
+    list() { return SettingsAPI.get()[key] || defaults; },
+    save(item) {
+      const db = loadDB();
+      db.settings[key] = db.settings[key] || [];
+      if (item.id && db.settings[key].find(x => x.id === item.id)) {
+        const idx = db.settings[key].findIndex(x => x.id === item.id);
+        db.settings[key][idx] = { ...db.settings[key][idx], ...item };
+      } else {
+        if (!item.id) {
+          item.id = (item.name_en || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || uid();
+        }
+        db.settings[key].push(item);
+      }
+      saveDB(db);
+      return item;
+    },
+    remove(id) {
+      const db = loadDB();
+      db.settings[key] = (db.settings[key] || []).filter(x => x.id !== id);
+      saveDB(db);
+    },
+  };
+}
+const FabricsAPI = makeLookupAPI("fabrics", DEFAULT_FABRICS);
+const CutsAPI    = makeLookupAPI("cuts",    DEFAULT_CUTS);
+
+/* =========================================================
+   ReviewsAPI  —  مراجعات العملاء
+========================================================= */
+const ReviewsAPI = {
+  list() { return SettingsAPI.get().reviews || []; },
+  save(review) {
+    const db = loadDB();
+    db.settings.reviews = db.settings.reviews || [];
+    if (review.id && db.settings.reviews.find(r => r.id === review.id)) {
+      const idx = db.settings.reviews.findIndex(r => r.id === review.id);
+      db.settings.reviews[idx] = { ...db.settings.reviews[idx], ...review };
+    } else {
+      if (!review.id) review.id = uid();
+      if (!review.date) review.date = new Date().toISOString().slice(0, 10);
+      db.settings.reviews.unshift(review);
+    }
+    saveDB(db);
+    return review;
+  },
+  remove(id) {
+    const db = loadDB();
+    db.settings.reviews = (db.settings.reviews || []).filter(r => r.id !== id);
+    saveDB(db);
+  },
+  avgRating() {
+    const reviews = this.list();
+    if (!reviews.length) return 0;
+    return reviews.reduce((s, r) => s + Number(r.rating || 0), 0) / reviews.length;
+  },
+};
+
+/* =========================================================
+   FavoritesAPI  —  المفضلة في localStorage (لكل جهاز)
+========================================================= */
+const FAVS_KEY = "abaya_amal_favs_v1";
+const FavoritesAPI = {
+  list() {
+    try { return JSON.parse(localStorage.getItem(FAVS_KEY) || "[]"); }
+    catch { return []; }
+  },
+  has(id) { return this.list().includes(id); },
+  add(id) {
+    const list = this.list();
+    if (!list.includes(id)) list.push(id);
+    localStorage.setItem(FAVS_KEY, JSON.stringify(list));
+  },
+  remove(id) {
+    const list = this.list().filter(x => x !== id);
+    localStorage.setItem(FAVS_KEY, JSON.stringify(list));
+  },
+  toggle(id) {
+    if (this.has(id)) { this.remove(id); return false; }
+    this.add(id); return true;
+  },
+  count() { return this.list().length; },
+};
+
+/* =========================================================
+   SiteInfoAPI  —  معلومات الموقع (من نحن / الشحن / الإرجاع)
+========================================================= */
+const SiteInfoAPI = {
+  get() { return SettingsAPI.get().siteInfo || defaultSiteInfo(); },
+  update(patch) {
+    const db = loadDB();
+    db.settings.siteInfo = { ...db.settings.siteInfo, ...patch };
+    saveDB(db);
+    return db.settings.siteInfo;
+  },
+};
+
+/* =========================================================
+   SizeChartsAPI
+========================================================= */
+const SizeChartsAPI = {
+  get() { return SettingsAPI.get().sizeCharts || defaultSizeCharts(); },
+  save(patch) {
+    const db = loadDB();
+    db.settings.sizeCharts = { ...db.settings.sizeCharts, ...patch };
+    saveDB(db);
+    return db.settings.sizeCharts;
   },
 };
 
@@ -1867,6 +2137,8 @@ const Utils = {
 Object.assign(window, {
   ProductsAPI, OrdersAPI, SettingsAPI, CouponsAPI,
   CategoriesAPI, CitiesAPI, TextOverridesAPI,
+  FabricsAPI, CutsAPI, ReviewsAPI, FavoritesAPI,
+  SiteInfoAPI, SizeChartsAPI,
   AuthAPI, CustomersAPI, Utils,
   GAZA_CITIES, CATEGORIES, ORDER_STATUSES,
   LOW_STOCK_THRESHOLD, DEFAULT_SIZES, DEFAULT_COLORS,
