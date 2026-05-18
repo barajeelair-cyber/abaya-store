@@ -272,13 +272,19 @@ const $colorsCont   = document.getElementById("colorsContainer");
 const $stockGrid    = document.getElementById("stockGrid");
 
 function fillCategorySelects() {
-  const cats = CategoriesAPI.list().filter(c => c.active !== false);
+  let cats = CategoriesAPI.list().filter(c => c.active !== false);
+  /* استعادة افتراضية لو حُذفت كل التصنيفات حتى لا يبقى نموذج المنتج بدون خيارات */
+  if (cats.length === 0) {
+    CategoriesAPI.save({ name_ar: "عام", name_en: "General", active: true });
+    cats = CategoriesAPI.list().filter(c => c.active !== false);
+  }
   const opts = cats.map(c => {
     const name = (getLang() === "en" && c.name_en) ? c.name_en : c.name_ar;
     return `<option value="${c.id}">${escapeHtml(name)}</option>`;
   }).join("");
-  document.getElementById("formCategory").innerHTML = opts;
-  $filterCat.innerHTML = `<option value="">${t("admin.products.all_categories")}</option>` + opts;
+  const formCat = document.getElementById("formCategory");
+  if (formCat) formCat.innerHTML = opts;
+  if ($filterCat) $filterCat.innerHTML = `<option value="">${t("admin.products.all_categories")}</option>` + opts;
 }
 
 let workingColors = []; /* في وقت تحرير المنتج */
@@ -359,7 +365,7 @@ function renderColors() {
 
 async function handleImageFile(idx, file) {
   if (!file) return;
-  if (file.size > 3 * 1024 * 1024) { showToast("حجم الصورة كبير (الحد 3 ميجا)"); return; }
+  if (file.size > 3 * 1024 * 1024) { showToast(t("admin.product.image_too_big")); return; }
   workingColors[idx].image = await Utils.fileToDataURL(file);
   renderColors();
 }
@@ -406,12 +412,14 @@ document.getElementById("addProductBtn").onclick = () => openProductModal(null);
 document.getElementById("cancelProduct").onclick = () => $productModal.classList.remove("open");
 
 function openProductModal(product) {
+  /* تأكد دائماً أن قائمة التصنيفات محدّثة قبل فتح المودال */
+  fillCategorySelects();
   $productForm.reset();
   if (product) {
-    $productTitle.textContent = "تعديل المنتج";
+    $productTitle.textContent = t("admin.product.edit_title");
     $productForm.id.value          = product.id;
     $productForm.name.value         = product.name;
-    $productForm.category.value     = product.category || "everyday";
+    $productForm.category.value     = product.category || "";
     $productForm.price.value        = product.price;
     $productForm.discount.value     = product.discount || 0;
     $productForm.description.value  = product.description || "";
@@ -420,8 +428,11 @@ function openProductModal(product) {
     workingSizes  = (product.sizes || []).slice();
     workingStock  = Object.assign({}, product.stock || {});
   } else {
-    $productTitle.textContent = "إضافة منتج";
+    $productTitle.textContent = t("admin.product.add_title");
     $productForm.id.value = "";
+    /* اختر أول تصنيف افتراضياً */
+    const firstCat = document.getElementById("formCategory").querySelector("option");
+    if (firstCat) $productForm.category.value = firstCat.value;
     workingColors = [];
     workingSizes  = [];
     workingStock  = {};
@@ -436,10 +447,13 @@ $productForm.onsubmit = (e) => {
   const f = $productForm;
 
   /* تحقق */
-  if (workingColors.length === 0) { showToast("أضيفي لوناً واحداً على الأقل"); return; }
-  if (workingColors.some(c => !c.name)) { showToast("أكملي أسماء الألوان"); return; }
-  if (workingColors.some(c => !c.image)) { showToast("ارفعي صورة لكل لون"); return; }
-  if (workingSizes.length === 0) { showToast("أضيفي مقاساً واحداً على الأقل"); return; }
+  if (!f.name.value.trim()) { showToast(getLang() === "en" ? "Enter product name" : "اكتبي اسم المنتج"); return; }
+  if (!f.category.value)    { showToast(getLang() === "en" ? "Select a category" : "اختاري التصنيف"); return; }
+  if (!f.price.value || Number(f.price.value) <= 0) { showToast(getLang() === "en" ? "Enter a valid price" : "اكتبي سعراً صحيحاً"); return; }
+  if (workingColors.length === 0) { showToast(t("admin.product.need_color")); return; }
+  if (workingColors.some(c => !c.name)) { showToast(t("admin.product.need_color_names")); return; }
+  if (workingColors.some(c => !c.image)) { showToast(t("admin.product.need_color_images")); return; }
+  if (workingSizes.length === 0) { showToast(t("admin.product.need_sizes")); return; }
 
   /* نظّف المخزون من تركيبات قديمة لم تعد موجودة */
   const cleanStock = {};
@@ -459,9 +473,19 @@ $productForm.onsubmit = (e) => {
     sizes:  workingSizes,
     stock:  cleanStock,
   };
-  ProductsAPI.save(product);
+  try {
+    ProductsAPI.save(product);
+  } catch (err) {
+    /* عادةً QuotaExceededError من localStorage عندما تكون الصور كبيرة جداً */
+    const msg = getLang() === "en"
+      ? "Saving failed — images may be too large. Try smaller images (<1 MB each)."
+      : "فشل الحفظ - الصور قد تكون كبيرة جداً. جرّبي صوراً أصغر (<1 ميجا للصورة).";
+    showToast(msg);
+    console.error("ProductsAPI.save error:", err);
+    return;
+  }
   $productModal.classList.remove("open");
-  showToast(product.id ? "تم تعديل المنتج" : "تمت إضافة المنتج");
+  showToast(product.id ? t("admin.product.updated") : t("admin.product.added"));
   refreshAll();
 };
 
@@ -500,9 +524,9 @@ function renderProductsTable() {
     b.onclick = () => {
       const p = ProductsAPI.get(b.dataset.id);
       if (b.dataset.act === "edit") openProductModal(p);
-      else if (b.dataset.act === "del" && confirm(`حذف "${p.name}"؟`)) {
+      else if (b.dataset.act === "del" && confirm((getLang() === "en" ? "Delete " : "حذف ") + `"${p.name}"؟`)) {
         ProductsAPI.remove(p.id);
-        showToast("تم الحذف");
+        showToast(t("admin.product.deleted"));
         refreshAll();
       }
     };

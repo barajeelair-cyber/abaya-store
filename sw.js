@@ -3,7 +3,7 @@
    استراتيجية: Cache-first مع fallback إلى الشبكة
 ========================================================= */
 
-const CACHE_NAME = "amal-v3";
+const CACHE_NAME = "amal-v5";
 const ASSETS = [
   "./",
   "./index.html",
@@ -44,17 +44,31 @@ self.addEventListener("fetch", (event) => {
   /* تجاهل خطابات google fonts وغيرها  —  دعها تذهب عبر الشبكة مباشرة */
   if (!req.url.startsWith(self.location.origin)) return;
 
-  event.respondWith(
-    caches.match(req).then((cached) => {
-      if (cached) return cached;
-      return fetch(req).then((response) => {
-        /* خزّن مكرراً للأصول من نفس المصدر */
-        if (response && response.status === 200 && response.type === "basic") {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
+  /* استراتيجية: network-first للملفات النصية (HTML/JS/CSS) لضمان آخر تحديث،
+     وcache-first للصور لتسريع التحميل */
+  const isAsset = /\.(svg|png|jpg|jpeg|webp|ico)$/i.test(req.url);
+
+  if (isAsset) {
+    /* cache-first للصور */
+    event.respondWith(
+      caches.match(req).then(cached => cached || fetch(req).then(res => {
+        if (res && res.status === 200) {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then(c => c.put(req, clone));
         }
-        return response;
-      }).catch(() => cached);
-    })
-  );
+        return res;
+      }).catch(() => cached))
+    );
+  } else {
+    /* network-first لـ HTML/JS/CSS */
+    event.respondWith(
+      fetch(req).then(res => {
+        if (res && res.status === 200) {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then(c => c.put(req, clone));
+        }
+        return res;
+      }).catch(() => caches.match(req))
+    );
+  }
 });
