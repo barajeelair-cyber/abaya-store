@@ -245,7 +245,7 @@ function openProductModal(id) {
   $pModal.classList.add("open");
 }
 function closeProductModal() { $pModal.classList.remove("open"); }
-document.getElementById("closeProductModal").onclick = closeProductModal;
+document.getElementById("closeProductModal")?.addEventListener("click", closeProductModal);
 
 function renderProductModal() {
   const p = currentProduct;
@@ -405,9 +405,9 @@ function renderCart() {
 
 function openCart()  { $drawer.classList.add("open"); $overlay.classList.add("open"); }
 function closeCart() { $drawer.classList.remove("open"); $overlay.classList.remove("open"); }
-$openCart.onclick  = openCart;
-$closeCart.onclick = closeCart;
-$overlay.onclick   = closeCart;
+$openCart?.addEventListener("click", openCart);
+$closeCart?.addEventListener("click", closeCart);
+$overlay?.addEventListener("click", closeCart);
 
 /* =========================================================
    إتمام الطلب
@@ -505,56 +505,65 @@ function applyCoupon() {
   renderSummary();
 }
 
-$goCheckout.onclick = () => {
-  if (cart.size === 0) return;
-  fillCities();
-  renderBankAccounts();
-  paymentProof = null;
-  appliedCoupon = null;
-  $proofPrev.innerHTML = "";
-  document.getElementById("couponInput").value = "";
-  setCouponStatus("", "");
-  renderSummary();
-  $checkout.classList.add("open");
-};
+if ($goCheckout) {
+  $goCheckout.onclick = () => {
+    if (cart.size === 0) return;
+    fillCities();
+    renderBankAccounts();
+    paymentProof = null;
+    appliedCoupon = null;
+    if ($proofPrev) $proofPrev.innerHTML = "";
+    const couponEl = document.getElementById("couponInput");
+    if (couponEl) couponEl.value = "";
+    setCouponStatus("", "");
+    renderSummary();
+    $checkout?.classList.add("open");
+  };
+}
 
-document.getElementById("applyCouponBtn").onclick = applyCoupon;
-document.getElementById("couponInput").addEventListener("keydown", (e) => {
+document.getElementById("applyCouponBtn")?.addEventListener("click", applyCoupon);
+document.getElementById("couponInput")?.addEventListener("keydown", (e) => {
   if (e.key === "Enter") { e.preventDefault(); applyCoupon(); }
 });
-$cancelChk.onclick = () => $checkout.classList.remove("open");
-$citySel.onchange = renderSummary;
+$cancelChk?.addEventListener("click", () => $checkout?.classList.remove("open"));
+$citySel?.addEventListener("change", renderSummary);
 
 /* رفع صورة التحويل */
-$proofInput.onchange = async (e) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-  if (file.size > 3 * 1024 * 1024) { showToast(t("checkout.image_too_big")); return; }
-  paymentProof = await Utils.fileToDataURL(file);
-  $proofPrev.innerHTML = `
-    <div class="upload-preview">
-      <img src="${paymentProof}" alt="">
-      <div class="meta">✓ تم تحميل صورة التحويل (${(file.size/1024).toFixed(0)} ك.ب)</div>
-      <button type="button" class="remove-img" id="removeProof">✕</button>
-    </div>`;
-  document.getElementById("removeProof").onclick = () => {
-    paymentProof = null; $proofPrev.innerHTML = ""; $proofInput.value = "";
+if ($proofInput) {
+  $proofInput.onchange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 3 * 1024 * 1024) { showToast(t("checkout.image_too_big")); return; }
+    paymentProof = await Utils.fileToDataURL(file);
+    if ($proofPrev) {
+      $proofPrev.innerHTML = `
+        <div class="upload-preview">
+          <img src="${paymentProof}" alt="">
+          <div class="meta">✓ ${(file.size/1024).toFixed(0)} KB</div>
+          <button type="button" class="remove-img" id="removeProof">✕</button>
+        </div>`;
+      document.getElementById("removeProof")?.addEventListener("click", () => {
+        paymentProof = null; $proofPrev.innerHTML = ""; $proofInput.value = "";
+      });
+    }
   };
-};
+}
 /* Drag & Drop */
-["dragover", "dragenter"].forEach(evt =>
-  $proofZone.addEventListener(evt, e => { e.preventDefault(); $proofZone.classList.add("dragover"); })
-);
-["dragleave", "drop"].forEach(evt =>
-  $proofZone.addEventListener(evt, e => { e.preventDefault(); $proofZone.classList.remove("dragover"); })
-);
-$proofZone.addEventListener("drop", e => {
-  const file = e.dataTransfer.files?.[0];
-  if (file) { $proofInput.files = e.dataTransfer.files; $proofInput.dispatchEvent(new Event("change")); }
-});
+if ($proofZone && $proofInput) {
+  ["dragover", "dragenter"].forEach(evt =>
+    $proofZone.addEventListener(evt, e => { e.preventDefault(); $proofZone.classList.add("dragover"); })
+  );
+  ["dragleave", "drop"].forEach(evt =>
+    $proofZone.addEventListener(evt, e => { e.preventDefault(); $proofZone.classList.remove("dragover"); })
+  );
+  $proofZone.addEventListener("drop", e => {
+    const file = e.dataTransfer.files?.[0];
+    if (file) { $proofInput.files = e.dataTransfer.files; $proofInput.dispatchEvent(new Event("change")); }
+  });
+}
 
 /* إرسال الطلب */
-$form.onsubmit = (e) => {
+if ($form) $form.onsubmit = (e) => {
   e.preventDefault();
   const data = new FormData($form);
   const city = Utils.cityById(data.get("city"));
@@ -600,7 +609,7 @@ $form.onsubmit = (e) => {
   setCouponStatus("", "");
   $successMd.classList.add("open");
 };
-document.getElementById("successOk").onclick = () => $successMd.classList.remove("open");
+document.getElementById("successOk")?.addEventListener("click", () => $successMd?.classList.remove("open"));
 
 /* =========================================================
    أدوات
@@ -619,12 +628,12 @@ function escapeHtml(s) {
 function truncate(s, n) { s = s || ""; return s.length > n ? s.slice(0, n) + "…" : s; }
 
 /* تتبع الطلب  —  ربط الأحداث */
-document.getElementById("trackOrderLink").addEventListener("click", (e) => {
+document.getElementById("trackOrderLink")?.addEventListener("click", (e) => {
   e.preventDefault(); openTrackModal();
 });
-document.getElementById("trackSearchBtn").onclick = trackOrder;
-document.getElementById("trackCloseBtn").onclick  = closeTrackModal;
-document.getElementById("trackInput").addEventListener("keydown", (e) => {
+document.getElementById("trackSearchBtn")?.addEventListener("click", trackOrder);
+document.getElementById("trackCloseBtn")?.addEventListener("click", closeTrackModal);
+document.getElementById("trackInput")?.addEventListener("keydown", (e) => {
   if (e.key === "Enter") { e.preventDefault(); trackOrder(); }
 });
 
@@ -697,62 +706,59 @@ if (isStandalone()) {
 
 /* =========================================================
    حساب الزبون: تسجيل دخول / تسجيل حساب / متابعة كزائر
+   كل ربط حدث محصَّن: نتحقق من وجود العنصر أولاً حتى لا يتعطل
+   الـ JS لو كانت نسخة HTML قديمة محفوظة في كاش المتصفح.
 ========================================================= */
 const $accountBtn = document.getElementById("accountBtn");
 const $authModal  = document.getElementById("authModal");
 
 function updateAccountButton() {
+  if (!$accountBtn || !window.CustomersAPI) return;
   const c = CustomersAPI.current();
   if (!c) {
     $accountBtn.innerHTML = `<span>${t("auth.account_btn")}</span>`;
   } else {
-    /* مختصر الاسم - الكلمة الأولى */
     const short = (c.name || "").split(" ")[0];
     $accountBtn.innerHTML = `<span>👤 ${escapeHtml(short)}</span>`;
   }
 }
 
-function openAuthModal() { $authModal.classList.add("open"); }
-function closeAuthModal() { $authModal.classList.remove("open"); }
+function openAuthModal()  { $authModal?.classList.add("open"); }
+function closeAuthModal() { $authModal?.classList.remove("open"); }
 
-/* قائمة منسدلة بسيطة: عند الضغط على زر الحساب، إن لم يكن مسجلاً افتح Auth، وإلا اعرض خيارات */
-$accountBtn.onclick = () => {
-  const c = CustomersAPI.current();
-  if (!c) {
-    /* مستخدم غير مسجل: افتح Modal الدخول */
-    openAuthModal();
-    return;
-  }
-  /* مسجَّل: قائمة سريعة */
-  const choice = prompt(
-    `${t("auth.welcome_back")} ${c.name}\n\n1 - ${t("auth.my_orders")}\n2 - ${t("auth.logout")}`,
-    "1"
-  );
-  if (choice === "1") openMyOrders();
-  else if (choice === "2") {
-    CustomersAPI.logout();
-    updateAccountButton();
-    showToast(t("auth.logged_out"));
-  }
-};
+if ($accountBtn && window.CustomersAPI) {
+  $accountBtn.addEventListener("click", () => {
+    const c = CustomersAPI.current();
+    if (!c) { openAuthModal(); return; }
+    const choice = prompt(
+      `${t("auth.welcome_back")} ${c.name}\n\n1 - ${t("auth.my_orders")}\n2 - ${t("auth.logout")}`,
+      "1"
+    );
+    if (choice === "1") openMyOrders();
+    else if (choice === "2") {
+      CustomersAPI.logout();
+      updateAccountButton();
+      showToast(t("auth.logged_out"));
+    }
+  });
+}
 
-/* التنقل بين تبويبتي تسجيل الدخول / إنشاء حساب */
+/* تبويبات Auth */
 document.querySelectorAll(".auth-tab").forEach(btn => {
-  btn.onclick = () => {
+  btn.addEventListener("click", () => {
     const tab = btn.dataset.tab;
     document.querySelectorAll(".auth-tab").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
     document.querySelectorAll(".auth-form").forEach(f => {
       f.style.display = f.dataset.form === tab ? "block" : "none";
     });
-  };
+  });
 });
 
-/* متابعة كزائرة */
-document.getElementById("continueAsGuest").onclick = closeAuthModal;
+document.getElementById("continueAsGuest")?.addEventListener("click", closeAuthModal);
 
-/* إرسال نموذج الدخول */
-document.getElementById("loginCustForm").onsubmit = (e) => {
+document.getElementById("loginCustForm")?.addEventListener("submit", (e) => {
   e.preventDefault();
+  if (!window.CustomersAPI) return;
   const f = new FormData(e.target);
   const r = CustomersAPI.login(f.get("phone"), f.get("password"));
   if (r.ok) {
@@ -763,11 +769,11 @@ document.getElementById("loginCustForm").onsubmit = (e) => {
   } else {
     showToast(t("auth.err." + r.reason));
   }
-};
+});
 
-/* إرسال نموذج إنشاء حساب */
-document.getElementById("registerCustForm").onsubmit = (e) => {
+document.getElementById("registerCustForm")?.addEventListener("submit", (e) => {
   e.preventDefault();
+  if (!window.CustomersAPI) return;
   const f = new FormData(e.target);
   const r = CustomersAPI.register({
     name: f.get("name"),
@@ -782,10 +788,10 @@ document.getElementById("registerCustForm").onsubmit = (e) => {
   } else {
     showToast(t("auth.err." + r.reason));
   }
-};
+});
 
-/* طلباتي */
 function openMyOrders() {
+  if (!window.CustomersAPI) return;
   const c = CustomersAPI.current();
   if (!c) return;
   const phone = String(c.phone || "").replace(/\D/g, "");
@@ -793,6 +799,7 @@ function openMyOrders() {
     String(o.customer?.phone || "").replace(/\D/g, "") === phone
   );
   const body = document.getElementById("myOrdersBody");
+  if (!body) return;
   body.innerHTML = myOrders.length ? myOrders.map(o => {
     const code = "AMA-" + String(o.id).slice(-6).toUpperCase();
     const status = Utils.statusInfo(o.status);
@@ -810,23 +817,27 @@ function openMyOrders() {
         <div><span class="pill" style="background:rgba(212,175,55,.15); color:var(--gold-2); padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700;">${status.label}</span></div>
       </div>`;
   }).join("") : `<p style="text-align:center; color:var(--muted); padding:20px 0;">${t("auth.no_orders")}</p>`;
-  document.getElementById("myOrdersModal").classList.add("open");
+  document.getElementById("myOrdersModal")?.classList.add("open");
 }
-document.getElementById("myOrdersClose").onclick = () =>
-  document.getElementById("myOrdersModal").classList.remove("open");
+document.getElementById("myOrdersClose")?.addEventListener("click", () =>
+  document.getElementById("myOrdersModal")?.classList.remove("open"));
 
 /* عند فتح Checkout: لو العميل مسجَّل، عبّئ الحقول تلقائياً */
-const originalGoCheckout = $goCheckout.onclick;
-$goCheckout.onclick = (e) => {
-  const c = CustomersAPI.current();
-  if (c) {
-    $form.name.value  = c.name || "";
-    $form.phone.value = c.phone || "";
-    if (c.area)  $form.area.value = c.area;
-    if (c.cityId) setTimeout(() => { $citySel.value = c.cityId; renderSummary(); }, 50);
-  }
-  if (originalGoCheckout) originalGoCheckout(e);
-};
+if ($goCheckout && window.CustomersAPI) {
+  const originalGoCheckout = $goCheckout.onclick;
+  $goCheckout.onclick = (e) => {
+    const c = CustomersAPI.current();
+    if (c) {
+      try {
+        $form.name.value  = c.name || "";
+        $form.phone.value = c.phone || "";
+        if (c.area)  $form.area.value = c.area;
+        if (c.cityId) setTimeout(() => { $citySel.value = c.cityId; renderSummary(); }, 50);
+      } catch (_e) {}
+    }
+    if (originalGoCheckout) originalGoCheckout(e);
+  };
+}
 
 /* =========================================================
    تبديل اللغة
