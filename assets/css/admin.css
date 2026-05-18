@@ -58,6 +58,18 @@ img { max-width: 100%; display: block; }
 .login-card .field { text-align: right; }
 .login-error { color: var(--danger); font-size: 13px; margin-top: 8px; min-height: 18px; }
 
+.remember-row {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--muted);
+  margin: 10px 0 14px;
+  cursor: pointer; user-select: none;
+}
+.remember-row input[type="checkbox"] {
+  width: 16px; height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
 /* =========================================================
    التخطيط
 ========================================================= */

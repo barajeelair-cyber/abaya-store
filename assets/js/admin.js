@@ -18,7 +18,8 @@ if (AuthAPI.isLoggedIn()) showApp(); else showLogin();
 $loginForm.onsubmit = (e) => {
   e.preventDefault();
   const f = new FormData($loginForm);
-  if (AuthAPI.login(f.get("username"), f.get("password"))) {
+  const remember = f.get("remember") === "on";
+  if (AuthAPI.login(f.get("username"), f.get("password"), remember)) {
     $loginError.textContent = "";
     showApp();
   } else {

@@ -696,6 +696,139 @@ if (isStandalone()) {
 }
 
 /* =========================================================
+   حساب الزبون: تسجيل دخول / تسجيل حساب / متابعة كزائر
+========================================================= */
+const $accountBtn = document.getElementById("accountBtn");
+const $authModal  = document.getElementById("authModal");
+
+function updateAccountButton() {
+  const c = CustomersAPI.current();
+  if (!c) {
+    $accountBtn.innerHTML = `<span>${t("auth.account_btn")}</span>`;
+  } else {
+    /* مختصر الاسم - الكلمة الأولى */
+    const short = (c.name || "").split(" ")[0];
+    $accountBtn.innerHTML = `<span>👤 ${escapeHtml(short)}</span>`;
+  }
+}
+
+function openAuthModal() { $authModal.classList.add("open"); }
+function closeAuthModal() { $authModal.classList.remove("open"); }
+
+/* قائمة منسدلة بسيطة: عند الضغط على زر الحساب، إن لم يكن مسجلاً افتح Auth، وإلا اعرض خيارات */
+$accountBtn.onclick = () => {
+  const c = CustomersAPI.current();
+  if (!c) {
+    /* مستخدم غير مسجل: افتح Modal الدخول */
+    openAuthModal();
+    return;
+  }
+  /* مسجَّل: قائمة سريعة */
+  const choice = prompt(
+    `${t("auth.welcome_back")} ${c.name}\n\n1 - ${t("auth.my_orders")}\n2 - ${t("auth.logout")}`,
+    "1"
+  );
+  if (choice === "1") openMyOrders();
+  else if (choice === "2") {
+    CustomersAPI.logout();
+    updateAccountButton();
+    showToast(t("auth.logged_out"));
+  }
+};
+
+/* التنقل بين تبويبتي تسجيل الدخول / إنشاء حساب */
+document.querySelectorAll(".auth-tab").forEach(btn => {
+  btn.onclick = () => {
+    const tab = btn.dataset.tab;
+    document.querySelectorAll(".auth-tab").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+    document.querySelectorAll(".auth-form").forEach(f => {
+      f.style.display = f.dataset.form === tab ? "block" : "none";
+    });
+  };
+});
+
+/* متابعة كزائرة */
+document.getElementById("continueAsGuest").onclick = closeAuthModal;
+
+/* إرسال نموذج الدخول */
+document.getElementById("loginCustForm").onsubmit = (e) => {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  const r = CustomersAPI.login(f.get("phone"), f.get("password"));
+  if (r.ok) {
+    closeAuthModal();
+    updateAccountButton();
+    showToast(t("auth.logged_in"));
+    e.target.reset();
+  } else {
+    showToast(t("auth.err." + r.reason));
+  }
+};
+
+/* إرسال نموذج إنشاء حساب */
+document.getElementById("registerCustForm").onsubmit = (e) => {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  const r = CustomersAPI.register({
+    name: f.get("name"),
+    phone: f.get("phone"),
+    password: f.get("password"),
+  });
+  if (r.ok) {
+    closeAuthModal();
+    updateAccountButton();
+    showToast(t("auth.registered"));
+    e.target.reset();
+  } else {
+    showToast(t("auth.err." + r.reason));
+  }
+};
+
+/* طلباتي */
+function openMyOrders() {
+  const c = CustomersAPI.current();
+  if (!c) return;
+  const phone = String(c.phone || "").replace(/\D/g, "");
+  const myOrders = OrdersAPI.list().filter(o =>
+    String(o.customer?.phone || "").replace(/\D/g, "") === phone
+  );
+  const body = document.getElementById("myOrdersBody");
+  body.innerHTML = myOrders.length ? myOrders.map(o => {
+    const code = "AMA-" + String(o.id).slice(-6).toUpperCase();
+    const status = Utils.statusInfo(o.status);
+    const cityName = Utils.cityById(o.cityId)?.name || o.cityName;
+    return `
+      <div class="bank-card" style="margin-bottom:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <strong style="color:var(--gold-2)">${code}</strong>
+          <span style="color:var(--muted); font-size:12px;">${Utils.formatDate(o.createdAt)}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:13px;">
+          <span style="color:var(--muted)">${escapeHtml(cityName)} · ${o.items.reduce((n,it)=>n+it.qty,0)} ${t("product.stock_piece")}</span>
+          <strong>${Utils.fmt(o.total)}</strong>
+        </div>
+        <div><span class="pill" style="background:rgba(212,175,55,.15); color:var(--gold-2); padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700;">${status.label}</span></div>
+      </div>`;
+  }).join("") : `<p style="text-align:center; color:var(--muted); padding:20px 0;">${t("auth.no_orders")}</p>`;
+  document.getElementById("myOrdersModal").classList.add("open");
+}
+document.getElementById("myOrdersClose").onclick = () =>
+  document.getElementById("myOrdersModal").classList.remove("open");
+
+/* عند فتح Checkout: لو العميل مسجَّل، عبّئ الحقول تلقائياً */
+const originalGoCheckout = $goCheckout.onclick;
+$goCheckout.onclick = (e) => {
+  const c = CustomersAPI.current();
+  if (c) {
+    $form.name.value  = c.name || "";
+    $form.phone.value = c.phone || "";
+    if (c.area)  $form.area.value = c.area;
+    if (c.cityId) setTimeout(() => { $citySel.value = c.cityId; renderSummary(); }, 50);
+  }
+  if (originalGoCheckout) originalGoCheckout(e);
+};
+
+/* =========================================================
    تبديل اللغة
 ========================================================= */
 function updateLangButton() {
@@ -712,6 +845,7 @@ document.getElementById("langToggle")?.addEventListener("click", () => {
   renderCategories();
   renderProducts();
   renderCart();
+  updateAccountButton();   /* تحديث زر الحساب باللغة الجديدة */
   /* أعد فتح المودالات المفتوحة لتترجم محتواها */
   if ($checkout.classList.contains("open")) {
     fillCities(); renderBankAccounts(); renderSummary();
@@ -726,6 +860,7 @@ applySettings();
 renderCategories();
 renderProducts();
 renderCart();
+updateAccountButton();
 
 window.addEventListener("storage", (e) => {
   if (e.key === "abaya_amal_v2") {

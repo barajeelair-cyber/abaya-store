@@ -8,6 +8,8 @@
 
 const DB_KEY = "abaya_amal_v2";
 const AUTH_KEY = "abaya_amal_admin_session";
+const AUTH_REMEMBER_KEY = "abaya_amal_admin_remember";
+const CUST_KEY = "abaya_amal_customer_session";
 const LANG_KEY = "abaya_amal_lang";
 
 /* =========================================================
@@ -431,6 +433,40 @@ const I18N = {
     "admin.city.deleted": "تم حذف المدينة",
     "admin.city.delete_confirm": "حذف هذه المدينة؟",
     "admin.city.need_names": "أكملي الاسم بالعربية والإنجليزية",
+
+    /* Customer Auth */
+    "auth.title": "حسابي",
+    "auth.welcome": "مرحباً بكِ في عبايات أمل",
+    "auth.tab_login": "تسجيل دخول",
+    "auth.tab_register": "حساب جديد",
+    "auth.guest_text": "أو يمكنكِ المتابعة بدون حساب",
+    "auth.guest_btn": "متابعة كزائرة",
+    "auth.name": "الاسم الكامل",
+    "auth.phone": "رقم الجوال",
+    "auth.password": "كلمة المرور (4 أحرف على الأقل)",
+    "auth.password_login": "كلمة المرور",
+    "auth.login_btn": "دخول",
+    "auth.register_btn": "إنشاء حساب",
+    "auth.logout": "تسجيل خروج",
+    "auth.my_orders": "📦 طلباتي",
+    "auth.welcome_back": "أهلاً",
+    "auth.account_btn": "👤 حسابي",
+    "auth.err.missing_fields": "أكملي كل الحقول",
+    "auth.err.weak_password": "كلمة المرور قصيرة جداً (4 أحرف على الأقل)",
+    "auth.err.phone_exists": "هذا الرقم مسجَّل مسبقاً. سجّلي الدخول.",
+    "auth.err.not_found": "لم نجد حساباً بهذا الرقم",
+    "auth.err.wrong_password": "كلمة المرور غير صحيحة",
+    "auth.registered": "تم إنشاء حسابك بنجاح ✨",
+    "auth.logged_in": "أهلاً بكِ مجدداً ✨",
+    "auth.logged_out": "تم تسجيل الخروج",
+    "auth.my_orders_title": "📦 طلباتي",
+    "auth.no_orders": "لا توجد طلبات بعد. تسوّقي وارجعي لتري طلباتك هنا.",
+
+    /* Admin login remember */
+    "admin.login.remember": "تذكرني على هذا الجهاز",
+
+    /* Footer */
+    "footer.admin_link": "دخول الإدارة",
 
     /* PWA */
     "pwa.install": "📲 تثبيت التطبيق",
@@ -864,6 +900,40 @@ const I18N = {
     "admin.city.delete_confirm": "Delete this city?",
     "admin.city.need_names": "Fill in both Arabic and English names",
 
+    /* Customer Auth */
+    "auth.title": "My Account",
+    "auth.welcome": "Welcome to Amal Abayas",
+    "auth.tab_login": "Sign in",
+    "auth.tab_register": "Create account",
+    "auth.guest_text": "Or continue without an account",
+    "auth.guest_btn": "Continue as guest",
+    "auth.name": "Full name",
+    "auth.phone": "Mobile number",
+    "auth.password": "Password (at least 4 chars)",
+    "auth.password_login": "Password",
+    "auth.login_btn": "Sign in",
+    "auth.register_btn": "Create account",
+    "auth.logout": "Sign out",
+    "auth.my_orders": "📦 My orders",
+    "auth.welcome_back": "Welcome",
+    "auth.account_btn": "👤 My Account",
+    "auth.err.missing_fields": "Please fill in all fields",
+    "auth.err.weak_password": "Password too short (at least 4 characters)",
+    "auth.err.phone_exists": "This number is already registered. Sign in instead.",
+    "auth.err.not_found": "No account with this number",
+    "auth.err.wrong_password": "Incorrect password",
+    "auth.registered": "Account created successfully ✨",
+    "auth.logged_in": "Welcome back ✨",
+    "auth.logged_out": "Signed out",
+    "auth.my_orders_title": "📦 My Orders",
+    "auth.no_orders": "No orders yet. Shop and come back to see your orders here.",
+
+    /* Admin login remember */
+    "admin.login.remember": "Remember me on this device",
+
+    /* Footer */
+    "footer.admin_link": "Admin Login",
+
     /* PWA */
     "pwa.install": "📲 Install App",
     "pwa.install_full": "Install Amal Abayas app",
@@ -987,6 +1057,7 @@ function loadDB() {
       if (!db.settings.categories) db.settings.categories = defaultCategories();
       if (!db.settings.textOverrides) db.settings.textOverrides = { ar: {}, en: {} };
       if (!db.settings.cities) db.settings.cities = defaultCities();
+      if (!db.settings.customers) db.settings.customers = [];
       return db;
     } catch (e) { /* corrupt */ }
   }
@@ -1117,6 +1188,7 @@ function seedData() {
       categories: defaultCategories(),
       cities: defaultCities(),
       textOverrides: { ar: {}, en: {} },
+      customers: [],
       admin: { username: "admin", password: "admin123" },
     },
   };
@@ -1390,25 +1462,99 @@ const CouponsAPI = {
 };
 
 /* =========================================================
-   AuthAPI  —  دخول الأدمن
+   AuthAPI  —  دخول الأدمن (مع خيار "تذكرني")
 ========================================================= */
 const AuthAPI = {
-  isLoggedIn() { return sessionStorage.getItem(AUTH_KEY) === "yes"; },
-  login(username, password) {
+  isLoggedIn() {
+    return sessionStorage.getItem(AUTH_KEY) === "yes"
+        || localStorage.getItem(AUTH_REMEMBER_KEY) === "yes";
+  },
+  login(username, password, remember) {
     const a = loadDB().settings.admin;
     if (username === a.username && password === a.password) {
-      sessionStorage.setItem(AUTH_KEY, "yes");
+      if (remember) {
+        localStorage.setItem(AUTH_REMEMBER_KEY, "yes");
+        sessionStorage.removeItem(AUTH_KEY);
+      } else {
+        sessionStorage.setItem(AUTH_KEY, "yes");
+        localStorage.removeItem(AUTH_REMEMBER_KEY);
+      }
       return true;
     }
     return false;
   },
-  logout() { sessionStorage.removeItem(AUTH_KEY); },
+  logout() {
+    sessionStorage.removeItem(AUTH_KEY);
+    localStorage.removeItem(AUTH_REMEMBER_KEY);
+  },
   changePassword(currentPwd, newPwd) {
     const db = loadDB();
     if (db.settings.admin.password !== currentPwd) return false;
     db.settings.admin.password = newPwd;
     saveDB(db);
     return true;
+  },
+};
+
+/* =========================================================
+   CustomersAPI  —  حسابات الزبائن
+========================================================= */
+const CustomersAPI = {
+  list() { return loadDB().settings.customers || []; },
+
+  findByPhone(phone) {
+    const p = String(phone || "").replace(/\D/g, "");
+    if (!p) return null;
+    return this.list().find(c => String(c.phone || "").replace(/\D/g, "") === p);
+  },
+
+  register({ name, phone, password, area, cityId }) {
+    if (!name || !phone || !password) return { ok: false, reason: "missing_fields" };
+    if (String(password).length < 4) return { ok: false, reason: "weak_password" };
+    if (this.findByPhone(phone)) return { ok: false, reason: "phone_exists" };
+    const db = loadDB();
+    db.settings.customers = db.settings.customers || [];
+    const customer = {
+      id: uid(),
+      name: String(name).trim(),
+      phone: String(phone).trim(),
+      password: String(password),
+      area: area || "",
+      cityId: cityId || "",
+      createdAt: new Date().toISOString(),
+    };
+    db.settings.customers.push(customer);
+    saveDB(db);
+    /* سجّل دخول تلقائياً بعد التسجيل */
+    localStorage.setItem(CUST_KEY, customer.id);
+    return { ok: true, customer };
+  },
+
+  login(phone, password) {
+    const c = this.findByPhone(phone);
+    if (!c) return { ok: false, reason: "not_found" };
+    if (c.password !== String(password)) return { ok: false, reason: "wrong_password" };
+    localStorage.setItem(CUST_KEY, c.id);
+    return { ok: true, customer: c };
+  },
+
+  logout() { localStorage.removeItem(CUST_KEY); },
+
+  current() {
+    const id = localStorage.getItem(CUST_KEY);
+    if (!id) return null;
+    return this.list().find(c => c.id === id) || null;
+  },
+
+  updateProfile(patch) {
+    const id = localStorage.getItem(CUST_KEY);
+    if (!id) return null;
+    const db = loadDB();
+    const c = (db.settings.customers || []).find(x => x.id === id);
+    if (!c) return null;
+    Object.assign(c, patch);
+    saveDB(db);
+    return c;
   },
 };
 
@@ -1469,7 +1615,8 @@ const Utils = {
 /* جعل كل شيء متاحاً للنوافذ */
 Object.assign(window, {
   ProductsAPI, OrdersAPI, SettingsAPI, CouponsAPI,
-  CategoriesAPI, CitiesAPI, TextOverridesAPI, AuthAPI, Utils,
+  CategoriesAPI, CitiesAPI, TextOverridesAPI,
+  AuthAPI, CustomersAPI, Utils,
   GAZA_CITIES, CATEGORIES, ORDER_STATUSES,
   LOW_STOCK_THRESHOLD, DEFAULT_SIZES, DEFAULT_COLORS,
   t, getLang, setLang, applyTranslations, I18N,
