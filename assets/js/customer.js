@@ -8,8 +8,24 @@ let currentCategory = "all";
 let currentProduct  = null;          /* داخل المودال */
 let selectedColor   = null;
 let selectedSize    = null;
+let selectedImageIdx = 0;
 let paymentProof    = null;          /* base64 data URL */
 let appliedCoupon   = null;          /* { code, discount, coupon } */
+
+/* حالة الفلاتر */
+const filters = {
+  fabric: new Set(),
+  cut: new Set(),
+  color: new Set(),
+  size: new Set(),
+  priceMin: null,
+  priceMax: null,
+  bestseller: false,
+  isNew: false,
+  embroidered: false,
+  open: false,
+  availableOnly: false,
+};
 
 const cart = new Map();              /* key = `${id}|${color}|${size}` */
 
@@ -46,6 +62,16 @@ function applySettings() {
   if (getLang() === "ar" && s.headline) {
     const h = document.getElementById("headlineText");
     if (h) h.textContent = s.headline;
+  }
+
+  /* خلفية Hero  —  من الإعدادات إن كانت محفوظة */
+  const heroSection = document.getElementById("heroSection");
+  if (heroSection) {
+    if (s.heroBgImage) {
+      heroSection.style.setProperty("--hero-image", `url("${s.heroBgImage}")`);
+    }
+    const op = (s.heroBgOpacity !== undefined) ? Number(s.heroBgOpacity) : 0.55;
+    heroSection.style.setProperty("--hero-bg-opacity", String(op));
   }
 
   const phoneText = s.contact?.phone || "";
@@ -186,17 +212,40 @@ function renderCategories() {
 /* =========================================================
    عرض المنتجات
 ========================================================= */
+function productMatchesFilters(p) {
+  if (filters.fabric.size && !filters.fabric.has(p.fabric)) return false;
+  if (filters.cut.size && !filters.cut.has(p.cut)) return false;
+  if (filters.color.size) {
+    const productColors = (p.colors || []).map(c => c.name);
+    if (!productColors.some(n => filters.color.has(n))) return false;
+  }
+  if (filters.size.size) {
+    const productSizes = p.sizes || [];
+    if (!productSizes.some(s => filters.size.has(s))) return false;
+  }
+  const price = ProductsAPI.finalPrice(p);
+  if (filters.priceMin !== null && price < filters.priceMin) return false;
+  if (filters.priceMax !== null && price > filters.priceMax) return false;
+  if (filters.bestseller   && !p.isBestseller) return false;
+  if (filters.isNew        && !p.isNew) return false;
+  if (filters.embroidered  && !p.isEmbroidered) return false;
+  if (filters.open         && !p.isOpen) return false;
+  if (filters.availableOnly && ProductsAPI.totalStock(p) === 0) return false;
+  return true;
+}
+
 function renderProducts() {
   let products = ProductsAPI.list();
   if (currentCategory !== "all") {
     products = products.filter(p => p.category === currentCategory);
   }
+  products = products.filter(productMatchesFilters);
 
   $grid.innerHTML = products.length ? products.map(p => {
     const total = ProductsAPI.totalStock(p);
     const out   = total === 0;
     const low   = !out && total <= LOW_STOCK_THRESHOLD;
-    const cover = p.colors?.[0]?.image || "";
+    const cover = ProductsAPI.coverImage(p);
     const final = ProductsAPI.finalPrice(p);
     const hasDiscount = Number(p.discount) > 0;
 
@@ -241,6 +290,7 @@ function openProductModal(id) {
   currentProduct = p;
   selectedColor  = p.colors?.[0]?.name || null;
   selectedSize   = null;
+  selectedImageIdx = 0;
   renderProductModal();
   $pModal.classList.add("open");
 }
@@ -265,11 +315,25 @@ function renderProductModal() {
 
   const variantStock = selectedSize ? ProductsAPI.variantStock(p, selectedColor, selectedSize) : null;
 
+  /* صور اللون المُختار (تدعم الصيغة القديمة .image والجديدة .images[]) */
+  const images = ProductsAPI.colorImages(colorObj);
+  if (selectedImageIdx >= images.length) selectedImageIdx = 0;
+  const mainSrc = images[selectedImageIdx] || "";
+  const thumbsHtml = images.length > 1 ? `
+    <div class="thumbs-row">
+      ${images.map((src, i) =>
+        `<button type="button" class="thumb-btn ${i === selectedImageIdx ? "active" : ""}" data-img-idx="${i}">
+          <img src="${escapeHtml(src)}" alt="">
+        </button>`
+      ).join("")}
+    </div>` : "";
+
   $pdContent.innerHTML = `
     <div class="image-side">
       <div class="main-image">
-        <img src="${escapeHtml(colorObj?.image || "")}" alt="${escapeHtml(p.name)}">
+        <img src="${escapeHtml(mainSrc)}" alt="${escapeHtml(p.name)}">
       </div>
+      ${thumbsHtml}
     </div>
     <div class="info-side">
       <h2>${escapeHtml(p.name)}</h2>
@@ -305,12 +369,20 @@ function renderProductModal() {
     b.onclick = () => {
       selectedColor = b.dataset.color;
       selectedSize  = null;
+      selectedImageIdx = 0;
       renderProductModal();
     };
   });
   $pdContent.querySelectorAll(".size-chip:not(:disabled)").forEach(b => {
     b.onclick = () => {
       selectedSize = b.dataset.sz;
+      renderProductModal();
+    };
+  });
+  /* صور إضافية */
+  $pdContent.querySelectorAll(".thumb-btn").forEach(b => {
+    b.onclick = () => {
+      selectedImageIdx = Number(b.dataset.imgIdx);
       renderProductModal();
     };
   });
@@ -338,7 +410,7 @@ function addCurrentToCart() {
     discount: p.discount || 0,
     color: selectedColor,
     size: selectedSize,
-    image: colorObj?.image || "",
+    image: ProductsAPI.colorImages(colorObj)[0] || "",
     qty,
   });
   renderCart();
@@ -715,11 +787,18 @@ const $authModal  = document.getElementById("authModal");
 function updateAccountButton() {
   if (!$accountBtn || !window.CustomersAPI) return;
   const c = CustomersAPI.current();
+  const iconSvg = `
+    <svg class="account-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="7.5" r="3.2"/>
+      <path d="M8.2 7.5c-.2-1.8.5-3.5 1.8-4.4 1.4-1 3.5-1 4.9 0 1.3.9 2 2.6 1.8 4.4-.5-.7-1.4-1.3-2.5-1.6-1.7-.5-3.6-.5-5.3 0-1.1.3-2 .9-2.5 1.6"/>
+      <path d="M5 21c1-4 3-7 7-7s6 3 7 7"/>
+      <path d="M12 14v7" stroke-width="1"/>
+    </svg>`;
   if (!c) {
-    $accountBtn.innerHTML = `<span>${t("auth.account_btn")}</span>`;
+    $accountBtn.innerHTML = `${iconSvg}<span>${t("auth.account_btn")}</span>`;
   } else {
     const short = (c.name || "").split(" ")[0];
-    $accountBtn.innerHTML = `<span>👤 ${escapeHtml(short)}</span>`;
+    $accountBtn.innerHTML = `${iconSvg}<span>${escapeHtml(short)}</span>`;
   }
 }
 
@@ -840,6 +919,109 @@ if ($goCheckout && window.CustomersAPI) {
 }
 
 /* =========================================================
+   لوحة الفلاتر
+========================================================= */
+function uniqueProductValues(getter) {
+  const vals = new Set();
+  ProductsAPI.list().forEach(p => {
+    const v = getter(p);
+    if (Array.isArray(v)) v.forEach(x => x && vals.add(x));
+    else if (v) vals.add(v);
+  });
+  return [...vals];
+}
+
+function renderFilterChips() {
+  /* أقمشة */
+  const fabricEl = document.getElementById("filterFabric");
+  if (fabricEl) {
+    fabricEl.innerHTML = DEFAULT_FABRICS.map(f =>
+      `<button type="button" class="filter-chip ${filters.fabric.has(f.id) ? "active" : ""}" data-filter="fabric" data-id="${f.id}">${t("fabric." + f.id)}</button>`
+    ).join("");
+  }
+  /* قَصّات */
+  const cutEl = document.getElementById("filterCut");
+  if (cutEl) {
+    cutEl.innerHTML = DEFAULT_CUTS.map(c =>
+      `<button type="button" class="filter-chip ${filters.cut.has(c.id) ? "active" : ""}" data-filter="cut" data-id="${c.id}">${t("cut." + c.id)}</button>`
+    ).join("");
+  }
+  /* ألوان (مستخرجة من المنتجات) */
+  const colorEl = document.getElementById("filterColor");
+  if (colorEl) {
+    const colors = uniqueProductValues(p => (p.colors || []).map(c => c.name));
+    colorEl.innerHTML = colors.map(c =>
+      `<button type="button" class="filter-chip ${filters.color.has(c) ? "active" : ""}" data-filter="color" data-id="${escapeHtml(c)}">${escapeHtml(c)}</button>`
+    ).join("");
+  }
+  /* مقاسات (مستخرجة من المنتجات) */
+  const sizeEl = document.getElementById("filterSize");
+  if (sizeEl) {
+    const sizes = uniqueProductValues(p => p.sizes || []);
+    sizeEl.innerHTML = sizes.map(s =>
+      `<button type="button" class="filter-chip ${filters.size.has(s) ? "active" : ""}" data-filter="size" data-id="${escapeHtml(s)}">${escapeHtml(s)}</button>`
+    ).join("");
+  }
+
+  /* ربط الأحداث على كل الرقائق */
+  document.querySelectorAll(".filter-chip[data-filter]").forEach(btn => {
+    btn.onclick = () => {
+      const key = btn.dataset.filter;
+      const id = btn.dataset.id;
+      const set = filters[key];
+      if (set.has(id)) set.delete(id); else set.add(id);
+      renderFilterChips();
+      renderProducts();
+    };
+  });
+}
+
+function bindFilterControls() {
+  const $price = (id) => document.getElementById(id);
+  $price("filterPriceMin")?.addEventListener("input", e => {
+    filters.priceMin = e.target.value ? Number(e.target.value) : null;
+    renderProducts();
+  });
+  $price("filterPriceMax")?.addEventListener("input", e => {
+    filters.priceMax = e.target.value ? Number(e.target.value) : null;
+    renderProducts();
+  });
+  const flagMap = {
+    flagBestseller: "bestseller",
+    flagNew: "isNew",
+    flagEmbroidered: "embroidered",
+    flagOpen: "open",
+    flagAvailable: "availableOnly",
+  };
+  Object.keys(flagMap).forEach(id => {
+    document.getElementById(id)?.addEventListener("change", e => {
+      filters[flagMap[id]] = e.target.checked;
+      renderProducts();
+    });
+  });
+  document.getElementById("filtersToggle")?.addEventListener("click", () => {
+    const panel = document.getElementById("filtersPanel");
+    const btn   = document.getElementById("filtersToggle");
+    const open  = panel.hidden;
+    panel.hidden = !open;
+    btn.classList.toggle("open", open);
+  });
+  document.getElementById("filtersClear")?.addEventListener("click", () => {
+    filters.fabric.clear(); filters.cut.clear();
+    filters.color.clear(); filters.size.clear();
+    filters.priceMin = null; filters.priceMax = null;
+    filters.bestseller = filters.isNew = filters.embroidered = filters.open = filters.availableOnly = false;
+    /* امسح المدخلات */
+    ["filterPriceMin", "filterPriceMax"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+    ["flagBestseller","flagNew","flagEmbroidered","flagOpen","flagAvailable"].forEach(id => {
+      const el = document.getElementById(id); if (el) el.checked = false;
+    });
+    renderFilterChips();
+    renderProducts();
+  });
+}
+
+/* =========================================================
    تبديل اللغة
 ========================================================= */
 function updateLangButton() {
@@ -854,11 +1036,12 @@ document.getElementById("langToggle")?.addEventListener("click", () => {
   updateLangButton();
   applySettings();         /* يطبق التراجم على كل [data-i18n] */
   renderCategories();
+  renderFilterChips();
   renderProducts();
   renderCart();
   updateAccountButton();   /* تحديث زر الحساب باللغة الجديدة */
   /* أعد فتح المودالات المفتوحة لتترجم محتواها */
-  if ($checkout.classList.contains("open")) {
+  if ($checkout?.classList.contains("open")) {
     fillCities(); renderBankAccounts(); renderSummary();
   }
 });
@@ -869,6 +1052,8 @@ updateLangButton();
 ========================================================= */
 applySettings();
 renderCategories();
+renderFilterChips();
+bindFilterControls();
 renderProducts();
 renderCart();
 updateAccountButton();

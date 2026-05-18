@@ -6,20 +6,25 @@
   <title>لوحة الإدارة · Amal Abaya and More</title>
 
   <link rel="icon" type="image/svg+xml" href="assets/img/logo.svg" />
-  <link rel="alternate icon" href="assets/img/logo.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/img/favicon-64.png" />
 
   <!-- PWA -->
   <link rel="manifest" href="admin-manifest.json" />
-  <meta name="theme-color" content="#111111" />
+  <meta name="theme-color" content="#ffffff" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Amal Admin" />
-  <link rel="apple-touch-icon" href="assets/img/icon-512.svg" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/img/apple-touch-icon.png" />
+  <link rel="apple-touch-icon" sizes="167x167" href="assets/img/apple-touch-icon-167.png" />
+  <link rel="apple-touch-icon" sizes="152x152" href="assets/img/apple-touch-icon-152.png" />
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@500;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="assets/css/admin.css?v=20260519a" />
+  <link rel="stylesheet" href="assets/css/admin.css?v=20260519b" />
 </head>
 <body>
 
@@ -307,6 +312,35 @@
         </form>
       </div>
 
+      <!-- خلفية البانر الرئيسي -->
+      <div class="panel">
+        <div class="panel-head">
+          <h2 data-i18n="admin.settings.hero_bg">🖼️ خلفية البانر الرئيسي</h2>
+        </div>
+        <p class="sub" data-i18n="admin.settings.hero_bg_help" style="margin: 0 0 12px;">
+          ارفعي صورة فاخرة (قماش، حرير، إلخ) لتظهر خلفية الـ Hero في الصفحة الرئيسية، وتحكمي بشفافيتها.
+        </p>
+        <div class="row-2">
+          <div class="field">
+            <label data-i18n="admin.settings.hero_bg_upload">رفع صورة الخلفية</label>
+            <label class="dropzone" id="heroBgZone">
+              <input type="file" id="heroBgFile" accept="image/*">
+              <div class="uz-icon">🖼️</div>
+              <div data-i18n="admin.settings.hero_bg_drop">اسحبي الصورة هنا أو انقري للاختيار</div>
+            </label>
+            <div id="heroBgPreview" style="margin-top:8px;"></div>
+            <button type="button" class="icon-btn-sm danger" id="heroBgClear" style="margin-top:8px;" data-i18n="admin.settings.hero_bg_clear">حذف الصورة</button>
+          </div>
+          <div class="field">
+            <label data-i18n="admin.settings.hero_bg_opacity">شفافية الخلفية: <span id="heroBgOpacityValue">55</span>%</label>
+            <input type="range" id="heroBgOpacity" min="0" max="100" step="5" value="55" style="width:100%;">
+            <p class="sub" style="margin-top:6px; font-size:12px;" data-i18n="admin.settings.hero_bg_opacity_help">
+              0% = شفافة تماماً  ·  100% = ظاهرة بقوة
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div class="panel">
         <div class="panel-head">
           <h2 data-i18n="admin.settings.banks">🏦 الحسابات البنكية</h2>
@@ -410,6 +444,27 @@
         </div>
       </div>
 
+      <div class="row-2">
+        <div class="field">
+          <label data-i18n="filters.fabric">القماش</label>
+          <select name="fabric" id="formFabric"></select>
+        </div>
+        <div class="field">
+          <label data-i18n="filters.cut">القَصّة</label>
+          <select name="cut" id="formCut"></select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>خصائص العباية</label>
+        <div class="flag-list">
+          <label class="flag-chip"><input type="checkbox" name="isOpen"><span data-i18n="filters.open">مفتوحة</span></label>
+          <label class="flag-chip"><input type="checkbox" name="isEmbroidered"><span data-i18n="filters.embroidered">مطرزة</span></label>
+          <label class="flag-chip"><input type="checkbox" name="isBestseller"><span data-i18n="filters.bestseller">الأكثر مبيعاً</span></label>
+          <label class="flag-chip"><input type="checkbox" name="isNew"><span data-i18n="filters.new">جديد</span></label>
+        </div>
+      </div>
+
       <div class="field">
         <label data-i18n="admin.product.field.description">الوصف</label>
         <textarea name="description" rows="2"></textarea>
@@ -472,7 +527,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="assets/js/data.js?v=20260519a"></script>
-<script src="assets/js/admin.js?v=20260519a"></script>
+<script src="assets/js/data.js?v=20260519b"></script>
+<script src="assets/js/admin.js?v=20260519b"></script>
 </body>
 </html>

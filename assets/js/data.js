@@ -45,10 +45,62 @@ const I18N = {
 
     /* Categories */
     "category.all": "الكل",
-    "category.everyday": "عبايات عملية",
-    "category.occasions": "عبايات مناسبات",
+    "category.new": "الجديد",
+    "category.khaleeji": "عبايات خليجية",
     "category.black": "عبايات سوداء",
+    "category.colored": "عبايات ملونة",
+    "category.luxury": "عبايات فخمة",
+    "category.everyday": "عبايات يومية",
+    "category.embroidered": "عبايات مطرزة",
+    "category.eid": "العيد ورمضان",
+    "category.offers": "العروض",
+    /* تصنيفات قديمة (احتفاظ بها للتوافق) */
+    "category.occasions": "عبايات مناسبات",
     "category.open": "عبايات مفتوحة",
+
+    /* Filters */
+    "filters.title": "🔍 فلاتر",
+    "filters.fabric": "القماش",
+    "filters.cut": "القَصّة",
+    "filters.price": "السعر",
+    "filters.color": "اللون",
+    "filters.size": "المقاس",
+    "filters.open": "مفتوحة",
+    "filters.closed": "مغلقة",
+    "filters.plain": "سادة",
+    "filters.embroidered": "مطرزة",
+    "filters.daily": "يومية",
+    "filters.occasion": "مناسبة",
+    "filters.available": "متوفر فقط",
+    "filters.bestseller": "الأكثر مبيعاً",
+    "filters.new": "جديد",
+    "filters.clear": "مسح الفلاتر",
+    "filters.from": "من",
+    "filters.to": "إلى",
+    "filters.toggle_open": "إظهار الفلاتر",
+    "filters.toggle_close": "إخفاء الفلاتر",
+
+    /* Fabrics */
+    "fabric.crepe":   "كريب",
+    "fabric.nada":    "ندى",
+    "fabric.silk":    "حرير",
+    "fabric.chiffon": "شيفون",
+    "fabric.linen":   "لينن",
+    "fabric.velvet":  "مخمل",
+    "fabric.satin":   "ساتان",
+    "fabric.summer":  "قماش صيفي",
+    "fabric.winter":  "قماش شتوي",
+
+    /* Cuts */
+    "cut.kloush":   "كلوش",
+    "cut.farasha":  "فراشة",
+    "cut.besht":    "بشت",
+    "cut.kimono":   "كيمونو",
+    "cut.straight": "مستقيمة",
+    "cut.buttons":  "بأزرار",
+    "cut.wrap":     "لف / Wrap",
+    "cut.wide":     "واسعة",
+    "cut.waisted":  "بخصر محدد",
 
     /* Product card */
     "product.view": "عرض",
@@ -420,6 +472,16 @@ const I18N = {
     "admin.txt.section.footer": "التذييل",
     "admin.txt.section.tracking": "تتبع الطلب",
 
+    /* Admin: hero background */
+    "admin.settings.hero_bg": "🖼️ خلفية البانر الرئيسي",
+    "admin.settings.hero_bg_help": "ارفعي صورة فاخرة (قماش، حرير، إلخ) لتظهر خلفية الـ Hero في الصفحة الرئيسية، وتحكمي بشفافيتها.",
+    "admin.settings.hero_bg_upload": "رفع صورة الخلفية",
+    "admin.settings.hero_bg_drop": "اسحبي الصورة هنا أو انقري للاختيار",
+    "admin.settings.hero_bg_clear": "حذف الصورة",
+    "admin.settings.hero_bg_opacity": "شفافية الخلفية",
+    "admin.settings.hero_bg_opacity_help": "0% = شفافة تماماً  ·  100% = ظاهرة بقوة",
+    "admin.settings.hero_bg_saved": "تم حفظ خلفية البانر ✓",
+
     /* Admin: cities management */
     "admin.settings.cities": "🚚 مدن التوصيل",
     "admin.settings.add_city": "+ إضافة مدينة",
@@ -450,7 +512,7 @@ const I18N = {
     "auth.logout": "تسجيل خروج",
     "auth.my_orders": "📦 طلباتي",
     "auth.welcome_back": "أهلاً",
-    "auth.account_btn": "👤 حسابي",
+    "auth.account_btn": "حسابي",
     "auth.err.missing_fields": "أكملي كل الحقول",
     "auth.err.weak_password": "كلمة المرور قصيرة جداً (4 أحرف على الأقل)",
     "auth.err.phone_exists": "هذا الرقم مسجَّل مسبقاً. سجّلي الدخول.",
@@ -510,11 +572,62 @@ const I18N = {
     "section.no_products": "No products in this category yet.",
 
     /* Categories */
-    "category.all": "All",
-    "category.everyday": "Everyday Abayas",
-    "category.occasions": "Occasion Abayas",
-    "category.black": "Black Abayas",
-    "category.open": "Open Abayas",
+    "category.all":         "All",
+    "category.new":         "New Arrivals",
+    "category.khaleeji":    "Gulf Abayas",
+    "category.black":       "Black Abayas",
+    "category.colored":     "Colored Abayas",
+    "category.luxury":      "Luxury Abayas",
+    "category.everyday":    "Everyday Abayas",
+    "category.embroidered": "Embroidered Abayas",
+    "category.eid":         "Eid & Ramadan",
+    "category.offers":      "Special Offers",
+    "category.occasions":   "Occasion Abayas",
+    "category.open":        "Open Abayas",
+
+    /* Filters */
+    "filters.title": "🔍 Filters",
+    "filters.fabric": "Fabric",
+    "filters.cut": "Cut",
+    "filters.price": "Price",
+    "filters.color": "Color",
+    "filters.size": "Size",
+    "filters.open": "Open",
+    "filters.closed": "Closed",
+    "filters.plain": "Plain",
+    "filters.embroidered": "Embroidered",
+    "filters.daily": "Everyday",
+    "filters.occasion": "Occasion",
+    "filters.available": "Available only",
+    "filters.bestseller": "Bestsellers",
+    "filters.new": "New",
+    "filters.clear": "Clear filters",
+    "filters.from": "From",
+    "filters.to": "To",
+    "filters.toggle_open": "Show filters",
+    "filters.toggle_close": "Hide filters",
+
+    /* Fabrics */
+    "fabric.crepe":   "Crepe",
+    "fabric.nada":    "Nada",
+    "fabric.silk":    "Silk",
+    "fabric.chiffon": "Chiffon",
+    "fabric.linen":   "Linen",
+    "fabric.velvet":  "Velvet",
+    "fabric.satin":   "Satin",
+    "fabric.summer":  "Summer fabric",
+    "fabric.winter":  "Winter fabric",
+
+    /* Cuts */
+    "cut.kloush":   "Klouch (A-line)",
+    "cut.farasha":  "Butterfly",
+    "cut.besht":    "Besht",
+    "cut.kimono":   "Kimono",
+    "cut.straight": "Straight",
+    "cut.buttons":  "Buttoned",
+    "cut.wrap":     "Wrap",
+    "cut.wide":     "Wide",
+    "cut.waisted":  "Fitted waist",
 
     /* Product card */
     "product.view": "View",
@@ -886,6 +999,16 @@ const I18N = {
     "admin.txt.section.footer": "Footer",
     "admin.txt.section.tracking": "Order tracking",
 
+    /* Admin: hero background */
+    "admin.settings.hero_bg": "🖼️ Hero Background",
+    "admin.settings.hero_bg_help": "Upload a luxury fabric/silk image to display as the hero background, and control its opacity.",
+    "admin.settings.hero_bg_upload": "Upload background image",
+    "admin.settings.hero_bg_drop": "Drag image here or click to choose",
+    "admin.settings.hero_bg_clear": "Remove image",
+    "admin.settings.hero_bg_opacity": "Background opacity",
+    "admin.settings.hero_bg_opacity_help": "0% = fully transparent · 100% = fully visible",
+    "admin.settings.hero_bg_saved": "Hero background saved ✓",
+
     /* Admin: cities management */
     "admin.settings.cities": "🚚 Delivery Cities",
     "admin.settings.add_city": "+ Add city",
@@ -916,7 +1039,7 @@ const I18N = {
     "auth.logout": "Sign out",
     "auth.my_orders": "📦 My orders",
     "auth.welcome_back": "Welcome",
-    "auth.account_btn": "👤 My Account",
+    "auth.account_btn": "My Account",
     "auth.err.missing_fields": "Please fill in all fields",
     "auth.err.weak_password": "Password too short (at least 4 characters)",
     "auth.err.phone_exists": "This number is already registered. Sign in instead.",
@@ -1058,6 +1181,8 @@ function loadDB() {
       if (!db.settings.textOverrides) db.settings.textOverrides = { ar: {}, en: {} };
       if (!db.settings.cities) db.settings.cities = defaultCities();
       if (!db.settings.customers) db.settings.customers = [];
+      if (db.settings.heroBgOpacity === undefined) db.settings.heroBgOpacity = 0.55;
+      if (db.settings.heroBgImage === undefined) db.settings.heroBgImage = "";
       return db;
     } catch (e) { /* corrupt */ }
   }
@@ -1071,13 +1196,45 @@ function saveDB(db) {
 }
 
 function defaultCategories() {
+  /* القائمة الموصى بها للمتجر  —  مرتّبة بالأولوية */
   return [
-    { id: "everyday",  name_ar: "عبايات عملية",   name_en: "Everyday Abayas",  active: true },
-    { id: "occasions", name_ar: "عبايات مناسبات", name_en: "Occasion Abayas",  active: true },
-    { id: "black",     name_ar: "عبايات سوداء",   name_en: "Black Abayas",     active: true },
-    { id: "open",      name_ar: "عبايات مفتوحة",  name_en: "Open Abayas",      active: true },
+    { id: "new",       name_ar: "الجديد",          name_en: "New Arrivals", active: true },
+    { id: "khaleeji",  name_ar: "عبايات خليجية",   name_en: "Gulf Abayas",  active: true },
+    { id: "black",     name_ar: "عبايات سوداء",    name_en: "Black Abayas", active: true },
+    { id: "colored",   name_ar: "عبايات ملونة",    name_en: "Colored Abayas", active: true },
+    { id: "luxury",    name_ar: "عبايات فخمة",     name_en: "Luxury Abayas", active: true },
+    { id: "everyday",  name_ar: "عبايات يومية",    name_en: "Everyday Abayas", active: true },
+    { id: "embroidered", name_ar: "عبايات مطرزة", name_en: "Embroidered Abayas", active: true },
+    { id: "eid",       name_ar: "العيد ورمضان",    name_en: "Eid & Ramadan", active: true },
+    { id: "offers",    name_ar: "العروض",          name_en: "Special Offers", active: true },
   ];
 }
+
+/* قائمة الأقمشة المتاحة  —  تظهر كفلتر وفي نموذج المنتج */
+const DEFAULT_FABRICS = [
+  { id: "crepe",   name_ar: "كريب",       name_en: "Crepe" },
+  { id: "nada",    name_ar: "ندى",        name_en: "Nada" },
+  { id: "silk",    name_ar: "حرير",       name_en: "Silk" },
+  { id: "chiffon", name_ar: "شيفون",      name_en: "Chiffon" },
+  { id: "linen",   name_ar: "لينن",       name_en: "Linen" },
+  { id: "velvet",  name_ar: "مخمل",       name_en: "Velvet" },
+  { id: "satin",   name_ar: "ساتان",      name_en: "Satin" },
+  { id: "summer",  name_ar: "قماش صيفي",  name_en: "Summer fabric" },
+  { id: "winter",  name_ar: "قماش شتوي",  name_en: "Winter fabric" },
+];
+
+/* قَصّات العبايات */
+const DEFAULT_CUTS = [
+  { id: "kloush",     name_ar: "كلوش",          name_en: "Klouch (A-line)" },
+  { id: "farasha",    name_ar: "فراشة",         name_en: "Butterfly" },
+  { id: "besht",      name_ar: "بشت",           name_en: "Besht" },
+  { id: "kimono",     name_ar: "كيمونو",        name_en: "Kimono" },
+  { id: "straight",   name_ar: "مستقيمة",       name_en: "Straight" },
+  { id: "buttons",    name_ar: "بأزرار",        name_en: "Buttoned" },
+  { id: "wrap",       name_ar: "لف / Wrap",     name_en: "Wrap" },
+  { id: "wide",       name_ar: "واسعة",         name_en: "Wide" },
+  { id: "waisted",    name_ar: "بخصر محدد",     name_en: "Fitted waist" },
+];
 
 function defaultCities() {
   return [
@@ -1108,12 +1265,18 @@ function seedData() {
         id: p1Id,
         name: "عباية المسائية الذهبية",
         description: "تصميم مسائي راقٍ بتطريز ذهبي يدوي وحاشية مزخرفة، تناسب المناسبات الخاصة.",
-        category: "occasions",
+        category: "luxury",
+        fabric: "satin",
+        cut: "kloush",
+        isOpen: false,
+        isEmbroidered: true,
+        isBestseller: true,
+        isNew: false,
         price: 340,
         discount: 0,
         colors: [
-          { name: "أسود", image: "https://images.unsplash.com/photo-1583391733956-6c78276477e1?w=900&q=80" },
-          { name: "بني داكن", image: "https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=900&q=80" },
+          { name: "أسود",      images: ["https://images.unsplash.com/photo-1583391733956-6c78276477e1?w=900&q=80"] },
+          { name: "بني داكن",  images: ["https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=900&q=80"] },
         ],
         sizes: ["S", "M", "L", "XL"],
         stock: {
@@ -1126,10 +1289,16 @@ function seedData() {
         name: "عباية يومية بسيطة",
         description: "عباية مريحة بقصة عصرية تناسب الإطلالة اليومية والعمل.",
         category: "everyday",
+        fabric: "crepe",
+        cut: "straight",
+        isOpen: false,
+        isEmbroidered: false,
+        isBestseller: false,
+        isNew: true,
         price: 180,
         discount: 10,
         colors: [
-          { name: "أسود", image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=900&q=80" },
+          { name: "أسود", images: ["https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=900&q=80"] },
         ],
         sizes: ["S", "M", "L"],
         stock: { "أسود|S": 4, "أسود|M": 6, "أسود|L": 3 },
@@ -1138,11 +1307,17 @@ function seedData() {
         id: p3Id,
         name: "عباية الخليج الفاخرة",
         description: "عباية سوداء كلاسيكية بتطريز ذهبي يدوي على الأكمام والياقة.",
-        category: "black",
+        category: "khaleeji",
+        fabric: "silk",
+        cut: "kloush",
+        isOpen: false,
+        isEmbroidered: true,
+        isBestseller: true,
+        isNew: false,
         price: 280,
         discount: 0,
         colors: [
-          { name: "أسود", image: "https://images.unsplash.com/photo-1551803091-e20673f15770?w=900&q=80" },
+          { name: "أسود", images: ["https://images.unsplash.com/photo-1551803091-e20673f15770?w=900&q=80"] },
         ],
         sizes: ["M", "L", "XL"],
         stock: { "أسود|M": 4, "أسود|L": 5, "أسود|XL": 3 },
@@ -1151,12 +1326,18 @@ function seedData() {
         id: p4Id,
         name: "عباية مفتوحة عصرية",
         description: "عباية مفتوحة بقصة فضفاضة وحزام علوي، لإطلالة جريئة ومميزة.",
-        category: "open",
+        category: "colored",
+        fabric: "chiffon",
+        cut: "wrap",
+        isOpen: true,
+        isEmbroidered: false,
+        isBestseller: false,
+        isNew: true,
         price: 260,
         discount: 15,
         colors: [
-          { name: "أسود", image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=900&q=80" },
-          { name: "بيج", image: "https://images.unsplash.com/photo-1485518882345-15568b007407?w=900&q=80" },
+          { name: "أسود", images: ["https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=900&q=80"] },
+          { name: "بيج",  images: ["https://images.unsplash.com/photo-1485518882345-15568b007407?w=900&q=80"] },
         ],
         sizes: ["S", "M", "L"],
         stock: { "أسود|S": 2, "أسود|M": 3, "أسود|L": 2, "بيج|S": 1, "بيج|M": 2, "بيج|L": 1 },
@@ -1172,6 +1353,8 @@ function seedData() {
         whatsapp: "+970 59 0000000",
         instagram: "amal.abaya",
       },
+      heroBgImage: "",      /* data URL أو رابط - يُحفظ من الإعدادات */
+      heroBgOpacity: 0.55,  /* 0-1 */
       bankAccounts: [
         {
           id: uid(),
@@ -1219,6 +1402,20 @@ const ProductsAPI = {
   finalPrice(p) {
     const d = Number(p.discount || 0);
     return d > 0 ? Math.round(p.price * (100 - d) / 100) : p.price;
+  },
+
+  /* مصفوفة صور لون معيّن  —  تدعم الصيغة القديمة .image والجديدة .images[] */
+  colorImages(color) {
+    if (!color) return [];
+    if (Array.isArray(color.images) && color.images.length) return color.images;
+    if (color.image) return [color.image];
+    return [];
+  },
+
+  /* صورة الغلاف لمنتج (أول صورة لأول لون) */
+  coverImage(p) {
+    const c = p?.colors?.[0];
+    return c ? (this.colorImages(c)[0] || "") : "";
   },
 
   save(product) {
@@ -1619,6 +1816,7 @@ Object.assign(window, {
   AuthAPI, CustomersAPI, Utils,
   GAZA_CITIES, CATEGORIES, ORDER_STATUSES,
   LOW_STOCK_THRESHOLD, DEFAULT_SIZES, DEFAULT_COLORS,
+  DEFAULT_FABRICS, DEFAULT_CUTS,
   t, getLang, setLang, applyTranslations, I18N,
   getActiveCategories, EDITABLE_TEXTS,
 });

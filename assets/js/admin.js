@@ -100,6 +100,7 @@ function bootApp() {
   fillFilters();
   refreshAll();
   applyContactSettings();
+  setupHeroBgControls();
   renderBanksList();
   renderCouponsList();
   renderCategoriesAdmin();
@@ -285,24 +286,43 @@ const $stockGrid    = document.getElementById("stockGrid");
 
 function fillCategorySelects() {
   let cats = CategoriesAPI.list().filter(c => c.active !== false);
-  /* استعادة افتراضية لو حُذفت كل التصنيفات حتى لا يبقى نموذج المنتج بدون خيارات */
   if (cats.length === 0) {
     CategoriesAPI.save({ name_ar: "عام", name_en: "General", active: true });
     cats = CategoriesAPI.list().filter(c => c.active !== false);
   }
+  const lang = getLang();
   const opts = cats.map(c => {
-    const name = (getLang() === "en" && c.name_en) ? c.name_en : c.name_ar;
+    const name = (lang === "en" && c.name_en) ? c.name_en : c.name_ar;
     return `<option value="${c.id}">${escapeHtml(name)}</option>`;
   }).join("");
   const formCat = document.getElementById("formCategory");
   if (formCat) formCat.innerHTML = opts;
   if ($filterCat) $filterCat.innerHTML = `<option value="">${t("admin.products.all_categories")}</option>` + opts;
+
+  /* أيضاً عبّئ select الأقمشة والقَصّات */
+  const fabricSel = document.getElementById("formFabric");
+  if (fabricSel) {
+    fabricSel.innerHTML = `<option value="">—</option>` + DEFAULT_FABRICS.map(f =>
+      `<option value="${f.id}">${escapeHtml(t("fabric." + f.id))}</option>`).join("");
+  }
+  const cutSel = document.getElementById("formCut");
+  if (cutSel) {
+    cutSel.innerHTML = `<option value="">—</option>` + DEFAULT_CUTS.map(c =>
+      `<option value="${c.id}">${escapeHtml(t("cut." + c.id))}</option>`).join("");
+  }
 }
 
 let workingColors = []; /* في وقت تحرير المنتج */
 let workingSizes  = [];
 
 function colorBlockHTML(idx, c) {
+  const images = Array.isArray(c.images) ? c.images : (c.image ? [c.image] : []);
+  const previews = images.map((src, i) => `
+    <div class="color-image-thumb">
+      <img src="${escapeAttr(src)}" alt="">
+      <button type="button" class="rm" data-act="remove-image" data-img-idx="${i}">✕</button>
+    </div>`).join("");
+
   return `
     <div class="color-block" data-idx="${idx}">
       <div class="row">
@@ -310,17 +330,12 @@ function colorBlockHTML(idx, c) {
                value="${escapeAttr(c.name || "")}" />
         <button type="button" class="icon-btn-sm danger" data-act="remove-color">حذف</button>
       </div>
+      <div class="color-images-grid">${previews}</div>
       <label class="dropzone" data-idx="${idx}">
-        <input type="file" accept="image/*" />
-        ${c.image
-          ? `<div class="dropzone-preview">
-               <img src="${escapeAttr(c.image)}" alt="">
-               <div class="meta">صورة جاهزة (يمكن سحب أخرى للاستبدال)</div>
-               <button type="button" class="rm" data-act="clear-img">✕</button>
-             </div>`
-          : `<div class="uz-icon">📁</div>
-             <div>اسحبي صورة هنا أو انقري للاختيار</div>
-             <div style="font-size:12px; margin-top:4px;">PNG / JPG</div>`}
+        <input type="file" accept="image/*" multiple />
+        <div class="uz-icon">📁</div>
+        <div>${images.length ? "أضيفي صوراً أخرى" : "اسحبي صوراً هنا أو انقري للاختيار (يمكن متعددة)"}</div>
+        <div style="font-size:12px; margin-top:4px;">PNG / JPG  —  حتى 3 ميجا لكل صورة</div>
       </label>
     </div>`;
 }
@@ -349,11 +364,11 @@ function renderColors() {
     };
   });
 
-  /* رفع الصور (drag + click) */
+  /* رفع الصور (drag + click)  —  يدعم متعددة */
   $colorsCont.querySelectorAll(".dropzone").forEach((zone) => {
     const idx = +zone.dataset.idx;
     const fileInput = zone.querySelector("input[type=file]");
-    fileInput.onchange = (e) => handleImageFile(idx, e.target.files?.[0]);
+    fileInput.onchange = (e) => handleImageFiles(idx, e.target.files);
 
     ["dragover", "dragenter"].forEach(evt =>
       zone.addEventListener(evt, e => { e.preventDefault(); zone.classList.add("dragover"); })
@@ -362,24 +377,44 @@ function renderColors() {
       zone.addEventListener(evt, e => { e.preventDefault(); zone.classList.remove("dragover"); })
     );
     zone.addEventListener("drop", e => {
-      const f = e.dataTransfer.files?.[0];
-      if (f) handleImageFile(idx, f);
+      const fs = e.dataTransfer.files;
+      if (fs && fs.length) handleImageFiles(idx, fs);
     });
+  });
 
-    /* مسح الصورة */
-    zone.querySelector('[data-act="clear-img"]')?.addEventListener("click", (e) => {
+  /* حذف صورة واحدة (داخل grid معاينات اللون) */
+  $colorsCont.querySelectorAll('[data-act="remove-image"]').forEach(btn => {
+    btn.onclick = (e) => {
       e.preventDefault(); e.stopPropagation();
-      workingColors[idx].image = "";
+      const colorIdx = +btn.closest(".color-block").dataset.idx;
+      const imgIdx = +btn.dataset.imgIdx;
+      if (!Array.isArray(workingColors[colorIdx].images)) {
+        workingColors[colorIdx].images = workingColors[colorIdx].image ? [workingColors[colorIdx].image] : [];
+      }
+      workingColors[colorIdx].images.splice(imgIdx, 1);
+      delete workingColors[colorIdx].image;  /* تخلّص من الحقل القديم */
       renderColors();
-    });
+    };
   });
 }
 
-async function handleImageFile(idx, file) {
-  if (!file) return;
-  if (file.size > 3 * 1024 * 1024) { showToast(t("admin.product.image_too_big")); return; }
-  workingColors[idx].image = await Utils.fileToDataURL(file);
+async function handleImageFiles(idx, files) {
+  if (!files || files.length === 0) return;
+  if (!Array.isArray(workingColors[idx].images)) {
+    workingColors[idx].images = workingColors[idx].image ? [workingColors[idx].image] : [];
+    delete workingColors[idx].image;
+  }
+  for (const file of files) {
+    if (file.size > 3 * 1024 * 1024) { showToast(t("admin.product.image_too_big")); continue; }
+    const dataUrl = await Utils.fileToDataURL(file);
+    workingColors[idx].images.push(dataUrl);
+  }
   renderColors();
+}
+
+/* shim للتوافق مع أي استدعاء قديم */
+async function handleImageFile(idx, file) {
+  if (file) await handleImageFiles(idx, [file]);
 }
 
 document.getElementById("addColorBtn").onclick = () => {
@@ -436,13 +471,24 @@ function openProductModal(product) {
     $productForm.discount.value     = product.discount || 0;
     $productForm.description.value  = product.description || "";
     $productForm.sizes.value        = (product.sizes || []).join(", ");
-    workingColors = JSON.parse(JSON.stringify(product.colors || []));
+    if ($productForm.fabric) $productForm.fabric.value = product.fabric || "";
+    if ($productForm.cut)    $productForm.cut.value    = product.cut    || "";
+    if ($productForm.isOpen)         $productForm.isOpen.checked         = !!product.isOpen;
+    if ($productForm.isEmbroidered)  $productForm.isEmbroidered.checked  = !!product.isEmbroidered;
+    if ($productForm.isBestseller)   $productForm.isBestseller.checked   = !!product.isBestseller;
+    if ($productForm.isNew)          $productForm.isNew.checked          = !!product.isNew;
+    /* صيغة جديدة للألوان: نضمن أن لكل لون مصفوفة .images */
+    workingColors = (product.colors || []).map(c => ({
+      name: c.name,
+      images: Array.isArray(c.images) && c.images.length
+                ? c.images.slice()
+                : (c.image ? [c.image] : []),
+    }));
     workingSizes  = (product.sizes || []).slice();
     workingStock  = Object.assign({}, product.stock || {});
   } else {
     $productTitle.textContent = t("admin.product.add_title");
     $productForm.id.value = "";
-    /* اختر أول تصنيف افتراضياً */
     const firstCat = document.getElementById("formCategory").querySelector("option");
     if (firstCat) $productForm.category.value = firstCat.value;
     workingColors = [];
@@ -464,7 +510,11 @@ $productForm.onsubmit = (e) => {
   if (!f.price.value || Number(f.price.value) <= 0) { showToast(getLang() === "en" ? "Enter a valid price" : "اكتبي سعراً صحيحاً"); return; }
   if (workingColors.length === 0) { showToast(t("admin.product.need_color")); return; }
   if (workingColors.some(c => !c.name)) { showToast(t("admin.product.need_color_names")); return; }
-  if (workingColors.some(c => !c.image)) { showToast(t("admin.product.need_color_images")); return; }
+  /* تحقق أن لكل لون صورة واحدة على الأقل (في الصيغة الجديدة .images أو القديمة .image) */
+  if (workingColors.some(c => {
+    const imgs = Array.isArray(c.images) ? c.images : (c.image ? [c.image] : []);
+    return imgs.length === 0;
+  })) { showToast(t("admin.product.need_color_images")); return; }
   if (workingSizes.length === 0) { showToast(t("admin.product.need_sizes")); return; }
 
   /* نظّف المخزون من تركيبات قديمة لم تعد موجودة */
@@ -474,14 +524,26 @@ $productForm.onsubmit = (e) => {
     cleanStock[k] = Number(workingStock[k] || 0);
   }));
 
+  /* طبّع الألوان: حوّل الصيغة القديمة .image إلى .images[]  */
+  const normalizedColors = workingColors.map(c => ({
+    name: c.name,
+    images: Array.isArray(c.images) ? c.images.slice() : (c.image ? [c.image] : []),
+  }));
+
   const product = {
     id: f.id.value || undefined,
     name: f.name.value.trim(),
     category: f.category.value,
+    fabric: (f.fabric && f.fabric.value) || "",
+    cut:    (f.cut    && f.cut.value)    || "",
+    isOpen:        !!(f.isOpen && f.isOpen.checked),
+    isEmbroidered: !!(f.isEmbroidered && f.isEmbroidered.checked),
+    isBestseller:  !!(f.isBestseller && f.isBestseller.checked),
+    isNew:         !!(f.isNew && f.isNew.checked),
     price: Number(f.price.value),
     discount: Math.max(0, Math.min(90, Number(f.discount.value) || 0)),
     description: f.description.value.trim(),
-    colors: workingColors,
+    colors: normalizedColors,
     sizes:  workingSizes,
     stock:  cleanStock,
   };
@@ -884,6 +946,65 @@ function applyContactSettings() {
   document.getElementById("cfgIg").value       = s.contact?.instagram || "";
   document.getElementById("cfgHeadline").value = s.headline || "";
   document.getElementById("cfgSound").checked  = s.soundEnabled !== false;
+  /* خلفية البانر */
+  const opacity = (s.heroBgOpacity !== undefined) ? Math.round(Number(s.heroBgOpacity) * 100) : 55;
+  const opEl = document.getElementById("heroBgOpacity");
+  const opValEl = document.getElementById("heroBgOpacityValue");
+  if (opEl) opEl.value = opacity;
+  if (opValEl) opValEl.textContent = opacity;
+  const preview = document.getElementById("heroBgPreview");
+  if (preview) {
+    preview.innerHTML = s.heroBgImage
+      ? `<img src="${s.heroBgImage}" alt="hero bg" style="max-width:240px; max-height:120px; border-radius:8px; border:1px solid var(--line);">`
+      : `<p style="color:var(--muted); font-size:12px; margin:0;">— لا توجد صورة محفوظة —</p>`;
+  }
+}
+
+/* رفع/حذف خلفية الـ hero */
+function setupHeroBgControls() {
+  const zone = document.getElementById("heroBgZone");
+  const file = document.getElementById("heroBgFile");
+  const clearBtn = document.getElementById("heroBgClear");
+  const opEl = document.getElementById("heroBgOpacity");
+  const opValEl = document.getElementById("heroBgOpacityValue");
+
+  if (file) {
+    file.onchange = async (e) => {
+      const f = e.target.files?.[0];
+      if (!f) return;
+      if (f.size > 3 * 1024 * 1024) { showToast(t("admin.product.image_too_big")); return; }
+      const dataUrl = await Utils.fileToDataURL(f);
+      SettingsAPI.save({ heroBgImage: dataUrl });
+      showToast(t("admin.settings.hero_bg_saved"));
+      applyContactSettings();
+    };
+  }
+  if (zone) {
+    ["dragover","dragenter"].forEach(evt =>
+      zone.addEventListener(evt, e => { e.preventDefault(); zone.classList.add("dragover"); }));
+    ["dragleave","drop"].forEach(evt =>
+      zone.addEventListener(evt, e => { e.preventDefault(); zone.classList.remove("dragover"); }));
+    zone.addEventListener("drop", e => {
+      const f = e.dataTransfer.files?.[0];
+      if (f) { file.files = e.dataTransfer.files; file.dispatchEvent(new Event("change")); }
+    });
+  }
+  if (clearBtn) {
+    clearBtn.onclick = () => {
+      SettingsAPI.save({ heroBgImage: "" });
+      showToast(t("admin.settings.hero_bg_saved"));
+      applyContactSettings();
+    };
+  }
+  if (opEl) {
+    opEl.oninput = () => {
+      if (opValEl) opValEl.textContent = opEl.value;
+    };
+    opEl.onchange = () => {
+      SettingsAPI.save({ heroBgOpacity: Number(opEl.value) / 100 });
+      showToast(t("admin.settings.hero_bg_saved"));
+    };
+  }
 }
 document.getElementById("contactForm").onsubmit = (e) => {
   e.preventDefault();
