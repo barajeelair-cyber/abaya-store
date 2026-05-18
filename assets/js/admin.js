@@ -555,7 +555,7 @@ function renderInventory() {
         const total = ProductsAPI.totalStock(p);
         const variantsHtml = `
           <table class="stock-grid" style="margin-top:6px;">
-            <tr><th>اللون \\ المقاس</th>${p.sizes.map(s => `<th>${escapeHtml(s)}</th>`).join("")}</tr>
+            <tr><th>${t("admin.product.size_axis")}</th>${p.sizes.map(s => `<th>${escapeHtml(s)}</th>`).join("")}</tr>
             ${p.colors.map(c => `
               <tr>
                 <th>${escapeHtml(c.name)}</th>
@@ -566,7 +566,7 @@ function renderInventory() {
                 }).join("")}
               </tr>`).join("")}
           </table>
-          <button class="icon-btn-sm ok" data-save="${p.id}" style="margin-top:8px;">حفظ التحديثات</button>`;
+          <button class="icon-btn-sm ok" data-save="${p.id}" style="margin-top:8px;">${t("admin.inv.save_changes")}</button>`;
         return `
           <tr>
             <td style="vertical-align:top;">
@@ -580,7 +580,7 @@ function renderInventory() {
             <td>${variantsHtml}</td>
           </tr>`;
       }).join("")
-    : `<tr><td colspan="4" style="text-align:center; color:var(--ok); padding:30px;">✓ كل المنتجات بحالة جيدة.</td></tr>`;
+    : `<tr><td colspan="4" style="text-align:center; color:var(--ok); padding:30px;">${t("admin.inv.all_good")}</td></tr>`;
 
   document.querySelectorAll("button[data-save]").forEach(btn => {
     btn.onclick = () => {
@@ -590,7 +590,7 @@ function renderInventory() {
         p.stock[inp.dataset.key] = Math.max(0, Number(inp.value) || 0);
       });
       ProductsAPI.save(p);
-      showToast("تم تحديث المخزون");
+      showToast(t("admin.inv.updated"));
       refreshAll();
     };
   });
@@ -884,7 +884,7 @@ document.getElementById("contactForm").onsubmit = (e) => {
     headline: document.getElementById("cfgHeadline").value.trim(),
     soundEnabled: document.getElementById("cfgSound").checked,
   });
-  showToast("تم حفظ المعلومات");
+  showToast(t("admin.settings.contact_saved"));
 };
 
 /* الحسابات البنكية */
@@ -910,13 +910,13 @@ function renderBanksList() {
       const patch = {};
       row.querySelectorAll("input[data-f]").forEach(inp => patch[inp.dataset.f] = inp.value.trim());
       SettingsAPI.updateBank(id, patch);
-      showToast("تم حفظ الحساب");
+      showToast(t("admin.settings.bank_saved"));
     };
     row.querySelector('[data-act="del-bank"]').onclick = () => {
-      if (!confirm("حذف هذا الحساب؟")) return;
+      if (!confirm(t("admin.settings.bank_delete_confirm"))) return;
       SettingsAPI.removeBank(id);
       renderBanksList();
-      showToast("تم الحذف");
+      showToast(t("admin.product.deleted"));
     };
   });
 }
@@ -932,36 +932,41 @@ function renderCouponsList() {
   const coupons = CouponsAPI.list();
   $couponsList.innerHTML = coupons.length ? `
     <div class="coupon-row-admin" style="font-weight:700; color:var(--muted); font-size:12px;">
-      <div>الكود</div><div>النوع</div><div>القيمة</div><div>أدنى طلب</div>
-      <div>الحالة</div><div>الاستخدام</div><div></div>
+      <div>${t("admin.settings.coupon_code")}</div>
+      <div>${t("admin.settings.coupon_type")}</div>
+      <div>${t("admin.settings.coupon_value")}</div>
+      <div>${t("admin.settings.coupon_min")}</div>
+      <div>${t("admin.settings.coupon_status")}</div>
+      <div>${t("admin.settings.coupon_usage")}</div>
+      <div></div>
     </div>
     ${coupons.map(c => `
       <div class="coupon-row-admin" data-id="${c.id}">
         <input class="input" data-f="code"     value="${escapeAttr(c.code)}"     placeholder="WELCOME10" style="text-transform:uppercase;">
         <select class="input" data-f="type">
-          <option value="percent" ${c.type === "percent" ? "selected" : ""}>نسبة %</option>
-          <option value="fixed"   ${c.type === "fixed"   ? "selected" : ""}>مبلغ ثابت ₪</option>
+          <option value="percent" ${c.type === "percent" ? "selected" : ""}>${t("admin.settings.coupon_percent")}</option>
+          <option value="fixed"   ${c.type === "fixed"   ? "selected" : ""}>${t("admin.settings.coupon_fixed")}</option>
         </select>
         <input class="input" data-f="value"    value="${Number(c.value || 0)}" type="number" min="0">
         <input class="input" data-f="minOrder" value="${Number(c.minOrder || 0)}" type="number" min="0">
         <label class="toggle">
           <input type="checkbox" data-f="active" ${c.active ? "checked" : ""}>
-          <span>${c.active ? "فعّال" : "موقوف"}</span>
+          <span>${c.active ? t("admin.settings.coupon_active") : t("admin.settings.coupon_inactive")}</span>
         </label>
-        <div class="uses">${c.usedCount || 0} مرة</div>
+        <div class="uses">${c.usedCount || 0} ${t("admin.settings.coupon_uses")}</div>
         <div class="actions">
-          <button class="icon-btn-sm ok"     data-act="save-coupon">حفظ</button>
-          <button class="icon-btn-sm danger" data-act="del-coupon">حذف</button>
+          <button class="icon-btn-sm ok"     data-act="save-coupon">${t("admin.save")}</button>
+          <button class="icon-btn-sm danger" data-act="del-coupon">${t("admin.delete")}</button>
         </div>
       </div>
     `).join("")}
-  ` : `<p style="color:var(--muted); font-size:13px;">لا توجد أكواد. اضغطي "إضافة كود".</p>`;
+  ` : `<p style="color:var(--muted); font-size:13px;">${t("admin.settings.no_coupons")}</p>`;
 
   $couponsList.querySelectorAll(".coupon-row-admin[data-id]").forEach(row => {
     const id = row.dataset.id;
     const cb = row.querySelector('input[data-f="active"]');
     if (cb) cb.onchange = () => {
-      cb.nextElementSibling.textContent = cb.checked ? "فعّال" : "موقوف";
+      cb.nextElementSibling.textContent = cb.checked ? t("admin.settings.coupon_active") : t("admin.settings.coupon_inactive");
     };
 
     row.querySelector('[data-act="save-coupon"]').onclick = () => {
@@ -972,18 +977,18 @@ function renderCouponsList() {
                   : el.type === "number"  ? Number(el.value || 0)
                   : (k === "code" ? el.value.trim().toUpperCase() : el.value.trim());
       });
-      if (!patch.code) { showToast("أدخلي الكود أولاً"); return; }
+      if (!patch.code) { showToast(t("admin.settings.coupon_need_code")); return; }
       const existing = CouponsAPI.list().find(x => x.id === id);
       CouponsAPI.save({ ...existing, ...patch });
       renderCouponsList();
-      showToast("تم حفظ الكود ✓");
+      showToast(t("admin.settings.coupon_saved"));
     };
 
     row.querySelector('[data-act="del-coupon"]').onclick = () => {
-      if (!confirm("حذف هذا الكود؟")) return;
+      if (!confirm(t("admin.settings.coupon_delete_confirm"))) return;
       CouponsAPI.remove(id);
       renderCouponsList();
-      showToast("تم الحذف");
+      showToast(t("admin.product.deleted"));
     };
   });
 }
@@ -997,12 +1002,12 @@ document.getElementById("addCouponBtn")?.addEventListener("click", () => {
 document.getElementById("pwdForm").onsubmit = (e) => {
   e.preventDefault();
   const f = new FormData(e.target);
-  if (f.get("next") !== f.get("confirm")) { showToast("الكلمة الجديدة غير متطابقة"); return; }
+  if (f.get("next") !== f.get("confirm")) { showToast(t("admin.settings.pwd_mismatch")); return; }
   if (!AuthAPI.changePassword(f.get("current"), f.get("next"))) {
-    showToast("الكلمة الحالية غير صحيحة"); return;
+    showToast(t("admin.settings.pwd_wrong")); return;
   }
   e.target.reset();
-  showToast("تم تحديث كلمة المرور ✓");
+  showToast(t("admin.settings.pwd_updated"));
 };
 
 /* =====================================================

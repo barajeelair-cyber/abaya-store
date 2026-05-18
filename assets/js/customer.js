@@ -43,9 +43,9 @@ const $pdContent  = document.getElementById("pdetailsContent");
 function applySettings() {
   applyTranslations();
   const s = SettingsAPI.get();
-  /* لا نُجبر headline على ما حفظه الأدمن إذا كان المستخدم بدّل اللغة - فقط استخدم الحفظ في AR */
   if (getLang() === "ar" && s.headline) {
-    document.getElementById("headlineText").textContent = s.headline;
+    const h = document.getElementById("headlineText");
+    if (h) h.textContent = s.headline;
   }
 
   const phoneText = s.contact?.phone || "";
@@ -54,21 +54,26 @@ function applySettings() {
   const tel       = (phoneText || "").replace(/[^\d+]/g, "");
   const waNumber  = (waText || "").replace(/[^\d]/g, "");
 
-  $("phoneText").textContent    = phoneText;
-  $("whatsappText").textContent = waText;
-  $("instagramText").textContent = igHandle ? "@" + igHandle : "";
-  $("footerPhoneText").textContent = phoneText;
-  if (tel)      $("phoneLink").href       = `tel:${tel}`;
-  if (waNumber) $("whatsappLink").href    = `https://wa.me/${waNumber}`;
+  /* helpers آمنة - تتجاهل العناصر المحذوفة من DOM بدل ما ترمي خطأ */
+  const setText = (id, txt) => { const el = $(id); if (el) el.textContent = txt; };
+  const setHref = (id, href) => { const el = $(id); if (el) el.href = href; };
+  const setDisplay = (id, disp) => { const el = $(id); if (el) el.style.display = disp; };
+
+  setText("phoneText",       phoneText);
+  setText("whatsappText",    waText);
+  setText("instagramText",   igHandle ? "@" + igHandle : "");
+  setText("footerPhoneText", phoneText);
+
+  if (tel)      { setHref("phoneLink", `tel:${tel}`);    setHref("footerPhone", `tel:${tel}`); }
+  if (waNumber) { setHref("whatsappLink", `https://wa.me/${waNumber}`); setHref("footerWa", `https://wa.me/${waNumber}`); }
+
   if (igHandle) {
-    $("instagramLink").href = `https://instagram.com/${igHandle}`;
-    $("footerIg").href      = `https://instagram.com/${igHandle}`;
+    setHref("instagramLink", `https://instagram.com/${igHandle}`);
+    setHref("footerIg",      `https://instagram.com/${igHandle}`);
   } else {
-    $("instagramLink").style.display = "none";
-    $("footerIg").style.display = "none";
+    setDisplay("instagramLink", "none");
+    setDisplay("footerIg",      "none");
   }
-  if (tel)      $("footerPhone").href     = `tel:${tel}`;
-  if (waNumber) $("footerWa").href        = `https://wa.me/${waNumber}`;
 }
 
 /* ---------- تتبع الطلب ---------- */
