@@ -1118,8 +1118,8 @@ function renderSiteInfo() {
   const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
   set("siteAboutText",    pick(info.aboutUs));
   set("siteShippingText", pick(info.shipping));
-  set("siteReturnText",   pick(info.returnPolicy));
   set("siteFaqText",      pick(info.faq));
+  /* ملاحظة: returnPolicy لم يعد يُعرض كبطاقة هنا - يُعرَض في Modal من رابط التذييل */
 }
 
 /* فتح Modal السياسات بمفتاح معيّن */

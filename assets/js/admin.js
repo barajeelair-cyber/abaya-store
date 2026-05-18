@@ -1597,14 +1597,13 @@ function renderSiteInfoEditor() {
   if (!el) return;
   const info = SiteInfoAPI.get();
   const sections = [
-    { key: "aboutUs",         label: "✨ من نحن" },
-    { key: "shipping",        label: "🚚 الشحن والتوصيل" },
-    { key: "returnPolicy",    label: "♻️ سياسة الاستبدال (مختصرة في الصفحة)" },
-    { key: "faq",             label: "💬 أسئلة شائعة" },
-    { key: "privacyPolicy",   label: "🔒 سياسة الخصوصية (Modal التذييل)" },
-    { key: "exchangePolicy",  label: "♻️ سياسة الاستبدال والاسترجاع (Modal التذييل)" },
-    { key: "codPolicy",       label: "💵 سياسة الدفع عند الاستلام" },
-    { key: "termsConditions", label: "📜 الشروط العامة والأحكام" },
+    { key: "aboutUs",         label: "✨ من نحن (يظهر في القسم الرئيسي)" },
+    { key: "shipping",        label: "🚚 الشحن والتوصيل (يظهر في القسم الرئيسي)" },
+    { key: "faq",             label: "💬 أسئلة شائعة (يظهر في القسم الرئيسي)" },
+    { key: "privacyPolicy",   label: "🔒 سياسة الخصوصية (رابط التذييل)" },
+    { key: "exchangePolicy",  label: "♻️ سياسة الاستبدال والاسترجاع (رابط التذييل)" },
+    { key: "codPolicy",       label: "💵 سياسة الدفع عند الاستلام (رابط التذييل)" },
+    { key: "termsConditions", label: "📜 الشروط العامة والأحكام (رابط التذييل)" },
   ];
   el.innerHTML = sections.map(s => `
     <div class="text-row" data-key="${s.key}">
