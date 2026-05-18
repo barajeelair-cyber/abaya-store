@@ -71,6 +71,15 @@ const I18N = {
     "siteInfo.return": "سياسة الاستبدال",
     "siteInfo.faq": "أسئلة شائعة",
 
+    /* Footer policies links */
+    "policy.privacy": "سياسة الخصوصية",
+    "policy.exchange": "سياسة الاستبدال والاسترجاع",
+    "policy.cod": "سياسة الدفع عند الاستلام",
+    "policy.terms": "الشروط العامة والأحكام",
+    "policy.size_calc": "احسبي مقاسك",
+    "policy.legal_title": "روابط مهمة",
+    "policy.close": "إغلاق",
+
     /* Size guide additions */
     "sizeGuide.system_intl": "النظام الدولي",
     "sizeGuide.system_gulf": "النظام الخليجي",
@@ -664,6 +673,15 @@ const I18N = {
     "siteInfo.shipping": "Shipping & Delivery",
     "siteInfo.return": "Return Policy",
     "siteInfo.faq": "FAQ",
+
+    /* Footer policies links */
+    "policy.privacy": "Privacy Policy",
+    "policy.exchange": "Exchange & Return Policy",
+    "policy.cod": "Cash on Delivery Policy",
+    "policy.terms": "Terms & Conditions",
+    "policy.size_calc": "Find your size",
+    "policy.legal_title": "Important Links",
+    "policy.close": "Close",
 
     /* Size guide additions */
     "sizeGuide.system_intl": "International",
@@ -1320,6 +1338,11 @@ function loadDB() {
       if (!db.settings.cuts)      db.settings.cuts    = DEFAULT_CUTS.slice();
       if (!db.settings.reviews)   db.settings.reviews = defaultReviews();
       if (!db.settings.siteInfo)  db.settings.siteInfo = defaultSiteInfo();
+      /* أضف السياسات الأربع إن لم تكن موجودة */
+      const policiesDefaults = defaultSiteInfo();
+      ["privacyPolicy", "exchangePolicy", "codPolicy", "termsConditions"].forEach(k => {
+        if (!db.settings.siteInfo[k]) db.settings.siteInfo[k] = policiesDefaults[k];
+      });
       if (!db.settings.sizeCharts) db.settings.sizeCharts = defaultSizeCharts();
       return db;
     } catch (e) { /* corrupt */ }
@@ -1393,6 +1416,204 @@ function defaultSiteInfo() {
     faq: {
       ar: "تواصلي معنا عبر الواتساب لأي سؤال عن المقاس أو القماش أو التوصيل قبل الطلب.",
       en: "Contact us on WhatsApp for any question about size, fabric, or delivery before ordering.",
+    },
+    privacyPolicy: {
+      ar: `نلتزم في عبايات أمل بحماية خصوصية عميلاتنا الكريمات. هذه السياسة توضح المعلومات التي نجمعها وكيف نستخدمها:
+
+1. المعلومات التي نجمعها:
+   • الاسم ورقم الجوال والعنوان (لإتمام التوصيل فقط)
+   • بيانات الطلبات والمشتريات
+   • صورة إيصال التحويل (لتأكيد الدفع)
+
+2. كيف نستخدم معلوماتك:
+   • تنفيذ الطلب وتوصيله
+   • التواصل معكِ بشأن طلبك
+   • تحسين تجربة التسوق لديكِ
+
+3. حماية بياناتك:
+   • لا نشارك معلوماتك مع أي طرف ثالث إلا لأغراض التوصيل
+   • نستخدم تقنيات تشفير لحماية بياناتك
+   • لكِ الحق في طلب حذف بياناتك في أي وقت
+
+4. الكوكيز:
+   • نستخدم كوكيز بسيطة لتذكّر تفضيلاتك (اللغة، السلة)
+
+للاستفسار عن خصوصيتك، تواصلي معنا عبر الواتساب.`,
+      en: `At Amal Abayas, we are committed to protecting our customers' privacy. This policy explains what information we collect and how we use it:
+
+1. Information we collect:
+   • Name, phone, and address (for delivery only)
+   • Order and purchase data
+   • Transfer receipt image (to confirm payment)
+
+2. How we use your information:
+   • Process and deliver your order
+   • Contact you about your order
+   • Improve your shopping experience
+
+3. Protecting your data:
+   • We do not share your information with third parties except for delivery purposes
+   • We use encryption to protect your data
+   • You have the right to request deletion of your data at any time
+
+4. Cookies:
+   • We use simple cookies to remember your preferences (language, cart)
+
+For any privacy questions, contact us on WhatsApp.`,
+    },
+    exchangePolicy: {
+      ar: `سياسة الاستبدال والاسترجاع في عبايات أمل:
+
+✅ يمكنكِ استبدال أو إرجاع العباية خلال 3 أيام من الاستلام بشرط:
+   • أن تكون بحالتها الأصلية (لم تُستخدم، لم تُغسل، لم تُعدّل)
+   • محتفظة بالعلامات والتغليف الأصلي
+   • مرفق معها فاتورة الشراء أو رمز الطلب
+
+❌ لا يمكن استبدال أو استرجاع:
+   • العبايات المخصصة (تفصيل خاص)
+   • العبايات التي تم استخدامها أو غسلها
+   • قطع التخفيضات النهائية
+
+💰 رد المبلغ:
+   • يتم رد ثمن العباية بالكامل بنفس طريقة الدفع
+   • رسوم التوصيل غير قابلة للاسترداد
+   • قد تطبق رسوم استرجاع رمزية (10 شيكل)
+
+🔄 الاستبدال بحجم آخر:
+   • مجاني إذا كان الحجم المتوفر بنفس السعر
+   • تتم تغطية فرق السعر إن وُجد
+
+للبدء بطلب استبدال أو إرجاع، تواصلي معنا عبر الواتساب مع ذكر رمز الطلب.`,
+      en: `Exchange & Return Policy at Amal Abayas:
+
+✅ You may exchange or return within 3 days of delivery provided:
+   • Item is in original condition (unused, unwashed, unaltered)
+   • Original tags and packaging are intact
+   • Order receipt or code is included
+
+❌ Non-returnable items:
+   • Custom-made abayas (made-to-order)
+   • Used or washed items
+   • Final-sale discounted items
+
+💰 Refunds:
+   • Full item refund via the original payment method
+   • Delivery fees are non-refundable
+   • A small return fee may apply (10 ILS)
+
+🔄 Size exchange:
+   • Free if the replacement size is at the same price
+   • Price difference will be charged if any
+
+To start an exchange or return, contact us via WhatsApp with your order code.`,
+    },
+    codPolicy: {
+      ar: `سياسة الدفع عند الاستلام في عبايات أمل:
+
+نوفر خيار الدفع عند الاستلام لمدن قطاع غزة لراحتك التامة:
+
+💵 كيف يعمل:
+   • اطلبي عبايتك عبر الموقع
+   • نقوم بتجهيز الطلب وشحنه
+   • تدفعين المبلغ كاش عند استلام الطلب من المندوب
+
+📦 شروط الدفع عند الاستلام:
+   • متاح لجميع مدن قطاع غزة
+   • الحد الأدنى للطلب: 100 شيكل
+   • الحد الأقصى: 1500 شيكل (للطلبات الأكبر يلزم تحويل بنكي مسبق)
+   • تأكيد الطلب يتم عبر الواتساب قبل الشحن
+
+⚠️ ملاحظات مهمة:
+   • في حال عدم استلام الطلب أو رفضه دون سبب، قد يتم إيقاف خاصية الدفع عند الاستلام مستقبلاً
+   • يرجى توفير المبلغ بالضبط لتسهيل الاستلام
+   • يحق للمندوب طلب هوية شخصية للتأكد
+
+💳 الطرق الأخرى للدفع المتاحة:
+   • تحويل بنكي
+   • محفظة إلكترونية`,
+      en: `Cash on Delivery (COD) Policy at Amal Abayas:
+
+We offer cash on delivery for all Gaza Strip cities for your convenience:
+
+💵 How it works:
+   • Order your abaya through the website
+   • We prepare and ship the order
+   • You pay in cash when receiving from the courier
+
+📦 COD conditions:
+   • Available in all Gaza Strip cities
+   • Minimum order: 100 ILS
+   • Maximum order: 1500 ILS (larger orders require bank transfer)
+   • Order is confirmed via WhatsApp before shipping
+
+⚠️ Important notes:
+   • If an order is unjustifiably refused, COD may be disabled on future orders
+   • Please have exact change ready
+   • The courier may request ID verification
+
+💳 Other available payment methods:
+   • Bank transfer
+   • Electronic wallet`,
+    },
+    termsConditions: {
+      ar: `الشروط العامة والأحكام لمتجر عبايات أمل:
+
+1. القبول بالشروط:
+   استخدامك لهذا الموقع وإجراؤك لطلب شراء يعني موافقتك على هذه الشروط.
+
+2. المنتجات والأسعار:
+   • جميع الأسعار معروضة بالشيكل (₪)
+   • الأسعار قابلة للتغيير دون إشعار مسبق
+   • نسعى لعرض ألوان المنتجات بدقة، لكن قد يختلف اللون قليلاً حسب شاشة الجهاز
+
+3. الطلبات والشحن:
+   • نحتفظ بحق إلغاء أي طلب لأسباب فنية أو مخزون
+   • يتم تأكيد الطلب عبر الواتساب قبل الشحن
+   • مدة التوصيل: 1-3 أيام عمل داخل قطاع غزة
+
+4. المسؤولية:
+   • لسنا مسؤولين عن أي تأخير في التوصيل لظروف خارجة عن إرادتنا
+   • العميلة مسؤولة عن تقديم عنوان صحيح ومعلومات اتصال دقيقة
+
+5. حقوق الملكية الفكرية:
+   • جميع المحتويات (نصوص، صور، تصاميم) ملكية حصرية لعبايات أمل
+   • يحظر استخدامها لأغراض تجارية دون إذن خطي
+
+6. النزاعات:
+   • أي نزاع يخضع لقوانين فلسطين
+   • نسعى أولاً لحل النزاعات ودياً
+
+7. التواصل:
+   لأي استفسار، تواصلي معنا عبر الواتساب أو الإيميل.`,
+      en: `General Terms & Conditions for Amal Abayas Store:
+
+1. Acceptance of Terms:
+   By using this website and placing an order, you agree to these terms.
+
+2. Products & Pricing:
+   • All prices are in Israeli Shekels (₪)
+   • Prices are subject to change without notice
+   • We strive to display product colors accurately, but actual colors may vary slightly depending on your screen
+
+3. Orders & Shipping:
+   • We reserve the right to cancel any order for technical or stock reasons
+   • Orders are confirmed via WhatsApp before shipping
+   • Delivery time: 1-3 business days within Gaza Strip
+
+4. Liability:
+   • We are not responsible for delivery delays due to circumstances beyond our control
+   • The customer is responsible for providing accurate address and contact information
+
+5. Intellectual Property:
+   • All content (text, images, designs) is the exclusive property of Amal Abayas
+   • Commercial use without written permission is prohibited
+
+6. Disputes:
+   • Any dispute is subject to Palestinian law
+   • We first seek to resolve disputes amicably
+
+7. Contact:
+   For any inquiries, contact us via WhatsApp or email.`,
     },
   };
 }

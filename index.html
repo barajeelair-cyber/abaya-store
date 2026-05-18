@@ -42,7 +42,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@500;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="assets/css/customer.css?v=20260519f" />
+  <link rel="stylesheet" href="assets/css/customer.css?v=20260519g" />
 </head>
 <body>
 
@@ -197,11 +197,30 @@
       <a href="#" id="footerWa" target="_blank" rel="noopener">💬 <span data-i18n="contact.whatsapp">واتساب</span></a>
       <a href="#" id="footerIg" target="_blank" rel="noopener">📷 <span data-i18n="contact.instagram">إنستغرام</span></a>
     </div>
+    <!-- روابط السياسات والمعلومات المهمة -->
+    <nav class="footer-policies" aria-label="policies">
+      <button type="button" class="footer-link"   data-policy="privacy">🔒 <span data-i18n="policy.privacy">سياسة الخصوصية</span></button>
+      <button type="button" class="footer-link"   data-policy="exchange">♻️ <span data-i18n="policy.exchange">سياسة الاستبدال والاسترجاع</span></button>
+      <button type="button" class="footer-link"   data-policy="cod">💵 <span data-i18n="policy.cod">سياسة الدفع عند الاستلام</span></button>
+      <button type="button" class="footer-link"   data-policy="terms">📜 <span data-i18n="policy.terms">الشروط العامة والأحكام</span></button>
+      <button type="button" class="footer-link"   id="openSizeCalcLink">📏 <span data-i18n="policy.size_calc">احسبي مقاسك</span></button>
+    </nav>
+
     <p>© <span id="year"></span> <span class="gold">Amal · عبايات أمل</span>  —  <span data-i18n="footer.copyright">جميع الحقوق محفوظة. صُنع بحبٍّ في قطاع غزة.</span></p>
     <p style="margin-top:14px; font-size:12px; opacity:.5;">
       <a href="admin.html" id="adminLink" style="color:inherit; text-decoration:underline;" data-i18n="footer.admin_link">دخول الإدارة</a>
     </p>
   </footer>
+
+  <!-- ============ Modal السياسات (واحد لكلها) ============ -->
+  <div class="modal" id="policyModal">
+    <div class="modal-box" style="max-width:780px;">
+      <button class="icon-btn" id="policyClose"
+              style="position:absolute; top:14px; left:14px;">✕</button>
+      <h3 id="policyTitle">—</h3>
+      <div class="policy-body" id="policyBody"></div>
+    </div>
+  </div>
 
   <!-- ============ Modal تفاصيل المنتج ============ -->
   <div class="modal product-modal" id="productModal">
@@ -516,7 +535,7 @@
   <!-- ============ تنبيه ============ -->
   <div class="toast" id="toast">تمت الإضافة إلى السلة</div>
 
-  <script src="assets/js/data.js?v=20260519f"></script>
-  <script src="assets/js/customer.js?v=20260519f"></script>
+  <script src="assets/js/data.js?v=20260519g"></script>
+  <script src="assets/js/customer.js?v=20260519g"></script>
 </body>
 </html>

@@ -1122,6 +1122,47 @@ function renderSiteInfo() {
   set("siteFaqText",      pick(info.faq));
 }
 
+/* فتح Modal السياسات بمفتاح معيّن */
+function openPolicy(key) {
+  const info = SiteInfoAPI.get();
+  const lang = getLang();
+  const titleKeyMap = {
+    privacy:  "policy.privacy",
+    exchange: "policy.exchange",
+    cod:      "policy.cod",
+    terms:    "policy.terms",
+  };
+  const fieldMap = {
+    privacy:  "privacyPolicy",
+    exchange: "exchangePolicy",
+    cod:      "codPolicy",
+    terms:    "termsConditions",
+  };
+  const $title = document.getElementById("policyTitle");
+  const $body  = document.getElementById("policyBody");
+  if (!$title || !$body) return;
+  $title.textContent = t(titleKeyMap[key]);
+  const obj = info[fieldMap[key]] || {};
+  const txt = obj[lang] || obj.ar || "";
+  /* اعرض النص مع الحفاظ على السطور (\n → <br>) وتأمين HTML */
+  $body.innerHTML = escapeHtml(txt).replace(/\n/g, "<br>");
+  document.getElementById("policyModal")?.classList.add("open");
+}
+
+/* ربط أزرار السياسات في التذييل */
+document.querySelectorAll("[data-policy]").forEach(btn => {
+  btn.addEventListener("click", () => openPolicy(btn.dataset.policy));
+});
+document.getElementById("policyClose")?.addEventListener("click", () =>
+  document.getElementById("policyModal")?.classList.remove("open"));
+
+/* "احسبي مقاسك" يفتح Modal دليل المقاسات */
+document.getElementById("openSizeCalcLink")?.addEventListener("click", () => {
+  document.getElementById("sizeGuideModal")?.classList.add("open");
+  /* انتقل تلقائياً للحاسبة بعد ثوانٍ */
+  setTimeout(() => document.querySelector(".size-calc")?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
+});
+
 /* =========================================================
    لوحة الفلاتر
 ========================================================= */

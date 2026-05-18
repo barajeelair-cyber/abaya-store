@@ -1597,10 +1597,14 @@ function renderSiteInfoEditor() {
   if (!el) return;
   const info = SiteInfoAPI.get();
   const sections = [
-    { key: "aboutUs",       label: "✨ من نحن" },
-    { key: "shipping",      label: "🚚 الشحن والتوصيل" },
-    { key: "returnPolicy",  label: "♻️ سياسة الاستبدال" },
-    { key: "faq",           label: "💬 أسئلة شائعة" },
+    { key: "aboutUs",         label: "✨ من نحن" },
+    { key: "shipping",        label: "🚚 الشحن والتوصيل" },
+    { key: "returnPolicy",    label: "♻️ سياسة الاستبدال (مختصرة في الصفحة)" },
+    { key: "faq",             label: "💬 أسئلة شائعة" },
+    { key: "privacyPolicy",   label: "🔒 سياسة الخصوصية (Modal التذييل)" },
+    { key: "exchangePolicy",  label: "♻️ سياسة الاستبدال والاسترجاع (Modal التذييل)" },
+    { key: "codPolicy",       label: "💵 سياسة الدفع عند الاستلام" },
+    { key: "termsConditions", label: "📜 الشروط العامة والأحكام" },
   ];
   el.innerHTML = sections.map(s => `
     <div class="text-row" data-key="${s.key}">

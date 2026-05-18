@@ -918,6 +918,43 @@ html[dir="ltr"] .brand-text em { font-style: italic; }
 }
 .footer .contact-row a { color: var(--gold-2); }
 
+/* روابط السياسات في التذييل */
+.footer-policies {
+  display: flex; flex-wrap: wrap; justify-content: center;
+  gap: 8px 18px; margin: 22px 0 16px;
+  padding: 16px 12px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.footer-link {
+  background: transparent; border: none;
+  color: var(--muted); cursor: pointer;
+  font-family: inherit; font-size: 13px; font-weight: 500;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-radius: 8px;
+  transition: color var(--t), background var(--t);
+}
+.footer-link:hover {
+  color: var(--gold-2); background: rgba(212,175,55,.08);
+}
+
+/* محتوى Modal السياسات */
+.policy-body {
+  margin-top: 14px; padding: 18px;
+  background: rgba(212,175,55,.04);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  max-height: 60vh; overflow-y: auto;
+  color: var(--text); font-size: 14px; line-height: 1.9;
+  white-space: pre-wrap;
+}
+#policyTitle {
+  text-align: center; padding-top: 10px;
+  background: linear-gradient(135deg, var(--gold-2), var(--gold));
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent;
+}
+
 /* =========================================================
    استجابة
 ========================================================= */
