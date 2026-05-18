@@ -1,74 +1,34 @@
 /* =========================================================
    Service Worker  —  عبايات أمل
-   استراتيجية: Cache-first مع fallback إلى الشبكة
+   ---------------------------------------------------------
+   استراتيجية: passthrough (لا يخزّن أي شيء)
+   - يكفي وجوده لجعل التطبيق قابلاً للتثبيت كـ PWA
+   - لا يعترض الـ fetches → المتصفح يجلب كل ملف من الشبكة
+   - يحذف كل الكاش القديم عند التفعيل
+   - يبلّغ الصفحات المفتوحة لتعيد التحميل بعد التحديث
 ========================================================= */
 
-const CACHE_NAME = "amal-v5";
-const ASSETS = [
-  "./",
-  "./index.html",
-  "./admin.html",
-  "./manifest.json",
-  "./admin-manifest.json",
-  "./assets/css/customer.css",
-  "./assets/css/admin.css",
-  "./assets/js/data.js",
-  "./assets/js/customer.js",
-  "./assets/js/admin.js",
-  "./assets/img/logo.svg",
-  "./assets/img/icon-512.svg",
-  "./assets/img/og-image.svg",
-];
+const VERSION = "amal-v7-passthrough";
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) =>
-      cache.addAll(ASSETS).catch(() => null)   /* لا تفشل إذا فشل أصل واحد */
-    )
-  );
+  /* نشّط النسخة الجديدة فوراً دون انتظار */
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
-  );
+  event.waitUntil((async () => {
+    /* احذف كل الكاش القديم  —  لا نحتاجه */
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k => caches.delete(k)));
+
+    /* سيطر على كل العملاء (التبويبات) المفتوحين */
+    await self.clients.claim();
+
+    /* بلّغ كل التبويبات لتعيد التحميل بنسخة جديدة */
+    const clients = await self.clients.matchAll({ type: "window" });
+    clients.forEach(c => c.postMessage({ type: "sw-updated" }));
+  })());
 });
 
-self.addEventListener("fetch", (event) => {
-  const req = event.request;
-  if (req.method !== "GET") return;
-
-  /* تجاهل خطابات google fonts وغيرها  —  دعها تذهب عبر الشبكة مباشرة */
-  if (!req.url.startsWith(self.location.origin)) return;
-
-  /* استراتيجية: network-first للملفات النصية (HTML/JS/CSS) لضمان آخر تحديث،
-     وcache-first للصور لتسريع التحميل */
-  const isAsset = /\.(svg|png|jpg|jpeg|webp|ico)$/i.test(req.url);
-
-  if (isAsset) {
-    /* cache-first للصور */
-    event.respondWith(
-      caches.match(req).then(cached => cached || fetch(req).then(res => {
-        if (res && res.status === 200) {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then(c => c.put(req, clone));
-        }
-        return res;
-      }).catch(() => cached))
-    );
-  } else {
-    /* network-first لـ HTML/JS/CSS */
-    event.respondWith(
-      fetch(req).then(res => {
-        if (res && res.status === 200) {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then(c => c.put(req, clone));
-        }
-        return res;
-      }).catch(() => caches.match(req))
-    );
-  }
-});
+/* لا fetch listener  —  دع المتصفح يتولى الجلب بنفسه.
+   هذا يجنّبنا أي ملفات قديمة محفوظة في الكاش. */

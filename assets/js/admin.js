@@ -36,6 +36,15 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./sw.js").catch(err => console.warn("SW reg failed:", err));
   });
+
+  /* عند تفعيل SW جديد، أعِد تحميل الصفحة لتجلب نسخة JS/CSS طازجة */
+  let swReloadOnce = false;
+  navigator.serviceWorker.addEventListener("message", (e) => {
+    if (e.data?.type === "sw-updated" && !swReloadOnce) {
+      swReloadOnce = true;
+      location.reload();
+    }
+  });
 }
 
 let deferredPwaPrompt = null;
