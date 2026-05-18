@@ -2,7 +2,7 @@
    عبايات أمل  —  منطق واجهة الزبون
    ========================================================= */
 
-document.getElementById("year").textContent = new Date().getFullYear();
+document.getElementById("year") && (document.getElementById("year").textContent = new Date().getFullYear());
 
 let currentCategory = "all";
 let currentProduct  = null;          /* داخل المودال */

@@ -13,7 +13,9 @@ const $loginError  = document.getElementById("loginError");
 function showLogin() { $loginScreen.style.display = "flex"; $appShell.style.display = "none"; }
 function showApp()   { $loginScreen.style.display = "none"; $appShell.style.display = "grid"; bootApp(); }
 
-if (AuthAPI.isLoggedIn()) showApp(); else showLogin();
+/* بدأ بإظهار شاشة الدخول دائماً  —  سنبدّلها بالتطبيق الكامل في نهاية
+   الملف بعد أن تكون كل الـ const declarations قد عُيّنت (تجنّب TDZ). */
+showLogin();
 
 $loginForm.onsubmit = (e) => {
   e.preventDefault();
@@ -26,9 +28,9 @@ $loginForm.onsubmit = (e) => {
     $loginError.textContent = t("admin.login.error");
   }
 };
-document.getElementById("logoutBtn").onclick = () => {
+document.getElementById("logoutBtn")?.addEventListener("click", () => {
   AuthAPI.logout(); location.reload();
-};
+});
 
 /* =====================================================
    PWA  —  تسجيل Service Worker وزر التثبيت
@@ -1409,3 +1411,11 @@ function escapeHtml(s) {
   }[c]));
 }
 function escapeAttr(s) { return escapeHtml(s); }
+
+/* =========================================================
+   نهاية الملف: الآن وبعد أن صارت كل الـ const مُعرَّفة،
+   إن كان المستخدم مسجَّل دخول من جلسة سابقة، أظهر اللوحة.
+   هذا يتجنّب TDZ error حين يبدأ bootApp يستدعي متغيرات
+   لم يصل إليها التنفيذ بعد.
+========================================================= */
+if (AuthAPI.isLoggedIn()) showApp();
