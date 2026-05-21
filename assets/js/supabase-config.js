@@ -14,11 +14,11 @@
 ========================================================= */
 
 window.AMAL_CONFIG = {
-  /* ضعي URL مشروع Supabase هنا (مثل: https://xxxxx.supabase.co) */
-  SUPABASE_URL: "",
+  /* مشروع: keuecilonmucsgwxuamc.supabase.co */
+  SUPABASE_URL: "https://keuecilonmucsgwxuamc.supabase.co",
 
-  /* ضعي anon/public key هنا (يبدأ بـ "eyJh...") */
-  SUPABASE_ANON_KEY: "",
+  /* anon public key  —  آمن للنشر (محمي بـ RLS) */
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtldWVjaWxvbm11Y3Nnd3h1YW1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMjI5ODMsImV4cCI6MjA5NDg5ODk4M30.H_N7jLdfIffCLrv5QiabolAMuNlr_N_nLCGZrr-PWDo",
 
   /* مسارات Storage buckets */
   BUCKET_PRODUCTS: "product-images",
