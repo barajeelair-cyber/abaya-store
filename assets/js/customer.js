@@ -765,19 +765,49 @@ function renderSizeTable() {
   const lang = getLang();
   const tbl = document.getElementById("sizeTable");
   if (!tbl) return;
-  const intlHeader = currentSizeSystem === "intl" ? "EU / US" : (lang === "en" ? "Intl" : "دولي");
-  tbl.innerHTML = `
-    <thead><tr>
-      <th>${t("sizeGuide.size")}</th>
-      <th>${t("sizeGuide.chest_cm")}</th>
-      <th>${t("sizeGuide.waist_cm")}</th>
-      <th>${t("sizeGuide.hips_cm")}</th>
-      <th>${t("sizeGuide.length_cm")}</th>
-      <th>${intlHeader}</th>
-    </tr></thead>
-    <tbody>
-      ${rows.map(r => `<tr><th>${escapeHtml(r.size)}</th><td>${escapeHtml(r.chest)}</td><td>${escapeHtml(r.waist)}</td><td>${escapeHtml(r.hips)}</td><td>${escapeHtml(r.length)}</td><td>${escapeHtml(r.intl)}</td></tr>`).join("")}
-    </tbody>`;
+
+  if (currentSizeSystem === "gulf") {
+    /* النظام الخليجي للعبايات: المقاس | طول العباية | الأكمام | الصدر | الحوض */
+    tbl.innerHTML = `
+      <thead><tr>
+        <th>${t("sizeGuide.size")}</th>
+        <th>${t("sizeGuide.length_cm")}</th>
+        <th>${t("sizeGuide.sleeve_cm")}</th>
+        <th>${t("sizeGuide.chest_cm")}</th>
+        <th>${t("sizeGuide.hips_cm")}</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map(r => `<tr>
+          <th>${escapeHtml(r.size)}</th>
+          <td>${escapeHtml(r.length || "")}</td>
+          <td>${escapeHtml(r.sleeve || "")}</td>
+          <td>${escapeHtml(r.chest || "")}</td>
+          <td>${escapeHtml(r.hips || "")}</td>
+        </tr>`).join("")}
+      </tbody>`;
+  } else {
+    /* النظام الدولي: المقاس | الصدر | الخصر | الأرداف | الطول | EU/US */
+    const intlHeader = lang === "en" ? "EU / US" : "EU / US";
+    tbl.innerHTML = `
+      <thead><tr>
+        <th>${t("sizeGuide.size")}</th>
+        <th>${t("sizeGuide.chest_cm")}</th>
+        <th>${t("sizeGuide.waist_cm")}</th>
+        <th>${t("sizeGuide.hips_cm")}</th>
+        <th>${t("sizeGuide.length_cm")}</th>
+        <th>${intlHeader}</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map(r => `<tr>
+          <th>${escapeHtml(r.size)}</th>
+          <td>${escapeHtml(r.chest || "")}</td>
+          <td>${escapeHtml(r.waist || "")}</td>
+          <td>${escapeHtml(r.hips || "")}</td>
+          <td>${escapeHtml(r.length || "")}</td>
+          <td>${escapeHtml(r.intl || "")}</td>
+        </tr>`).join("")}
+      </tbody>`;
+  }
   /* وصف ديناميكي */
   const $desc = document.getElementById("sizeGuideDesc");
   if ($desc) $desc.textContent = charts.description?.[lang] || charts.description?.ar || "";
