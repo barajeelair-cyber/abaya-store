@@ -1346,6 +1346,16 @@ function loadDB() {
         if (!db.settings.siteInfo[k]) db.settings.siteInfo[k] = policiesDefaults[k];
       });
       if (!db.settings.sizeCharts) db.settings.sizeCharts = defaultSizeCharts();
+      /* فحص النسخة القديمة من جدول المقاسات الخليجي:
+         إن لم يحتو على عمود sleeve أو احتوى مقاسات قديمة (40،42،44...) - استبدله */
+      const gulf = db.settings.sizeCharts.gulf;
+      if (Array.isArray(gulf) && gulf.length > 0) {
+        const hasOldSizes = gulf.some(r => ["40","42","44","46","48","50"].includes(r.size));
+        const hasSleeve   = gulf.every(r => r.sleeve !== undefined);
+        if (hasOldSizes || !hasSleeve) {
+          db.settings.sizeCharts = defaultSizeCharts();
+        }
+      }
       return db;
     } catch (e) { /* corrupt */ }
   }
@@ -2047,7 +2057,17 @@ const SiteInfoAPI = {
    SizeChartsAPI
 ========================================================= */
 const SizeChartsAPI = {
-  get() { return SettingsAPI.get().sizeCharts || defaultSizeCharts(); },
+  get() {
+    /* استخدم window.SettingsAPI ليلتقط تجاوز Supabase إن وُجد */
+    const settings = (window.SettingsAPI || SettingsAPI).get();
+    const charts = settings.sizeCharts || settings.size_charts;
+    /* تحقق من النسخة الجديدة: يجب أن يحتوي gulf على عمود sleeve */
+    if (charts && Array.isArray(charts.gulf) && charts.gulf.length > 0
+        && charts.gulf.every(r => r.sleeve !== undefined)) {
+      return charts;
+    }
+    return defaultSizeCharts();
+  },
   save(patch) {
     const db = loadDB();
     db.settings.sizeCharts = { ...db.settings.sizeCharts, ...patch };
