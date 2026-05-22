@@ -137,6 +137,11 @@
       },
       save(product) {
         const payload = mapProductToDB(product);
+        /* نظّف حقول المفاتيح الأجنبية: قيمة فارغة "" أو معرّف غير موجود
+           تخالف قيد FK وتُفشل الحفظ → نحوّلها إلى null. */
+        if (!payload.category || !cache.categories.some(c => c.id === payload.category)) payload.category = null;
+        if (!payload.fabric   || !cache.fabrics.some(f => f.id === payload.fabric))     payload.fabric   = null;
+        if (!payload.cut      || !cache.cuts.some(c => c.id === payload.cut))           payload.cut      = null;
         const isUpdate = !!product.id;
         /* تحديث الـ cache مباشرة (تفاؤلياً) */
         if (isUpdate) {
