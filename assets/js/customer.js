@@ -1565,6 +1565,7 @@ function bootCustomer() {
     updateAccountButton();
     renderReviews();
     renderSiteInfo();
+    renderSizeTable();
   } catch (e) {
     console.error("[bootCustomer]", e);
   }
@@ -1577,6 +1578,7 @@ function rerenderCustomer() {
     renderProducts();
     renderReviews();
     renderSiteInfo();
+    renderSizeTable();
   } catch (e) { console.error("[rerender]", e); }
 }
 
