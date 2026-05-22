@@ -788,7 +788,7 @@ function truncate(s, n) { s = s || ""; return s.length > n ? s.slice(0, n) + "�
 /* =========================================================
    دليل المقاسات التفاعلي (نظام دولي/خليجي + حاسبة)
 ========================================================= */
-let currentSizeSystem = "intl";
+let currentSizeSystem = "gulf";
 
 function renderSizeTable() {
   if (!window.SizeChartsAPI) return;

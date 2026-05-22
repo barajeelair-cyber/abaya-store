@@ -1340,6 +1340,11 @@ function loadDB() {
       const db = JSON.parse(raw);
       /* migrations  —  أضِف الحقول الجديدة لقواعد البيانات القديمة */
       if (!db.settings.categories) db.settings.categories = defaultCategories();
+      /* اكتشف وإستبدل قوائم التصنيفات القديمة (offers/sale/khaleeji/luxury/new) */
+      const oldCatIds = new Set(["offers", "sale", "khaleeji", "luxury", "new"]);
+      if (db.settings.categories.some(c => oldCatIds.has(c.id))) {
+        db.settings.categories = defaultCategories();
+      }
       if (!db.settings.textOverrides) db.settings.textOverrides = { ar: {}, en: {} };
       if (!db.settings.cities) db.settings.cities = defaultCities();
       if (!db.settings.customers) db.settings.customers = [];
@@ -1379,17 +1384,17 @@ function saveDB(db) {
 }
 
 function defaultCategories() {
-  /* القائمة الموصى بها للمتجر  —  مرتّبة بالأولوية */
+  /* القائمة الفعلية لعبايات أمل  —  مرتّبة بالأولوية */
   return [
-    { id: "new",       name_ar: "الجديد",          name_en: "New Arrivals", active: true },
-    { id: "khaleeji",  name_ar: "عبايات خليجية",   name_en: "Gulf Abayas",  active: true },
-    { id: "black",     name_ar: "عبايات سوداء",    name_en: "Black Abayas", active: true },
-    { id: "colored",   name_ar: "عبايات ملونة",    name_en: "Colored Abayas", active: true },
-    { id: "luxury",    name_ar: "عبايات فخمة",     name_en: "Luxury Abayas", active: true },
-    { id: "everyday",  name_ar: "عبايات يومية",    name_en: "Everyday Abayas", active: true },
-    { id: "embroidered", name_ar: "عبايات مطرزة", name_en: "Embroidered Abayas", active: true },
-    { id: "eid",       name_ar: "العيد ورمضان",    name_en: "Eid & Ramadan", active: true },
-    { id: "offers",    name_ar: "العروض",          name_en: "Special Offers", active: true },
+    { id: "everyday",      name_ar: "عملية",          name_en: "Practical",       active: true },
+    { id: "black",         name_ar: "سوداء",          name_en: "Black",           active: true },
+    { id: "colored",       name_ar: "ملونة",          name_en: "Colored",         active: true },
+    { id: "embroidered",   name_ar: "تطريز",          name_en: "Embroidered",     active: true },
+    { id: "open_2pieces",  name_ar: "مفتوحة قطعتين",  name_en: "Open Two-Piece",  active: true },
+    { id: "cardigan",      name_ar: "كارديغان",       name_en: "Cardigan",        active: true },
+    { id: "eid",           name_ar: "عيد ورمضان",     name_en: "Eid & Ramadan",   active: true },
+    { id: "complete_look", name_ar: "كملي ستايلك",    name_en: "Complete Look",   active: true },
+    { id: "blazer",        name_ar: "بليزر",          name_en: "Blazer",          active: true },
   ];
 }
 
