@@ -255,10 +255,16 @@
             const newItem = { ...item, id: tempId };
             cache[cacheKey].push(newItem);
             const insertItem = { ...item };
-            /* لـ categories/cities/fabrics/cuts نولّد id من الاسم */
-            if (!insertItem.id && insertItem.name_en) {
-              insertItem.id = insertItem.name_en.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || tempId;
+            /* ولّد معرّفاً من الاسم الإنجليزي، واضمن أنه فريد لا يتعارض مع
+               أي معرّف موجود (وإلا فشل الحفظ بسبب تكرار المفتاح الأساسي). */
+            let baseId = (insertItem.id
+              || (insertItem.name_en || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""))
+              || ("item-" + Date.now());
+            let uniqueId = baseId;
+            while (cache[cacheKey].some(x => x !== newItem && x.id === uniqueId)) {
+              uniqueId = baseId + "-" + Math.random().toString(36).slice(2, 6);
             }
+            insertItem.id = uniqueId;
             supabase.from(table).insert(insertItem).select().single().then(({ data, error }) => {
               if (error) { notifyWriteError(`insert ${table}`, error); return; }
               const idx = cache[cacheKey].findIndex(x => x.id === tempId);
