@@ -265,10 +265,11 @@
               uniqueId = baseId + "-" + Math.random().toString(36).slice(2, 6);
             }
             insertItem.id = uniqueId;
+            /* حدّث معرّف عنصر الذاكرة فوراً حتى لا يتعارض حفظ تالٍ سريع معه */
+            newItem.id = uniqueId;
             supabase.from(table).insert(insertItem).select().single().then(({ data, error }) => {
               if (error) { notifyWriteError(`insert ${table}`, error); return; }
-              const idx = cache[cacheKey].findIndex(x => x.id === tempId);
-              if (idx >= 0) cache[cacheKey][idx] = data;
+              if (data) Object.assign(newItem, data);
             });
           }
           return item;
