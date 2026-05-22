@@ -593,7 +593,7 @@ function renderProductsTable() {
   document.getElementById("productsTable").innerHTML = products.length
     ? products.map(p => {
         const total = ProductsAPI.totalStock(p);
-        const cover = p.colors?.[0]?.image || "";
+        const cover = ProductsAPI.coverImage(p) || p.colors?.[0]?.image || "";
         const catName = Utils.categoryById(p.category)?.name || "—";
         return `
         <tr>
@@ -665,7 +665,7 @@ function renderInventory() {
           <tr>
             <td style="vertical-align:top;">
               <div style="display:flex; align-items:center; gap:10px;">
-                <img class="thumb" src="${escapeAttr(p.colors[0]?.image || "")}" alt="">
+                <img class="thumb" src="${escapeAttr(ProductsAPI.coverImage(p) || p.colors?.[0]?.image || "")}" alt="">
                 <div>${escapeHtml(p.name)}<br><small style="color:var(--muted)">${Utils.fmt(p.price)}</small></div>
               </div>
             </td>

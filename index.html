@@ -386,18 +386,15 @@
       <!-- آلة حاسبة تفاعلية -->
       <div class="size-calc">
         <h4 data-i18n="sizeGuide.calc_title">🧮 احسبي مقاسك تلقائياً</h4>
+        <p class="calc-hint" data-i18n="sizeGuide.calc_hint">أدخلي طولكِ ووزنكِ، وسنقترح المقاس المناسب من الجدول الخليجي.</p>
         <div class="calc-row">
           <div class="calc-field">
-            <label data-i18n="sizeGuide.calc_chest">محيط الصدر (سم)</label>
-            <input type="number" id="calcChest" min="60" max="200" placeholder="92">
+            <label data-i18n="sizeGuide.calc_height">الطول (سم)</label>
+            <input type="number" id="calcHeight" min="140" max="200" placeholder="165">
           </div>
           <div class="calc-field">
-            <label data-i18n="sizeGuide.calc_waist">محيط الخصر (سم)</label>
-            <input type="number" id="calcWaist" min="50" max="180" placeholder="72">
-          </div>
-          <div class="calc-field">
-            <label data-i18n="sizeGuide.calc_hips">محيط الأرداف (سم)</label>
-            <input type="number" id="calcHips" min="60" max="200" placeholder="96">
+            <label data-i18n="sizeGuide.calc_weight">الوزن (كجم)</label>
+            <input type="number" id="calcWeight" min="35" max="150" placeholder="65">
           </div>
           <button type="button" class="btn-gold" id="calcBtn" data-i18n="sizeGuide.calc_btn">اعرفي مقاسي</button>
         </div>

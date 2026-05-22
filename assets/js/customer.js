@@ -838,45 +838,71 @@ function parseRange(rangeStr) {
   return isFinite(n) ? { min: n, max: n } : null;
 }
 
-function calculateSize(chest, waist, hips) {
-  const charts = SizeChartsAPI.get();
-  const rows = charts[currentSizeSystem] || [];
-  if (!rows.length) return null;
+/* جدول مقاسات بناءً على الوزن (كغ) ـ مرجعية الزبونة */
+const SIZE_BY_WEIGHT = [
+  { min: 40, max: 50,  intl: "XS",  gulf: "50" },
+  { min: 51, max: 60,  intl: "S",   gulf: "52" },
+  { min: 61, max: 70,  intl: "M",   gulf: "54" },
+  { min: 71, max: 80,  intl: "L",   gulf: "56" },
+  { min: 81, max: 90,  intl: "XL",  gulf: "58" },
+  { min: 91, max: 100, intl: "2XL", gulf: "60" },
+  { min: 101, max: 115,intl: "3XL", gulf: "62" },
+];
 
-  if (currentSizeSystem === "gulf") {
-    /* النظام الخليجي للعبايات: الأرقام في الجدول هي قياسات الجسم
-       التي يناسبها هذا المقاس. نختار أصغر مقاس يستوعب قياسات الزبونة. */
-    const userChest = Number(chest) || 0;
-    const userHips  = Number(hips)  || 0;
-    if (!userChest && !userHips) return null;
+/* جدول الطول (سم) → مقاس خليجي */
+const SIZE_BY_HEIGHT = [
+  { min: 150, max: 155, gulf: "52" },
+  { min: 156, max: 160, gulf: "54" },
+  { min: 161, max: 165, gulf: "56" },
+  { min: 166, max: 170, gulf: "58" },
+  { min: 171, max: 175, gulf: "60" },
+  { min: 176, max: 180, gulf: "62" },
+];
 
-    /* صف يناسب الزبونة: قياساته >= قياساتها (مع تسامح 1 سم) */
-    const fitting = rows.filter(r => {
-      const rowChest = Number(r.chest) || 0;
-      const rowHips  = Number(r.hips)  || 0;
-      const fitsChest = !userChest || rowChest + 1 >= userChest;
-      const fitsHips  = !userHips  || rowHips  + 1 >= userHips;
-      return fitsChest && fitsHips;
-    });
-    /* أصغر مقاس يناسبها */
-    return fitting[0] || rows[rows.length - 1];
+function sizeFromWeight(weight) {
+  if (!weight) return null;
+  const w = Number(weight);
+  if (w < SIZE_BY_WEIGHT[0].min) return SIZE_BY_WEIGHT[0];
+  if (w > SIZE_BY_WEIGHT[SIZE_BY_WEIGHT.length - 1].max) return SIZE_BY_WEIGHT[SIZE_BY_WEIGHT.length - 1];
+  return SIZE_BY_WEIGHT.find(r => w >= r.min && w <= r.max) || null;
+}
+
+function sizeFromHeight(height) {
+  if (!height) return null;
+  const h = Number(height);
+  if (h < SIZE_BY_HEIGHT[0].min) return SIZE_BY_HEIGHT[0];
+  if (h > SIZE_BY_HEIGHT[SIZE_BY_HEIGHT.length - 1].max) return SIZE_BY_HEIGHT[SIZE_BY_HEIGHT.length - 1];
+  return SIZE_BY_HEIGHT.find(r => h >= r.min && h <= r.max) || null;
+}
+
+function calculateSizeFromHW(height, weight) {
+  /* أوزاناً عند توفر الاثنين: الوزن أولوية (المقاس بالعرض)، الطول للتأكيد */
+  const byWeight = sizeFromWeight(weight);
+  const byHeight = sizeFromHeight(height);
+
+  /* اختاري المقاس الأكبر بين الاثنين للراحة */
+  let primaryGulf = byWeight?.gulf || byHeight?.gulf;
+  let intlLabel = byWeight?.intl;
+
+  if (byWeight && byHeight) {
+    /* خذ الأكبر */
+    const wGulf = parseInt(byWeight.gulf, 10);
+    const hGulf = parseInt(byHeight.gulf, 10);
+    if (hGulf > wGulf) primaryGulf = byHeight.gulf;
+    /* لو الطول أكبر، ابحث عن intl المناسب */
+    if (hGulf > wGulf) {
+      const match = SIZE_BY_WEIGHT.find(r => r.gulf === byHeight.gulf);
+      if (match) intlLabel = match.intl;
+    }
   }
 
-  /* النظام الدولي: نطاقات (84-88 إلخ) ـ نحسب أفضل تطابق */
-  let best = null, bestScore = -1;
-  rows.forEach(r => {
-    let score = 0;
-    [["chest", chest], ["waist", waist], ["hips", hips]].forEach(([k, val]) => {
-      if (!val) return;
-      const rng = parseRange(r[k]);
-      if (!rng) return;
-      if (val >= rng.min - 1 && val <= rng.max + 1) score += 2;
-      else if (val < rng.min) score -= (rng.min - val) * 0.3;
-      else score -= (val - rng.max) * 0.3;
-    });
-    if (score > bestScore) { bestScore = score; best = r; }
-  });
-  return best;
+  if (!primaryGulf) return null;
+
+  const charts = SizeChartsAPI.get();
+  const gulfRows = charts.gulf || [];
+  const matchedRow = gulfRows.find(r => String(r.size) === String(primaryGulf));
+
+  return matchedRow || { size: primaryGulf, intl: intlLabel || "" };
 }
 
 document.querySelectorAll(".sst-btn").forEach(btn => {
@@ -888,22 +914,21 @@ document.querySelectorAll(".sst-btn").forEach(btn => {
 });
 
 document.getElementById("calcBtn")?.addEventListener("click", () => {
-  const chest = Number(document.getElementById("calcChest")?.value);
-  const waist = Number(document.getElementById("calcWaist")?.value);
-  const hips  = Number(document.getElementById("calcHips")?.value);
+  const height = Number(document.getElementById("calcHeight")?.value);
+  const weight = Number(document.getElementById("calcWeight")?.value);
   const $result = document.getElementById("calcResult");
   if (!$result) return;
-  if (!chest && !waist && !hips) {
+  if (!height && !weight) {
     $result.innerHTML = `<p style="color:var(--muted)">${t("sizeGuide.calc_no_match")}</p>`;
     return;
   }
-  const match = calculateSize(chest, waist, hips);
+  const match = calculateSizeFromHW(height, weight);
   if (match) {
     $result.innerHTML = `
       <div class="calc-result-card">
         <span class="calc-result-label">${t("sizeGuide.calc_result")}</span>
         <span class="calc-result-size">${escapeHtml(match.size)}</span>
-        <span class="calc-result-meta">${escapeHtml(match.intl)}</span>
+        <span class="calc-result-meta">${escapeHtml(match.intl || "")}</span>
       </div>`;
   } else {
     $result.innerHTML = `<p style="color:var(--danger)">${t("sizeGuide.calc_no_match")}</p>`;
@@ -967,6 +992,115 @@ function isIOS() {
   return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
 }
 
+function detectPlatform() {
+  const ua = navigator.userAgent || "";
+  if (/iphone|ipad|ipod/i.test(ua) && !window.MSStream) return "ios";
+  if (/android/i.test(ua)) return "android";
+  if (/windows/i.test(ua)) return "windows";
+  if (/macintosh|mac os/i.test(ua)) return "mac";
+  return "desktop";
+}
+
+function showUniversalInstallModal() {
+  const platform = detectPlatform();
+  const modal = document.getElementById("iosInstallModal");
+  const body  = modal?.querySelector(".modal-box");
+  if (!modal || !body) return;
+  /* احفظ الـ HTML الأصلي مرة واحدة لاستعادته عند تبديل اللغة */
+  if (!body.dataset.original) body.dataset.original = body.innerHTML;
+
+  const lang = getLang();
+  const isAR = lang === "ar";
+
+  const instructions = {
+    ios: isAR ? [
+      "افتحي الموقع في تطبيق <strong>Safari</strong> (وليس Chrome).",
+      "اضغطي زر <strong>المشاركة</strong> ⬆️ في أسفل الشاشة.",
+      "اسحبي للأسفل واختاري <strong>'إضافة إلى الشاشة الرئيسية'</strong>.",
+      "اضغطي <strong>'إضافة'</strong> أعلى الشاشة. ستجدين أيقونة عبايات أمل على شاشتك الرئيسية ✨",
+    ] : [
+      "Open this site in <strong>Safari</strong> (not Chrome).",
+      "Tap the <strong>Share</strong> ⬆️ button at the bottom.",
+      "Scroll down and select <strong>'Add to Home Screen'</strong>.",
+      "Tap <strong>'Add'</strong>. The Amal icon will appear on your home screen ✨",
+    ],
+    android: isAR ? [
+      "افتحي الموقع في تطبيق <strong>Chrome</strong>.",
+      "اضغطي زر القائمة <strong>⋮</strong> أعلى يمين الشاشة.",
+      "اختاري <strong>'إضافة إلى الشاشة الرئيسية'</strong> أو <strong>'تثبيت التطبيق'</strong>.",
+      "اضغطي <strong>'تثبيت'</strong>. ستجدين أيقونة التطبيق على شاشتك الرئيسية ✨",
+    ] : [
+      "Open this site in <strong>Chrome</strong>.",
+      "Tap the menu <strong>⋮</strong> at the top right.",
+      "Select <strong>'Add to Home Screen'</strong> or <strong>'Install App'</strong>.",
+      "Tap <strong>'Install'</strong>. The app icon will appear on your home screen ✨",
+    ],
+    windows: isAR ? [
+      "افتحي الموقع في متصفح <strong>Chrome</strong> أو <strong>Edge</strong>.",
+      "ابحثي عن أيقونة <strong>التثبيت 📥</strong> في شريط العنوان (يمين أو يسار).",
+      "أو افتحي قائمة المتصفح ⋮ ثم اختاري <strong>'تثبيت عبايات أمل'</strong>.",
+      "اضغطي <strong>'تثبيت'</strong>. سيظهر التطبيق في قائمة Start ✨",
+    ] : [
+      "Open this site in <strong>Chrome</strong> or <strong>Edge</strong>.",
+      "Look for the <strong>install 📥</strong> icon in the address bar.",
+      "Or open the browser menu ⋮ and select <strong>'Install Amal Abayas'</strong>.",
+      "Click <strong>'Install'</strong>. The app will appear in your Start menu ✨",
+    ],
+    mac: isAR ? [
+      "افتحي الموقع في متصفح <strong>Chrome</strong> أو <strong>Edge</strong>.",
+      "ابحثي عن أيقونة <strong>التثبيت 📥</strong> في شريط العنوان.",
+      "أو افتحي قائمة المتصفح ⋮ ثم اختاري <strong>'تثبيت عبايات أمل'</strong>.",
+      "اضغطي <strong>'تثبيت'</strong>. سيظهر التطبيق في Launchpad ✨",
+    ] : [
+      "Open this site in <strong>Chrome</strong> or <strong>Edge</strong>.",
+      "Look for the <strong>install 📥</strong> icon in the address bar.",
+      "Or open the browser menu ⋮ and select <strong>'Install Amal Abayas'</strong>.",
+      "Click <strong>'Install'</strong>. The app will appear in Launchpad ✨",
+    ],
+    desktop: isAR ? [
+      "افتحي الموقع في متصفح <strong>Chrome</strong> أو <strong>Edge</strong> أو <strong>Brave</strong>.",
+      "ابحثي عن أيقونة <strong>📥 التثبيت</strong> في شريط العنوان.",
+      "أو من قائمة المتصفح اختاري <strong>'تثبيت عبايات أمل'</strong>.",
+      "ستفتح كتطبيق مستقل في نافذة منفصلة ✨",
+    ] : [
+      "Open in <strong>Chrome</strong>, <strong>Edge</strong>, or <strong>Brave</strong>.",
+      "Look for the <strong>📥 install</strong> icon in the address bar.",
+      "Or select <strong>'Install Amal Abayas'</strong> from the browser menu.",
+      "It will open as a standalone app ✨",
+    ],
+  };
+
+  const platformIcons = { ios: "📱", android: "🤖", windows: "🪟", mac: "🍎", desktop: "💻" };
+  const platformNames = {
+    ios: isAR ? "iPhone / iPad" : "iPhone / iPad",
+    android: isAR ? "Android" : "Android",
+    windows: isAR ? "Windows" : "Windows",
+    mac: isAR ? "Mac" : "Mac",
+    desktop: isAR ? "الكمبيوتر" : "Desktop",
+  };
+  const steps = instructions[platform];
+  const title = isAR
+    ? `${platformIcons[platform]} التثبيت على ${platformNames[platform]}`
+    : `${platformIcons[platform]} Install on ${platformNames[platform]}`;
+  const closeLabel = isAR ? "إغلاق" : "Close";
+
+  body.innerHTML = `
+    <h3 style="text-align:center;">${title}</h3>
+    <div style="text-align:right; margin: 22px 0; line-height:1.9;">
+      ${steps.map((s, i) => `<p style="margin:10px 0;">${i + 1}️⃣ ${s}</p>`).join("")}
+    </div>
+    <p style="text-align:center; color:var(--muted); font-size:13px; margin-top:14px;">
+      ${isAR ? "بعد التثبيت يعمل التطبيق بسرعة مذهلة وبدون متصفح" : "After installation, the app runs fast and standalone."}
+    </p>
+    <button class="btn-gold" id="iosInstallClose" style="display:block; margin: 18px auto 0;">${closeLabel}</button>
+  `;
+  /* أعد ربط زر الإغلاق (تم استبدال DOM) */
+  body.querySelector("#iosInstallClose").addEventListener("click", () => {
+    modal.classList.remove("open");
+  });
+  modal.classList.add("open");
+}
+
 document.getElementById("installBtn")?.addEventListener("click", async () => {
   if (isStandalone()) { showToast(t("pwa.installed")); return; }
   if (deferredPwaPrompt) {
@@ -976,11 +1110,8 @@ document.getElementById("installBtn")?.addEventListener("click", async () => {
       document.getElementById("installBtn").style.display = "none";
     }
     deferredPwaPrompt = null;
-  } else if (isIOS()) {
-    document.getElementById("iosInstallModal").classList.add("open");
   } else {
-    /* لم يُفعَّل الـ install prompt بعد  —  اعرض تعليمات iOS كاحتياط */
-    document.getElementById("iosInstallModal").classList.add("open");
+    showUniversalInstallModal();
   }
 });
 
