@@ -1667,8 +1667,8 @@ function defaultSizeCharts() {
       { size: "62", length: "153", sleeve: "78", chest: "134", hips: "146", intl: "3XL+" },
     ],
     description: {
-      ar: "اختاري نظام المقاسات (دولي أو خليجي) ثم قارني قياساتك بالجدول. عند الشك بين مقاسين، اختاري الأكبر.",
-      en: "Choose your sizing system (International or Gulf) then match your measurements to the table. When in doubt, size up.",
+      ar: "دليل المقاسات الخليجي — اختاري المقاس بناءً على طولكِ ووزنكِ. عند الشك بين مقاسين، اختاري الأكبر للراحة.",
+      en: "Gulf size guide — pick your size based on height and weight. When in doubt, choose the larger size for comfort.",
     },
   };
 }
