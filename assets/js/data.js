@@ -1839,7 +1839,7 @@ function uid() {
 /* =========================================================
    ProductsAPI
 ========================================================= */
-const ProductsAPI = {
+var ProductsAPI = {
   list()       { return loadDB().products; },
   get(id)      { return loadDB().products.find(p => p.id === id); },
 
@@ -1905,7 +1905,7 @@ const ProductsAPI = {
 /* =========================================================
    OrdersAPI
 ========================================================= */
-const OrdersAPI = {
+var OrdersAPI = {
   list() { return loadDB().orders.slice().reverse(); },
 
   /* ترجع Promise بـ { ok, order, error } لتتوافق مع طبقة Supabase
@@ -1944,7 +1944,7 @@ const OrdersAPI = {
 /* =========================================================
    SettingsAPI
 ========================================================= */
-const SettingsAPI = {
+var SettingsAPI = {
   get()  { return loadDB().settings; },
   save(patch) {
     const db = loadDB();
@@ -2002,13 +2002,13 @@ function makeLookupAPI(key, defaults) {
     },
   };
 }
-const FabricsAPI = makeLookupAPI("fabrics", DEFAULT_FABRICS);
-const CutsAPI    = makeLookupAPI("cuts",    DEFAULT_CUTS);
+var FabricsAPI = makeLookupAPI("fabrics", DEFAULT_FABRICS);
+var CutsAPI    = makeLookupAPI("cuts",    DEFAULT_CUTS);
 
 /* =========================================================
    ReviewsAPI  —  مراجعات العملاء
 ========================================================= */
-const ReviewsAPI = {
+var ReviewsAPI = {
   list() { return SettingsAPI.get().reviews || []; },
   save(review) {
     const db = loadDB();
@@ -2101,7 +2101,7 @@ const SizeChartsAPI = {
 /* =========================================================
    CitiesAPI  —  مدن التوصيل قابلة للتحرير
 ========================================================= */
-const CitiesAPI = {
+var CitiesAPI = {
   list() { return SettingsAPI.get().cities || []; },
   active() { return this.list().filter(c => c.active !== false); },
   save(city) {
@@ -2131,7 +2131,7 @@ const CitiesAPI = {
 /* =========================================================
    CategoriesAPI  —  تصنيفات قابلة للتحرير من الإعدادات
 ========================================================= */
-const CategoriesAPI = {
+var CategoriesAPI = {
   list() { return SettingsAPI.get().categories || []; },
   /* قائمة التصنيفات النشطة + "الكل" مُضافة في البداية */
   active() {
@@ -2196,7 +2196,7 @@ const TextOverridesAPI = {
 /* =========================================================
    CouponsAPI  —  أكواد الخصم
 ========================================================= */
-const CouponsAPI = {
+var CouponsAPI = {
   list() { return loadDB().settings.coupons || []; },
 
   save(coupon) {
