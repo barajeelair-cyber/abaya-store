@@ -229,7 +229,8 @@ tr:hover td { background: #fcfaf5; }
 .pill.shipped    { background: #d3e4ff; color: #0c4ec3; }
 .pill.delivered  { background: #d8f0df; color: #1e6e34; }
 .pill.cancelled  { background: #f1d8d6; color: #8a1a14; }
-.pill.lowstock   { background: #f6d6d3; color: var(--danger); }
+.pill.lowstock   { background: #ffe7cc; color: #b35a00; }
+.pill.outstock   { background: #f6d6d3; color: var(--danger); font-weight: 700; }
 .pill.ok         { background: #e3eee5; color: var(--ok); }
 
 .actions { display: flex; gap: 6px; }

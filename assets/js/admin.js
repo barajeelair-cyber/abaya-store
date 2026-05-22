@@ -649,7 +649,7 @@ $searchInput.oninput = renderProductsTable;
 $filterCat.onchange = renderProductsTable;
 
 function stockPill(stock) {
-  if (stock === 0) return `<span class="pill lowstock">${t("admin.stock.out")}</span>`;
+  if (stock === 0) return `<span class="pill outstock">${t("admin.stock.out")}</span>`;
   if (stock <= LOW_STOCK_THRESHOLD) return `<span class="pill lowstock">${t("admin.stock.low")} (${stock})</span>`;
   return `<span class="pill ok">${stock}</span>`;
 }

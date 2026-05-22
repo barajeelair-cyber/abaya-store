@@ -365,9 +365,15 @@ html[dir="ltr"] .brand-text em { font-style: italic; }
   position: absolute; top: 14px;
   padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
 }
-.badge-low      { right: 14px; background: rgba(217,83,79,.95); color: #fff; }
-.badge-out      { right: 14px; background: #000; color: var(--gold); border: 1px solid var(--gold); }
+.badge-low      { right: 14px; background: rgba(230,150,30,.97); color: #fff; }
+.badge-out      { right: 14px; background: #c0271e; color: #fff; border: 1px solid #c0271e; }
 .badge-discount { left: 14px; background: var(--success); color: #fff; }
+
+/* تمييز المنتج الذي نفد مخزونه عن باقي المنتجات */
+.card.out-of-stock { opacity: .82; border-color: rgba(192,39,30,.55); box-shadow: 0 0 0 1px rgba(192,39,30,.28) inset; }
+.card.out-of-stock .img-wrap img { filter: grayscale(.85) brightness(.82); }
+.card.out-of-stock .card-body h3 { color: var(--muted); }
+.card.out-of-stock .price { color: var(--muted); }
 
 .card-body { padding: 16px; flex: 1; display: flex; flex-direction: column; gap: 6px; }
 .card-body h3 { margin: 0; font-size: 17px; }
