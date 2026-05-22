@@ -222,7 +222,7 @@ const I18N = {
     "checkout.banks": "💳 حوّلي المبلغ على أحد الحسابات التالية:",
     "checkout.proof": "📸 ارفعي صورة التحويل (مطلوبة لتأكيد الطلب):",
     "checkout.upload_hint": "اسحبي الصورة هنا أو انقري للاختيار",
-    "checkout.upload_hint_2": "PNG / JPG  —  حتى 3 ميجا",
+    "checkout.upload_hint_2": "PNG / JPG  —  حتى 10 ميجا",
     "checkout.confirm": "تأكيد الطلب",
     "checkout.cancel": "إلغاء",
     "checkout.items_count": "عدد القطع",
@@ -239,7 +239,7 @@ const I18N = {
     "checkout.copied": "تم النسخ",
     "checkout.select_city": "اختاري المدينة",
     "checkout.upload_first": "ارفعي صورة التحويل أولاً",
-    "checkout.image_too_big": "حجم الصورة كبير (3 ميجا حد أقصى)",
+    "checkout.image_too_big": "حجم الصورة كبير (10 ميجا حد أقصى)",
     "checkout.no_banks": "لا توجد حسابات بنكية مضافة. تواصلي مع الإدارة.",
 
     /* Coupon */
@@ -389,7 +389,7 @@ const I18N = {
     "admin.product.need_color_names": "أكملي أسماء الألوان",
     "admin.product.need_color_images": "ارفعي صورة لكل لون",
     "admin.product.need_sizes": "أضيفي مقاساً واحداً على الأقل",
-    "admin.product.image_too_big": "حجم الصورة كبير (الحد 3 ميجا)",
+    "admin.product.image_too_big": "حجم الصورة كبير (الحد 10 ميجا)",
 
     /* Admin: inventory */
     "admin.inv.title": "المخزون",
@@ -825,7 +825,7 @@ const I18N = {
     "checkout.banks": "💳 Transfer the amount to one of these accounts:",
     "checkout.proof": "📸 Upload transfer receipt (required to confirm order):",
     "checkout.upload_hint": "Drag image here or click to choose",
-    "checkout.upload_hint_2": "PNG / JPG — up to 3 MB",
+    "checkout.upload_hint_2": "PNG / JPG — up to 10 MB",
     "checkout.confirm": "Confirm Order",
     "checkout.cancel": "Cancel",
     "checkout.items_count": "Items",
@@ -842,7 +842,7 @@ const I18N = {
     "checkout.copied": "Copied",
     "checkout.select_city": "Please select a city",
     "checkout.upload_first": "Please upload the transfer receipt first",
-    "checkout.image_too_big": "Image too large (3 MB max)",
+    "checkout.image_too_big": "Image too large (10 MB max)",
     "checkout.no_banks": "No bank accounts available. Contact the store.",
 
     /* Coupon */
@@ -992,7 +992,7 @@ const I18N = {
     "admin.product.need_color_names": "Fill in all color names",
     "admin.product.need_color_images": "Upload an image for each color",
     "admin.product.need_sizes": "Add at least one size",
-    "admin.product.image_too_big": "Image too large (3 MB max)",
+    "admin.product.image_too_big": "Image too large (10 MB max)",
 
     /* Admin: inventory */
     "admin.inv.title": "Inventory",
@@ -2324,10 +2324,14 @@ const CustomersAPI = {
 ========================================================= */
 const Utils = {
   cityById(id) {
-    const cities = SettingsAPI.get().cities || [];
+    /* جرّب من CitiesAPI أولاً (يدعم Supabase override)، ثم Settings، ثم Legacy */
+    let cities = [];
+    if (window.CitiesAPI?.list) {
+      try { cities = window.CitiesAPI.list() || []; } catch (e) {}
+    }
+    if (!cities.length) cities = (window.SettingsAPI || SettingsAPI).get().cities || [];
     const c = cities.find(x => x.id === id);
     if (!c) {
-      /* fallback إلى المصفوفة الأصلية في حال عدم الترحيل */
       const legacy = GAZA_CITIES.find(x => x.id === id);
       if (!legacy) return null;
       return { ...legacy, name: t("city." + id) };
@@ -2340,7 +2344,12 @@ const Utils = {
   },
   categoryById(id) {
     if (id === "all") return { id: "all", name: t("category.all") };
-    const cats = SettingsAPI.get().categories || [];
+    /* جرّب أولاً من CategoriesAPI (يدعم Supabase override)، ثم من Settings */
+    let cats = [];
+    if (window.CategoriesAPI?.list) {
+      try { cats = window.CategoriesAPI.list() || []; } catch (e) {}
+    }
+    if (!cats.length) cats = (window.SettingsAPI || SettingsAPI).get().categories || [];
     const c = cats.find(x => x.id === id);
     if (!c) return { id, name: id };
     const lang = getLang();

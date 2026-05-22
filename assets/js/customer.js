@@ -659,7 +659,7 @@ if ($proofInput) {
   $proofInput.onchange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 3 * 1024 * 1024) { showToast(t("checkout.image_too_big")); return; }
+    if (file.size > 10 * 1024 * 1024) { showToast(t("checkout.image_too_big")); return; }
     paymentProof = await Utils.fileToDataURL(file);
     if ($proofPrev) {
       $proofPrev.innerHTML = `
@@ -824,7 +824,28 @@ function parseRange(rangeStr) {
 function calculateSize(chest, waist, hips) {
   const charts = SizeChartsAPI.get();
   const rows = charts[currentSizeSystem] || [];
-  /* لكل صف، احسب درجة التطابق (كم قياس داخل النطاق) */
+  if (!rows.length) return null;
+
+  if (currentSizeSystem === "gulf") {
+    /* النظام الخليجي للعبايات: الأرقام في الجدول هي قياسات الجسم
+       التي يناسبها هذا المقاس. نختار أصغر مقاس يستوعب قياسات الزبونة. */
+    const userChest = Number(chest) || 0;
+    const userHips  = Number(hips)  || 0;
+    if (!userChest && !userHips) return null;
+
+    /* صف يناسب الزبونة: قياساته >= قياساتها (مع تسامح 1 سم) */
+    const fitting = rows.filter(r => {
+      const rowChest = Number(r.chest) || 0;
+      const rowHips  = Number(r.hips)  || 0;
+      const fitsChest = !userChest || rowChest + 1 >= userChest;
+      const fitsHips  = !userHips  || rowHips  + 1 >= userHips;
+      return fitsChest && fitsHips;
+    });
+    /* أصغر مقاس يناسبها */
+    return fitting[0] || rows[rows.length - 1];
+  }
+
+  /* النظام الدولي: نطاقات (84-88 إلخ) ـ نحسب أفضل تطابق */
   let best = null, bestScore = -1;
   rows.forEach(r => {
     let score = 0;
@@ -964,9 +985,9 @@ if (isStandalone()) {
 const $accountBtn = document.getElementById("accountBtn");
 const $authModal  = document.getElementById("authModal");
 
-function updateAccountButton() {
+async function updateAccountButton() {
   if (!$accountBtn || !window.CustomersAPI) return;
-  const c = CustomersAPI.current();
+  const c = await Promise.resolve(CustomersAPI.current());
   const iconSvg = `
     <svg class="account-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <circle cx="12" cy="7.5" r="3.2"/>
@@ -1015,14 +1036,14 @@ document.querySelectorAll(".auth-tab").forEach(btn => {
 
 document.getElementById("continueAsGuest")?.addEventListener("click", closeAuthModal);
 
-document.getElementById("loginCustForm")?.addEventListener("submit", (e) => {
+document.getElementById("loginCustForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
   if (!window.CustomersAPI) return;
   const f = new FormData(e.target);
-  const r = CustomersAPI.login(f.get("phone"), f.get("password"));
+  const r = await Promise.resolve(CustomersAPI.login(f.get("phone"), f.get("password")));
   if (r.ok) {
     closeAuthModal();
-    updateAccountButton();
+    await updateAccountButton();
     showToast(t("auth.logged_in"));
     e.target.reset();
   } else {
@@ -1030,18 +1051,18 @@ document.getElementById("loginCustForm")?.addEventListener("submit", (e) => {
   }
 });
 
-document.getElementById("registerCustForm")?.addEventListener("submit", (e) => {
+document.getElementById("registerCustForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
   if (!window.CustomersAPI) return;
   const f = new FormData(e.target);
-  const r = CustomersAPI.register({
+  const r = await Promise.resolve(CustomersAPI.register({
     name: f.get("name"),
     phone: f.get("phone"),
     password: f.get("password"),
-  });
+  }));
   if (r.ok) {
     closeAuthModal();
-    updateAccountButton();
+    await updateAccountButton();
     showToast(t("auth.registered"));
     e.target.reset();
   } else {
@@ -1332,17 +1353,46 @@ document.getElementById("langToggle")?.addEventListener("click", () => {
 updateLangButton();
 
 /* =========================================================
-   إقلاع
+   إقلاع  —  ننتظر data-ready عند استخدام Supabase
 ========================================================= */
-applySettings();
-renderCategories();
-renderFilterChips();
-bindFilterControls();
-renderProducts();
-renderCart();
-updateAccountButton();
-renderReviews();
-renderSiteInfo();
+function bootCustomer() {
+  try {
+    applySettings();
+    renderCategories();
+    renderFilterChips();
+    bindFilterControls();
+    renderProducts();
+    renderCart();
+    updateAccountButton();
+    renderReviews();
+    renderSiteInfo();
+  } catch (e) {
+    console.error("[bootCustomer]", e);
+  }
+}
+
+function rerenderCustomer() {
+  try {
+    renderCategories();
+    renderFilterChips();
+    renderProducts();
+    renderReviews();
+    renderSiteInfo();
+  } catch (e) { console.error("[rerender]", e); }
+}
+
+if (window.isSupabaseConfigured?.()) {
+  if (window.supabaseReady) {
+    bootCustomer();
+  } else {
+    window.addEventListener("data-ready", bootCustomer, { once: true });
+    /* احتياط: إذا تأخر data-ready لـ 8 ثوان، ابدأ بـ localStorage */
+    setTimeout(() => { if (!window.supabaseReady) bootCustomer(); }, 8000);
+  }
+} else {
+  bootCustomer();
+}
+window.addEventListener("data-changed", rerenderCustomer);
 
 window.addEventListener("storage", (e) => {
   if (e.key === "abaya_amal_v2") {

@@ -1,51 +1,103 @@
 /* =========================================================
-   Supabase Adapter Layer
+   Supabase Sync-Cache Adapter
    ---------------------------------------------------------
-   إذا كان Supabase مُهيَّأ في supabase-config.js، يستبدل هذا
-   الملف الـ APIs المعرّفة في data.js بنسخ تتحدث مع Supabase
-   مباشرة. الواجهة نفسها (نفس أسماء الدوال) فلا يحتاج باقي
-   الكود لأي تعديل.
+   البنية:
+   1. عند بدء التطبيق نحمّل supabase-js + كل البيانات الأولية في cache
+   2. بعد جاهزية الـ cache، نُطلق حدث 'data-ready'
+   3. كل دوال القراءة (list/get) تُرجع من الـ cache مباشرة (sync)
+   4. كل دوال الكتابة (save/remove) تكتب إلى Supabase + تُحدّث الـ cache
+      مباشرة (تفاؤلياً) بحيث يستطيع الـ caller أن يقرأ الجديد فوراً
+      بدون await
 ========================================================= */
 
 (function () {
   if (!window.isSupabaseConfigured?.()) {
     console.info("[Supabase] غير مُهيَّأ، نستخدم localStorage");
+    /* أطلق data-ready فوراً حتى تتابع الصفحة الرسم */
+    window.addEventListener("DOMContentLoaded", () => {
+      window.dispatchEvent(new Event("data-ready"));
+    });
+    if (document.readyState !== "loading") {
+      setTimeout(() => window.dispatchEvent(new Event("data-ready")), 0);
+    }
     return;
   }
 
   const { SUPABASE_URL, SUPABASE_ANON_KEY, BUCKET_PRODUCTS, BUCKET_PROOFS, BUCKET_HERO } = window.AMAL_CONFIG;
+  const CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
 
-  /* تحميل مكتبة supabase-js من CDN ديناميكياً */
-  const script = document.createElement("script");
-  script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
-  script.onload = init;
-  document.head.appendChild(script);
+  loadSupabase().then(initAdapter).catch(err => {
+    console.error("[Supabase] فشل التحميل، نستخدم localStorage:", err);
+    window.dispatchEvent(new Event("data-ready"));
+  });
 
-  function init() {
+  function loadSupabase() {
+    return new Promise((resolve, reject) => {
+      if (window.supabase) return resolve();
+      const s = document.createElement("script");
+      s.src = CDN;
+      s.onload = () => resolve();
+      s.onerror = (e) => reject(e);
+      document.head.appendChild(s);
+    });
+  }
+
+  async function initAdapter() {
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     window.supabaseClient = supabase;
-    console.info("[Supabase] متصل ✓");
 
-    /* ====== Products ====== */
+    /* ====== Caches ====== */
+    const cache = {
+      products:    [],
+      orders:      [],
+      categories:  [],
+      cities:      [],
+      fabrics:     [],
+      cuts:        [],
+      coupons:     [],
+      reviews:     [],
+      banks:       [],
+      settings:    { textOverrides: { ar: {}, en: {} }, contact: {} },
+    };
+
+    /* جلب كل البيانات بالتوازي */
+    const [
+      productsRes, ordersRes, categoriesRes, citiesRes,
+      fabricsRes, cutsRes, couponsRes, reviewsRes,
+      banksRes, settingsRes,
+    ] = await Promise.all([
+      supabase.from("products").select("*").order("created_at", { ascending: false }),
+      supabase.from("orders").select("*").order("created_at", { ascending: false }),
+      supabase.from("categories").select("*").order("sort", { ascending: true }),
+      supabase.from("cities").select("*"),
+      supabase.from("fabrics").select("*"),
+      supabase.from("cuts").select("*"),
+      supabase.from("coupons").select("*"),
+      supabase.from("reviews").select("*").eq("approved", true).order("created_at", { ascending: false }),
+      supabase.from("bank_accounts").select("*").eq("active", true),
+      supabase.from("store_settings").select("*").eq("id", 1).single(),
+    ]);
+
+    cache.products   = (productsRes.data   || []).map(mapProductFromDB);
+    cache.orders     = (ordersRes.data     || []).map(mapOrderFromDB);
+    cache.categories = categoriesRes.data  || [];
+    cache.cities     = citiesRes.data      || [];
+    cache.fabrics    = fabricsRes.data     || [];
+    cache.cuts       = cutsRes.data        || [];
+    cache.coupons    = couponsRes.data     || [];
+    cache.reviews    = reviewsRes.data     || [];
+    cache.banks      = banksRes.data       || [];
+    cache.settings   = settingsRes.data    || { textOverrides: { ar: {}, en: {} }, contact: {} };
+    cache.settings.bankAccounts = cache.banks;
+
+    console.info(`[Supabase] جاهز ✓ — ${cache.products.length} منتج، ${cache.orders.length} طلب، ${cache.categories.length} تصنيف`);
+
+    /* ===== ProductsAPI ===== */
     window.ProductsAPI = {
-      _cache: null,
-      async list() {
-        if (this._cache) return this._cache;
-        const { data, error } = await supabase.from("products").select("*").order("created_at", { ascending: false });
-        if (error) { console.error(error); return []; }
-        this._cache = (data || []).map(mapProductFromDB);
-        return this._cache;
-      },
-      async get(id) {
-        const list = await this.list();
-        return list.find(p => p.id === id);
-      },
-      totalStock(p) {
-        return Object.values(p.stock || {}).reduce((s, v) => s + Number(v || 0), 0);
-      },
-      variantStock(p, color, size) {
-        return Number(p.stock?.[`${color}|${size}`] || 0);
-      },
+      list() { return cache.products; },
+      get(id) { return cache.products.find(p => p.id === id); },
+      totalStock(p) { return Object.values(p.stock || {}).reduce((s, v) => s + Number(v || 0), 0); },
+      variantStock(p, color, size) { return Number(p.stock?.[`${color}|${size}`] || 0); },
       finalPrice(p) {
         const d = Number(p.discount || 0);
         return d > 0 ? Math.round(p.price * (100 - d) / 100) : p.price;
@@ -60,168 +112,283 @@
         const c = p.colors?.[0];
         return this.colorImages(c)[0] || "";
       },
-      async save(product) {
+      save(product) {
         const payload = mapProductToDB(product);
-        let result;
-        if (product.id) {
-          ({ data: result, error: result } = await supabase.from("products").update(payload).eq("id", product.id).select().single());
+        const isUpdate = !!product.id;
+        /* تحديث الـ cache مباشرة (تفاؤلياً) */
+        if (isUpdate) {
+          const idx = cache.products.findIndex(x => x.id === product.id);
+          if (idx >= 0) cache.products[idx] = { ...product };
         } else {
-          ({ data: result, error: result } = await supabase.from("products").insert(payload).select().single());
+          /* id مؤقت حتى ترجع DB */
+          const tempId = "temp-" + Date.now();
+          cache.products.unshift({ ...product, id: tempId });
+          product.id = tempId;
         }
-        this._cache = null;
-        return result ? mapProductFromDB(result) : product;
+        /* اكتب إلى DB في الخلفية */
+        (isUpdate
+          ? supabase.from("products").update(payload).eq("id", product.id).select().single()
+          : supabase.from("products").insert(payload).select().single()
+        ).then(({ data, error }) => {
+          if (error) { console.error("[save product]", error); return; }
+          /* استبدل الـ temp id بالحقيقي */
+          const real = mapProductFromDB(data);
+          const idx = cache.products.findIndex(x => x.id === product.id);
+          if (idx >= 0) cache.products[idx] = real;
+          window.dispatchEvent(new Event("data-changed"));
+        });
+        return product;
       },
-      async remove(id) {
-        await supabase.from("products").delete().eq("id", id);
-        this._cache = null;
+      remove(id) {
+        cache.products = cache.products.filter(p => p.id !== id);
+        supabase.from("products").delete().eq("id", id).then(({ error }) => {
+          if (error) console.error("[remove product]", error);
+        });
       },
-      async decrementVariant(id, color, size, qty) {
-        const p = await this.get(id);
+      decrementVariant(id, color, size, qty) {
+        const p = cache.products.find(x => x.id === id);
         if (!p) return;
         const key = `${color}|${size}`;
         p.stock[key] = Math.max(0, Number(p.stock[key] || 0) - qty);
-        await this.save(p);
+        this.save(p);
       },
     };
 
-    /* ====== Orders ====== */
+    /* ===== OrdersAPI ===== */
     window.OrdersAPI = {
-      async list() {
-        const { data, error } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
-        if (error) { console.error(error); return []; }
-        return (data || []).map(mapOrderFromDB);
-      },
-      async add(order) {
+      list() { return cache.orders; },
+      add(order) {
         const payload = mapOrderToDB(order);
-        const { data, error } = await supabase.from("orders").insert(payload).select().single();
-        if (error) { console.error(error); throw error; }
+        order.id = "temp-" + Date.now();
+        order.createdAt = new Date().toISOString();
+        order.status = "awaiting";
+        cache.orders.unshift({ ...order });
+        supabase.from("orders").insert(payload).select().single().then(({ data, error }) => {
+          if (error) { console.error("[add order]", error); return; }
+          const real = mapOrderFromDB(data);
+          const idx = cache.orders.findIndex(x => x.id === order.id);
+          if (idx >= 0) cache.orders[idx] = real;
+          window.dispatchEvent(new Event("data-changed"));
+        });
         /* خصم المخزون */
-        for (const it of order.items) {
-          await ProductsAPI.decrementVariant(it.productId, it.color, it.size, it.qty);
-        }
-        return mapOrderFromDB(data);
+        order.items.forEach(it =>
+          window.ProductsAPI.decrementVariant(it.productId, it.color, it.size, it.qty)
+        );
+        return order;
       },
-      async updateStatus(id, status) {
+      updateStatus(id, status) {
+        const o = cache.orders.find(x => x.id === id);
+        if (o) o.status = status;
         const patch = { status };
         if (status === "pending")   patch.payment_verified_at = new Date().toISOString();
         if (status === "shipped")   patch.shipped_at          = new Date().toISOString();
         if (status === "delivered") patch.delivered_at        = new Date().toISOString();
-        await supabase.from("orders").update(patch).eq("id", id);
+        supabase.from("orders").update(patch).eq("id", id).then(({ error }) => {
+          if (error) console.error("[update status]", error);
+        });
       },
     };
 
-    /* ====== Lookups (categories, cities, fabrics, cuts, coupons, banks, reviews) ====== */
-    function makeRemoteLookupAPI(table) {
+    /* ===== Lookups (sync wrappers) ===== */
+    function makeLookupAPI(table, cacheKey) {
       return {
-        async list() {
-          const { data, error } = await supabase.from(table).select("*").order("created_at", { ascending: true });
-          if (error) { console.error(error); return []; }
-          return data || [];
-        },
-        async save(item) {
-          const op = item.id ? "update" : "insert";
-          if (op === "update") {
-            const { data } = await supabase.from(table).update(item).eq("id", item.id).select().single();
-            return data;
+        list() { return cache[cacheKey]; },
+        active() { return cache[cacheKey].filter(c => c.active !== false); },
+        save(item) {
+          if (item.id) {
+            const idx = cache[cacheKey].findIndex(x => x.id === item.id);
+            if (idx >= 0) cache[cacheKey][idx] = { ...cache[cacheKey][idx], ...item };
+            supabase.from(table).update(item).eq("id", item.id).then(({ error }) => {
+              if (error) console.error(`[save ${table}]`, error);
+            });
           } else {
-            const { data } = await supabase.from(table).insert(item).select().single();
-            return data;
+            const tempId = "temp-" + Date.now();
+            const newItem = { ...item, id: tempId };
+            cache[cacheKey].push(newItem);
+            const insertItem = { ...item };
+            /* لـ categories/cities/fabrics/cuts نولّد id من الاسم */
+            if (!insertItem.id && insertItem.name_en) {
+              insertItem.id = insertItem.name_en.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || tempId;
+            }
+            supabase.from(table).insert(insertItem).select().single().then(({ data, error }) => {
+              if (error) { console.error(`[insert ${table}]`, error); return; }
+              const idx = cache[cacheKey].findIndex(x => x.id === tempId);
+              if (idx >= 0) cache[cacheKey][idx] = data;
+            });
           }
+          return item;
         },
-        async remove(id) { await supabase.from(table).delete().eq("id", id); },
+        remove(id) {
+          cache[cacheKey] = cache[cacheKey].filter(x => x.id !== id);
+          supabase.from(table).delete().eq("id", id).then(({ error }) => {
+            if (error) console.error(`[remove ${table}]`, error);
+          });
+        },
       };
     }
 
-    window.CategoriesAPI = {
-      ...makeRemoteLookupAPI("categories"),
-      async active() { return (await this.list()).filter(c => c.active !== false); },
-    };
-    window.CitiesAPI = {
-      ...makeRemoteLookupAPI("cities"),
-      async active() { return (await this.list()).filter(c => c.active !== false); },
-    };
-    window.FabricsAPI = makeRemoteLookupAPI("fabrics");
-    window.CutsAPI    = makeRemoteLookupAPI("cuts");
+    window.CategoriesAPI = makeLookupAPI("categories", "categories");
+    window.CitiesAPI     = makeLookupAPI("cities",     "cities");
+    window.FabricsAPI    = makeLookupAPI("fabrics",    "fabrics");
+    window.CutsAPI       = makeLookupAPI("cuts",       "cuts");
+
+    /* ===== CouponsAPI (لها خصوصيات) ===== */
     window.CouponsAPI = {
-      ...makeRemoteLookupAPI("coupons"),
-      async validate(code, subtotal) {
-        const { data } = await supabase.from("coupons").select("*").ilike("code", code).single();
-        if (!data) return { ok: false, reason: "الكود غير موجود" };
-        if (!data.active) return { ok: false, reason: "هذا الكود غير مُفعَّل" };
-        if (Number(subtotal) < Number(data.min_order || 0))
-          return { ok: false, reason: `الحد الأدنى للطلب ${data.min_order} ₪` };
-        const discount = data.type === "percent"
-          ? Math.round(subtotal * Number(data.value) / 100)
-          : Math.min(Number(data.value), subtotal);
-        return { ok: true, coupon: data, discount };
+      list() { return cache.coupons; },
+      save(coupon) {
+        const payload = {
+          code: coupon.code,
+          type: coupon.type,
+          value: Number(coupon.value || 0),
+          min_order: Number(coupon.minOrder || coupon.min_order || 0),
+          active: coupon.active !== false,
+        };
+        if (coupon.id) {
+          const idx = cache.coupons.findIndex(x => x.id === coupon.id);
+          if (idx >= 0) cache.coupons[idx] = { ...cache.coupons[idx], ...payload };
+          supabase.from("coupons").update(payload).eq("id", coupon.id).then(() => {});
+        } else {
+          const tempId = "temp-" + Date.now();
+          cache.coupons.push({ id: tempId, ...payload, used_count: 0 });
+          supabase.from("coupons").insert(payload).select().single().then(({ data }) => {
+            if (data) {
+              const idx = cache.coupons.findIndex(x => x.id === tempId);
+              if (idx >= 0) cache.coupons[idx] = data;
+            }
+          });
+        }
+        return coupon;
       },
-      async recordUse(code) {
-        const { data } = await supabase.from("coupons").select("*").ilike("code", code).single();
-        if (data) await supabase.from("coupons").update({ used_count: (data.used_count || 0) + 1 }).eq("id", data.id);
+      remove(id) {
+        cache.coupons = cache.coupons.filter(c => c.id !== id);
+        supabase.from("coupons").delete().eq("id", id).then(() => {});
+      },
+      validate(code, subtotal) {
+        const c = cache.coupons.find(x => (x.code || "").toUpperCase() === (code || "").toUpperCase().trim());
+        if (!c) return { ok: false, reason: "الكود غير موجود" };
+        if (!c.active) return { ok: false, reason: "هذا الكود غير مُفعَّل" };
+        const min = Number(c.min_order || c.minOrder || 0);
+        if (Number(subtotal) < min) return { ok: false, reason: `الحد الأدنى للطلب ${min} ₪` };
+        const discount = c.type === "percent"
+          ? Math.round(subtotal * Number(c.value) / 100)
+          : Math.min(Number(c.value), subtotal);
+        return { ok: true, coupon: c, discount };
+      },
+      recordUse(code) {
+        const c = cache.coupons.find(x => (x.code || "").toUpperCase() === (code || "").toUpperCase());
+        if (c) {
+          c.used_count = (c.used_count || 0) + 1;
+          supabase.from("coupons").update({ used_count: c.used_count }).eq("id", c.id).then(() => {});
+        }
       },
     };
 
+    /* ===== ReviewsAPI ===== */
     window.ReviewsAPI = {
-      async list() {
-        const { data } = await supabase.from("reviews").select("*").eq("approved", true).order("created_at", { ascending: false });
-        return data || [];
+      list() { return cache.reviews; },
+      save(review) {
+        const payload = {
+          name: review.name,
+          rating: Number(review.rating || 5),
+          comment: review.comment || review.text,
+          verified: !!review.verified,
+          approved: review.approved !== false,
+        };
+        if (review.id && !String(review.id).startsWith("temp-")) {
+          const idx = cache.reviews.findIndex(r => r.id === review.id);
+          if (idx >= 0) cache.reviews[idx] = { ...cache.reviews[idx], ...payload };
+          supabase.from("reviews").update(payload).eq("id", review.id).then(() => {});
+        } else {
+          const tempId = "temp-" + Date.now();
+          cache.reviews.unshift({ id: tempId, ...payload, created_at: new Date().toISOString() });
+          supabase.from("reviews").insert(payload).select().single().then(({ data }) => {
+            if (data) {
+              const idx = cache.reviews.findIndex(r => r.id === tempId);
+              if (idx >= 0) cache.reviews[idx] = data;
+            }
+          });
+        }
+        return review;
       },
-      async save(review) { return await supabase.from("reviews").upsert(review).select().single(); },
-      async remove(id)   { await supabase.from("reviews").delete().eq("id", id); },
-      avgRating: async function () {
-        const list = await this.list();
-        if (!list.length) return 0;
-        return list.reduce((s, r) => s + Number(r.rating || 0), 0) / list.length;
+      remove(id) {
+        cache.reviews = cache.reviews.filter(r => r.id !== id);
+        supabase.from("reviews").delete().eq("id", id).then(() => {});
+      },
+      avgRating() {
+        if (!cache.reviews.length) return 0;
+        return cache.reviews.reduce((s, r) => s + Number(r.rating || 0), 0) / cache.reviews.length;
       },
     };
 
-    /* ====== Settings ====== */
+    /* ===== SettingsAPI ===== */
     window.SettingsAPI = {
-      _cache: null,
-      async _load() {
-        if (this._cache) return this._cache;
-        const { data } = await supabase.from("store_settings").select("*").eq("id", 1).single();
-        this._cache = data || {};
-        const { data: banks } = await supabase.from("bank_accounts").select("*").eq("active", true);
-        this._cache.bankAccounts = banks || [];
-        return this._cache;
+      get() { return cache.settings; },
+      save(patch) {
+        Object.assign(cache.settings, patch);
+        const dbPatch = {};
+        Object.keys(patch).forEach(k => {
+          /* تحويل camelCase ↔ snake_case للحقول المعروفة */
+          if (k === "heroBgImage")   dbPatch.hero_bg_image = patch[k];
+          else if (k === "heroBgOpacity") dbPatch.hero_bg_opacity = patch[k];
+          else if (k === "soundEnabled")  dbPatch.sound_enabled  = patch[k];
+          else if (k === "textOverrides") dbPatch.text_overrides = patch[k];
+          else if (k === "siteInfo")      dbPatch.site_info      = patch[k];
+          else if (k === "sizeCharts")    dbPatch.size_charts    = patch[k];
+          else if (k === "storeName")     dbPatch.store_name     = patch[k];
+          else dbPatch[k] = patch[k];
+        });
+        supabase.from("store_settings").update(dbPatch).eq("id", 1).then(() => {});
+        return cache.settings;
       },
-      get() { return this._cache || { contact: {}, bankAccounts: [], textOverrides: { ar:{}, en:{} } }; },
-      async refresh() { this._cache = null; return await this._load(); },
-      async save(patch) {
-        const dbPatch = { ...patch };
-        if (patch.contact) dbPatch.contact = patch.contact;
-        await supabase.from("store_settings").update(dbPatch).eq("id", 1);
-        this._cache = null;
-        return await this._load();
+      addBank(account) {
+        const tempId = "temp-" + Date.now();
+        const newBank = { ...account, id: tempId, active: true };
+        cache.banks.push(newBank);
+        cache.settings.bankAccounts = cache.banks;
+        supabase.from("bank_accounts").insert({
+          bank_name: account.bankName,
+          account_name: account.accountName,
+          account_number: account.accountNumber,
+          iban: account.iban,
+        }).select().single().then(({ data }) => {
+          if (data) {
+            const idx = cache.banks.findIndex(b => b.id === tempId);
+            if (idx >= 0) cache.banks[idx] = data;
+          }
+        });
+        return newBank;
       },
-      async addBank(account) {
-        const { data } = await supabase.from("bank_accounts").insert(account).select().single();
-        this._cache = null;
-        return data;
+      updateBank(id, patch) {
+        const b = cache.banks.find(x => x.id === id);
+        if (b) Object.assign(b, patch);
+        const dbPatch = {};
+        if (patch.bankName)      dbPatch.bank_name      = patch.bankName;
+        if (patch.accountName)   dbPatch.account_name   = patch.accountName;
+        if (patch.accountNumber) dbPatch.account_number = patch.accountNumber;
+        if (patch.iban !== undefined) dbPatch.iban      = patch.iban;
+        supabase.from("bank_accounts").update(dbPatch).eq("id", id).then(() => {});
       },
-      async updateBank(id, patch) {
-        await supabase.from("bank_accounts").update(patch).eq("id", id);
-        this._cache = null;
-      },
-      async removeBank(id) {
-        await supabase.from("bank_accounts").delete().eq("id", id);
-        this._cache = null;
+      removeBank(id) {
+        cache.banks = cache.banks.filter(b => b.id !== id);
+        cache.settings.bankAccounts = cache.banks;
+        supabase.from("bank_accounts").delete().eq("id", id).then(() => {});
       },
     };
 
-    /* ====== Customers ====== */
+    /* ===== Customers (للزبائن) ===== */
     window.CustomersAPI = {
+      list() { return []; }, /* لا نسمح بقراءة قائمة الزبائن من client */
       async findByPhone(phone) {
         const p = String(phone || "").replace(/\D/g, "");
         if (!p) return null;
-        const { data } = await supabase.from("customers").select("*").eq("phone", p).single();
+        const { data } = await supabase.from("customers").select("*").eq("phone", p).maybeSingle();
         return data;
       },
       async register({ name, phone, password }) {
         if (!name || !phone || !password) return { ok: false, reason: "missing_fields" };
         if (String(password).length < 4) return { ok: false, reason: "weak_password" };
-        if (await this.findByPhone(phone)) return { ok: false, reason: "phone_exists" };
+        const existing = await this.findByPhone(phone);
+        if (existing) return { ok: false, reason: "phone_exists" };
         const passwordHash = await hashPassword(password);
         const { data, error } = await supabase.from("customers").insert({
           name: name.trim(),
@@ -244,25 +411,27 @@
       async current() {
         const id = localStorage.getItem("abaya_amal_customer_session");
         if (!id) return null;
-        const { data } = await supabase.from("customers").select("*").eq("id", id).single();
+        const { data } = await supabase.from("customers").select("*").eq("id", id).maybeSingle();
         return data;
       },
     };
 
-    /* ====== Storage helper ====== */
+    /* ===== رفع الصور إلى Storage ===== */
     window.uploadToStorage = async function (bucket, file, path) {
-      const filename = path || `${Date.now()}-${Math.random().toString(36).slice(2)}.${file.name.split(".").pop()}`;
-      const { data, error } = await supabase.storage.from(bucket).upload(filename, file);
+      const ext = file.name.split(".").pop() || "jpg";
+      const filename = path || `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { data, error } = await supabase.storage.from(bucket).upload(filename, file, { upsert: false });
       if (error) throw error;
       const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(data.path);
       return publicUrl;
     };
 
-    /* أعلِم باقي الكود أن APIs جاهزة */
-    window.dispatchEvent(new Event("supabase-ready"));
+    /* ===== جاهز ===== */
+    window.supabaseReady = true;
+    window.dispatchEvent(new Event("data-ready"));
   }
 
-  /* ===== Mappers (DB ↔ JS) ===== */
+  /* ===== Mappers ===== */
   function mapProductFromDB(p) {
     return {
       id: p.id,
@@ -289,15 +458,15 @@
       category: p.category,
       fabric: p.fabric,
       cut: p.cut,
-      price: p.price,
-      discount: p.discount,
-      is_open: !!p.isOpen,
+      price: Number(p.price || 0),
+      discount: Number(p.discount || 0),
+      is_open:        !!p.isOpen,
       is_embroidered: !!p.isEmbroidered,
-      is_bestseller: !!p.isBestseller,
-      is_new: !!p.isNew,
-      colors: p.colors,
-      sizes: p.sizes,
-      stock: p.stock,
+      is_bestseller:  !!p.isBestseller,
+      is_new:         !!p.isNew,
+      colors: p.colors || [],
+      sizes:  p.sizes  || [],
+      stock:  p.stock  || {},
     };
   }
   function mapOrderFromDB(o) {
@@ -306,13 +475,10 @@
       createdAt: o.created_at,
       status: o.status,
       customer: {
-        name: o.customer_name,
-        phone: o.customer_phone,
-        area: o.customer_area,
-        notes: o.customer_notes,
+        name: o.customer_name, phone: o.customer_phone,
+        area: o.customer_area, notes: o.customer_notes,
       },
-      cityId: o.city_id,
-      cityName: o.city_name,
+      cityId: o.city_id, cityName: o.city_name,
       deliveryFee: Number(o.delivery_fee || 0),
       items: o.items || [],
       subtotal: Number(o.subtotal || 0),
@@ -346,7 +512,6 @@
     };
   }
 
-  /* ===== كلمة المرور (SHA-256 — مناسب لاستخدامنا، يمكن ترقيتها لـ bcrypt server-side) ===== */
   async function hashPassword(password) {
     const enc = new TextEncoder().encode("amal_salt_v1:" + password);
     const hash = await crypto.subtle.digest("SHA-256", enc);

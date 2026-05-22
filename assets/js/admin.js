@@ -340,7 +340,7 @@ function colorBlockHTML(idx, c) {
         <input type="file" accept="image/*" multiple />
         <div class="uz-icon">📁</div>
         <div>${images.length ? "أضيفي صوراً أخرى" : "اسحبي صوراً هنا أو انقري للاختيار (يمكن متعددة)"}</div>
-        <div style="font-size:12px; margin-top:4px;">PNG / JPG  —  حتى 3 ميجا لكل صورة</div>
+        <div style="font-size:12px; margin-top:4px;">PNG / JPG  —  حتى 10 ميجا لكل صورة</div>
       </label>
     </div>`;
 }
@@ -410,7 +410,7 @@ async function handleImageFiles(idx, files) {
     delete workingColors[idx].image;
   }
   for (const file of files) {
-    if (file.size > 3 * 1024 * 1024) { showToast(t("admin.product.image_too_big")); continue; }
+    if (file.size > 10 * 1024 * 1024) { showToast(t("admin.product.image_too_big")); continue; }
     const dataUrl = await Utils.fileToDataURL(file);
     workingColors[idx].images.push(dataUrl);
   }
@@ -977,7 +977,7 @@ function setupHeroBgControls() {
     file.onchange = async (e) => {
       const f = e.target.files?.[0];
       if (!f) return;
-      if (f.size > 3 * 1024 * 1024) { showToast(t("admin.product.image_too_big")); return; }
+      if (f.size > 10 * 1024 * 1024) { showToast(t("admin.product.image_too_big")); return; }
       const dataUrl = await Utils.fileToDataURL(f);
       SettingsAPI.save({ heroBgImage: dataUrl });
       showToast(t("admin.settings.hero_bg_saved"));
@@ -1758,9 +1758,27 @@ function escapeHtml(s) {
 function escapeAttr(s) { return escapeHtml(s); }
 
 /* =========================================================
-   نهاية الملف: الآن وبعد أن صارت كل الـ const مُعرَّفة،
-   إن كان المستخدم مسجَّل دخول من جلسة سابقة، أظهر اللوحة.
-   هذا يتجنّب TDZ error حين يبدأ bootApp يستدعي متغيرات
-   لم يصل إليها التنفيذ بعد.
+   نهاية الملف: ننتظر data-ready عند استخدام Supabase
+   ثم نُظهر اللوحة إن كان المستخدم مسجَّل دخول.
 ========================================================= */
-if (AuthAPI.isLoggedIn()) showApp();
+function autoShowIfLoggedIn() {
+  if (AuthAPI.isLoggedIn()) showApp();
+}
+
+if (window.isSupabaseConfigured?.()) {
+  if (window.supabaseReady) {
+    autoShowIfLoggedIn();
+  } else {
+    window.addEventListener("data-ready", autoShowIfLoggedIn, { once: true });
+    setTimeout(() => { if (!window.supabaseReady) autoShowIfLoggedIn(); }, 8000);
+  }
+} else {
+  autoShowIfLoggedIn();
+}
+
+/* أعد تحديث اللوحة عند تغيّر البيانات (مثلاً عند حفظ منتج) */
+window.addEventListener("data-changed", () => {
+  if ($appShell.style.display !== "none") {
+    try { refreshAll(); } catch (e) { console.error(e); }
+  }
+});
