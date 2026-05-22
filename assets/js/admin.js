@@ -1059,10 +1059,11 @@ function renderBanksList() {
   const banks = SettingsAPI.get().bankAccounts || [];
   $banksList.innerHTML = banks.length ? banks.map(b => `
     <div class="bank-row" data-id="${b.id}">
-      <input class="input" data-f="bankName"      value="${escapeAttr(b.bankName)}"      placeholder="اسم البنك">
-      <input class="input" data-f="accountName"   value="${escapeAttr(b.accountName)}"   placeholder="اسم صاحب الحساب">
-      <input class="input" data-f="accountNumber" value="${escapeAttr(b.accountNumber)}" placeholder="رقم الحساب">
-      <input class="input" data-f="iban"          value="${escapeAttr(b.iban)}"          placeholder="IBAN">
+      <input class="input" data-f="bankName"      value="${escapeAttr(b.bankName || b.bank_name || "")}"           placeholder="اسم البنك">
+      <input class="input" data-f="accountName"   value="${escapeAttr(b.accountName || b.account_name || "")}"     placeholder="اسم صاحب الحساب">
+      <input class="input" data-f="accountNumber" value="${escapeAttr(b.accountNumber || b.account_number || "")}" placeholder="رقم الحساب">
+      <input class="input" data-f="iban"          value="${escapeAttr(b.iban || "")}"                              placeholder="IBAN">
+      <input class="input" data-f="phone"         value="${escapeAttr(b.phone || "")}"                             placeholder="جوال التحويل (اختياري)">
       <div class="actions">
         <button class="icon-btn-sm ok"     data-act="save-bank">حفظ</button>
         <button class="icon-btn-sm danger" data-act="del-bank">حذف</button>

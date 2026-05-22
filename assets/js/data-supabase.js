@@ -350,6 +350,7 @@
           account_name: account.accountName,
           account_number: account.accountNumber,
           iban: account.iban,
+          phone: account.phone || null,
         }).select().single().then(({ data }) => {
           if (data) {
             const idx = cache.banks.findIndex(b => b.id === tempId);
@@ -365,7 +366,8 @@
         if (patch.bankName)      dbPatch.bank_name      = patch.bankName;
         if (patch.accountName)   dbPatch.account_name   = patch.accountName;
         if (patch.accountNumber) dbPatch.account_number = patch.accountNumber;
-        if (patch.iban !== undefined) dbPatch.iban      = patch.iban;
+        if (patch.iban !== undefined)  dbPatch.iban     = patch.iban;
+        if (patch.phone !== undefined) dbPatch.phone    = patch.phone || null;
         supabase.from("bank_accounts").update(dbPatch).eq("id", id).then(() => {});
       },
       removeBank(id) {

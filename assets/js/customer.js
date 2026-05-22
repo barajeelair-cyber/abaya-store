@@ -550,7 +550,14 @@ function fillCities() {
 }
 
 function renderBankAccounts() {
-  const banks = SettingsAPI.get().bankAccounts || [];
+  /* يدعم camelCase (localStorage) و snake_case (Supabase) */
+  const banks = (SettingsAPI.get().bankAccounts || SettingsAPI.get().bank_accounts || []).map(b => ({
+    bankName: b.bankName || b.bank_name,
+    accountName: b.accountName || b.account_name,
+    accountNumber: b.accountNumber || b.account_number,
+    iban: b.iban,
+    phone: b.phone || "",
+  }));
   $bankList.innerHTML = banks.length ? banks.map(b => `
     <div class="bank-card">
       <h5>🏦 ${escapeHtml(b.bankName)}</h5>
@@ -565,6 +572,14 @@ function renderBankAccounts() {
         <strong>${escapeHtml(b.iban)}</strong>
         <button type="button" class="copy" data-copy="${escapeHtml(b.iban)}">${t("checkout.copy")}</button>
       </div>
+      ${b.phone ? `
+      <div class="row" style="background:rgba(212,175,55,.08); padding:6px 8px; border-radius:6px;">
+        <span>📱 ${t("checkout.bank_phone")}</span>
+        <strong dir="ltr">${escapeHtml(b.phone)}</strong>
+        <button type="button" class="copy" data-copy="${escapeHtml(b.phone)}">${t("checkout.copy")}</button>
+      </div>
+      <div style="color:var(--gold-2); font-size:11px; margin-top:4px; text-align:center;">⚡ ${t("checkout.bank_phone_fast")}</div>
+      ` : ""}
     </div>
   `).join("") : `<p style="color:var(--muted); font-size:13px;">${t("checkout.no_banks")}</p>`;
 
