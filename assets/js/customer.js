@@ -721,7 +721,7 @@ if ($proofZone && $proofInput) {
 }
 
 /* إرسال الطلب */
-if ($form) $form.onsubmit = (e) => {
+if ($form) $form.onsubmit = async (e) => {
   e.preventDefault();
   const data = new FormData($form);
   const city = Utils.cityById(data.get("city"));
@@ -739,21 +739,45 @@ if ($form) $form.onsubmit = (e) => {
   const couponCode     = appliedCoupon ? appliedCoupon.code : "";
   const total = Math.max(0, subtotal + city.fee - couponDiscount);
 
-  OrdersAPI.add({
-    customer: {
-      name:  data.get("name"),
-      phone: data.get("phone"),
-      area:  data.get("area"),
-      notes: data.get("notes") || "",
-    },
-    cityId: city.id, cityName: city.name,
-    deliveryFee: city.fee,
-    items, subtotal, savings,
-    couponCode, couponDiscount,
-    total,
-    paymentProof,
-  });
+  /* عطّل زر الإرسال لمنع الإرسال المزدوج وأظهر حالة الانتظار */
+  const submitBtn = document.getElementById("submitOrderBtn");
+  const submitLabel = submitBtn ? submitBtn.textContent : "";
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = getLang() === "en" ? "Sending…" : "جارٍ الإرسال…";
+  }
 
+  /* انتظر تأكيد الحفظ الفعلي قبل عرض النجاح */
+  let res;
+  try {
+    res = await OrdersAPI.add({
+      customer: {
+        name:  data.get("name"),
+        phone: data.get("phone"),
+        area:  data.get("area"),
+        notes: data.get("notes") || "",
+      },
+      cityId: city.id, cityName: city.name,
+      deliveryFee: city.fee,
+      items, subtotal, savings,
+      couponCode, couponDiscount,
+      total,
+      paymentProof,
+    });
+  } catch (err) {
+    res = { ok: false, error: err };
+  }
+
+  /* فشل الحفظ → أبقِ السلة كما هي ليُعيد الزبون المحاولة */
+  if (!res || !res.ok) {
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = submitLabel; }
+    showToast(getLang() === "en"
+      ? "Could not send the order. Check your connection and try again."
+      : "تعذّر إرسال الطلب. تحقّقي من اتصالك بالإنترنت وحاولي مجدداً.");
+    return;
+  }
+
+  /* نجاح مؤكَّد */
   if (couponCode) CouponsAPI.recordUse(couponCode);
 
   cart.clear();
@@ -765,6 +789,7 @@ if ($form) $form.onsubmit = (e) => {
   paymentProof = null; $proofPrev.innerHTML = "";
   appliedCoupon = null;
   setCouponStatus("", "");
+  if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = submitLabel; }
   $successMd.classList.add("open");
 };
 document.getElementById("successOk")?.addEventListener("click", () => $successMd?.classList.remove("open"));
@@ -778,6 +803,17 @@ function showToast(msg) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => $toast.classList.remove("show"), 2200);
 }
+
+/* تنبيه الزبون مرة واحدة إذا كان التطبيق يعمل ببيانات غير متصلة */
+let offlineNotified = false;
+window.addEventListener("data-offline", () => {
+  if (offlineNotified) return;
+  offlineNotified = true;
+  showToast(getLang() === "en"
+    ? "Connection issue — showing saved data. Some items may be outdated."
+    : "تعذّر الاتصال — نعرض بيانات محفوظة، وقد تكون بعض المعلومات قديمة.");
+});
+
 function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"

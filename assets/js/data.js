@@ -1908,18 +1908,25 @@ const ProductsAPI = {
 const OrdersAPI = {
   list() { return loadDB().orders.slice().reverse(); },
 
+  /* ترجع Promise بـ { ok, order, error } لتتوافق مع طبقة Supabase
+     ويتمكن المتصل من التأكد قبل عرض رسالة النجاح. */
   add(order) {
-    const db = loadDB();
-    order.id = uid();
-    order.createdAt = new Date().toISOString();
-    order.status = "awaiting";  /* بانتظار تأكيد الدفع */
-    db.orders.push(order);
-    saveDB(db);
-    /* خصم المخزون فوراً (تحفّظ) */
-    order.items.forEach(it =>
-      ProductsAPI.decrementVariant(it.productId, it.color, it.size, it.qty)
-    );
-    return order;
+    try {
+      const db = loadDB();
+      order.id = uid();
+      order.createdAt = new Date().toISOString();
+      order.status = "awaiting";  /* بانتظار تأكيد الدفع */
+      db.orders.push(order);
+      saveDB(db);
+      /* خصم المخزون فوراً (تحفّظ) */
+      order.items.forEach(it =>
+        ProductsAPI.decrementVariant(it.productId, it.color, it.size, it.qty)
+      );
+      return Promise.resolve({ ok: true, order });
+    } catch (error) {
+      console.error("[add order:localStorage]", error);
+      return Promise.resolve({ ok: false, error });
+    }
   },
 
   updateStatus(id, status) {

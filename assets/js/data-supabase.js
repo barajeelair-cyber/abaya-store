@@ -11,6 +11,27 @@
 ========================================================= */
 
 (function () {
+  /* يُبلّغ عن فشل كتابة في الخلفية: يسجّل في console ويُطلق حدثاً
+     تلتقطه الواجهة لتعرض رسالة للمستخدم بدل الفشل الصامت. */
+  function notifyWriteError(context, error) {
+    console.error(`[${context}]`, error);
+    try {
+      window.dispatchEvent(new CustomEvent("data-write-error", {
+        detail: { context, message: error?.message || String(error) },
+      }));
+    } catch (_) {}
+  }
+  /* يُبلّغ أن التطبيق يعمل في وضع غير متصل (localStorage) */
+  function notifyOffline(reason) {
+    console.warn("[Supabase] وضع غير متصل:", reason);
+    try {
+      window.dispatchEvent(new CustomEvent("data-offline", {
+        detail: { reason: reason?.message || String(reason || "") },
+      }));
+    } catch (_) {}
+  }
+  window.notifyWriteError = notifyWriteError;
+
   if (!window.isSupabaseConfigured?.()) {
     console.info("[Supabase] غير مُهيَّأ، نستخدم localStorage");
     /* أطلق data-ready فوراً حتى تتابع الصفحة الرسم */
@@ -27,7 +48,9 @@
   const CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
 
   loadSupabase().then(initAdapter).catch(err => {
-    console.error("[Supabase] فشل التحميل، نستخدم localStorage:", err);
+    /* فشل تحميل supabase-js أو جلب البيانات الأولية → نكمل بـ localStorage
+       (الـ APIs المعرّفة في data.js تبقى فعّالة) ونُعلم الواجهة. */
+    notifyOffline(err);
     window.dispatchEvent(new Event("data-ready"));
   });
 
@@ -130,7 +153,7 @@
           ? supabase.from("products").update(payload).eq("id", product.id).select().single()
           : supabase.from("products").insert(payload).select().single()
         ).then(({ data, error }) => {
-          if (error) { console.error("[save product]", error); return; }
+          if (error) { notifyWriteError("save product", error); return; }
           /* استبدل الـ temp id بالحقيقي */
           const real = mapProductFromDB(data);
           const idx = cache.products.findIndex(x => x.id === product.id);
@@ -142,7 +165,7 @@
       remove(id) {
         cache.products = cache.products.filter(p => p.id !== id);
         supabase.from("products").delete().eq("id", id).then(({ error }) => {
-          if (error) console.error("[remove product]", error);
+          if (error) notifyWriteError("remove product", error);
         });
       },
       decrementVariant(id, color, size, qty) {
@@ -157,34 +180,55 @@
     /* ===== OrdersAPI ===== */
     window.OrdersAPI = {
       list() { return cache.orders; },
+      /* ترجع Promise بـ { ok, order, error } بعد تأكيد الحفظ فعلياً في DB
+         حتى لا يُعرَض نجاح وهمي للزبونة إن فشلت الكتابة. */
       add(order) {
         const payload = mapOrderToDB(order);
-        order.id = "temp-" + Date.now();
+        const tempId = "temp-" + Date.now();
+        order.id = tempId;
         order.createdAt = new Date().toISOString();
         order.status = "awaiting";
+        /* تحديث تفاؤلي للـ cache */
         cache.orders.unshift({ ...order });
-        supabase.from("orders").insert(payload).select().single().then(({ data, error }) => {
-          if (error) { console.error("[add order]", error); return; }
-          const real = mapOrderFromDB(data);
-          const idx = cache.orders.findIndex(x => x.id === order.id);
-          if (idx >= 0) cache.orders[idx] = real;
-          window.dispatchEvent(new Event("data-changed"));
-        });
-        /* خصم المخزون */
-        order.items.forEach(it =>
-          window.ProductsAPI.decrementVariant(it.productId, it.color, it.size, it.qty)
-        );
-        return order;
+        return supabase.from("orders").insert(payload).select().single()
+          .then(({ data, error }) => {
+            if (error) {
+              notifyWriteError("add order", error);
+              /* تراجع: أزل الطلب التفاؤلي لأن الحفظ فشل */
+              cache.orders = cache.orders.filter(o => o.id !== tempId);
+              return { ok: false, error };
+            }
+            const real = mapOrderFromDB(data);
+            const idx = cache.orders.findIndex(x => x.id === tempId);
+            if (idx >= 0) cache.orders[idx] = real;
+            /* خصم المخزون بعد تأكيد الطلب فقط */
+            order.items.forEach(it =>
+              window.ProductsAPI.decrementVariant(it.productId, it.color, it.size, it.qty)
+            );
+            window.dispatchEvent(new Event("data-changed"));
+            return { ok: true, order: real };
+          })
+          .catch(error => {
+            notifyWriteError("add order", error);
+            cache.orders = cache.orders.filter(o => o.id !== tempId);
+            return { ok: false, error };
+          });
       },
       updateStatus(id, status) {
         const o = cache.orders.find(x => x.id === id);
+        const prevStatus = o ? o.status : null;
         if (o) o.status = status;
         const patch = { status };
         if (status === "pending")   patch.payment_verified_at = new Date().toISOString();
         if (status === "shipped")   patch.shipped_at          = new Date().toISOString();
         if (status === "delivered") patch.delivered_at        = new Date().toISOString();
         supabase.from("orders").update(patch).eq("id", id).then(({ error }) => {
-          if (error) console.error("[update status]", error);
+          if (error) {
+            /* تراجع عن تغيير الحالة المحلي عند الفشل */
+            if (o && prevStatus !== null) o.status = prevStatus;
+            notifyWriteError("update order status", error);
+            window.dispatchEvent(new Event("data-changed"));
+          }
         });
       },
     };
@@ -199,7 +243,7 @@
             const idx = cache[cacheKey].findIndex(x => x.id === item.id);
             if (idx >= 0) cache[cacheKey][idx] = { ...cache[cacheKey][idx], ...item };
             supabase.from(table).update(item).eq("id", item.id).then(({ error }) => {
-              if (error) console.error(`[save ${table}]`, error);
+              if (error) notifyWriteError(`save ${table}`, error);
             });
           } else {
             const tempId = "temp-" + Date.now();
@@ -211,7 +255,7 @@
               insertItem.id = insertItem.name_en.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || tempId;
             }
             supabase.from(table).insert(insertItem).select().single().then(({ data, error }) => {
-              if (error) { console.error(`[insert ${table}]`, error); return; }
+              if (error) { notifyWriteError(`insert ${table}`, error); return; }
               const idx = cache[cacheKey].findIndex(x => x.id === tempId);
               if (idx >= 0) cache[cacheKey][idx] = data;
             });
@@ -221,7 +265,7 @@
         remove(id) {
           cache[cacheKey] = cache[cacheKey].filter(x => x.id !== id);
           supabase.from(table).delete().eq("id", id).then(({ error }) => {
-            if (error) console.error(`[remove ${table}]`, error);
+            if (error) notifyWriteError(`remove ${table}`, error);
           });
         },
       };
@@ -246,11 +290,14 @@
         if (coupon.id) {
           const idx = cache.coupons.findIndex(x => x.id === coupon.id);
           if (idx >= 0) cache.coupons[idx] = { ...cache.coupons[idx], ...payload };
-          supabase.from("coupons").update(payload).eq("id", coupon.id).then(() => {});
+          supabase.from("coupons").update(payload).eq("id", coupon.id).then(({ error }) => {
+            if (error) notifyWriteError("save coupon", error);
+          });
         } else {
           const tempId = "temp-" + Date.now();
           cache.coupons.push({ id: tempId, ...payload, used_count: 0 });
-          supabase.from("coupons").insert(payload).select().single().then(({ data }) => {
+          supabase.from("coupons").insert(payload).select().single().then(({ data, error }) => {
+            if (error) { notifyWriteError("insert coupon", error); return; }
             if (data) {
               const idx = cache.coupons.findIndex(x => x.id === tempId);
               if (idx >= 0) cache.coupons[idx] = data;
@@ -261,7 +308,9 @@
       },
       remove(id) {
         cache.coupons = cache.coupons.filter(c => c.id !== id);
-        supabase.from("coupons").delete().eq("id", id).then(() => {});
+        supabase.from("coupons").delete().eq("id", id).then(({ error }) => {
+          if (error) notifyWriteError("remove coupon", error);
+        });
       },
       validate(code, subtotal) {
         const c = cache.coupons.find(x => (x.code || "").toUpperCase() === (code || "").toUpperCase().trim());
@@ -278,7 +327,9 @@
         const c = cache.coupons.find(x => (x.code || "").toUpperCase() === (code || "").toUpperCase());
         if (c) {
           c.used_count = (c.used_count || 0) + 1;
-          supabase.from("coupons").update({ used_count: c.used_count }).eq("id", c.id).then(() => {});
+          supabase.from("coupons").update({ used_count: c.used_count }).eq("id", c.id).then(({ error }) => {
+            if (error) notifyWriteError("record coupon use", error);
+          });
         }
       },
     };
@@ -297,11 +348,14 @@
         if (review.id && !String(review.id).startsWith("temp-")) {
           const idx = cache.reviews.findIndex(r => r.id === review.id);
           if (idx >= 0) cache.reviews[idx] = { ...cache.reviews[idx], ...payload };
-          supabase.from("reviews").update(payload).eq("id", review.id).then(() => {});
+          supabase.from("reviews").update(payload).eq("id", review.id).then(({ error }) => {
+            if (error) notifyWriteError("save review", error);
+          });
         } else {
           const tempId = "temp-" + Date.now();
           cache.reviews.unshift({ id: tempId, ...payload, created_at: new Date().toISOString() });
-          supabase.from("reviews").insert(payload).select().single().then(({ data }) => {
+          supabase.from("reviews").insert(payload).select().single().then(({ data, error }) => {
+            if (error) { notifyWriteError("insert review", error); return; }
             if (data) {
               const idx = cache.reviews.findIndex(r => r.id === tempId);
               if (idx >= 0) cache.reviews[idx] = data;
@@ -312,7 +366,9 @@
       },
       remove(id) {
         cache.reviews = cache.reviews.filter(r => r.id !== id);
-        supabase.from("reviews").delete().eq("id", id).then(() => {});
+        supabase.from("reviews").delete().eq("id", id).then(({ error }) => {
+          if (error) notifyWriteError("remove review", error);
+        });
       },
       avgRating() {
         if (!cache.reviews.length) return 0;
@@ -337,7 +393,9 @@
           else if (k === "storeName")     dbPatch.store_name     = patch[k];
           else dbPatch[k] = patch[k];
         });
-        supabase.from("store_settings").update(dbPatch).eq("id", 1).then(() => {});
+        supabase.from("store_settings").update(dbPatch).eq("id", 1).then(({ error }) => {
+          if (error) notifyWriteError("save settings", error);
+        });
         return cache.settings;
       },
       addBank(account) {
@@ -351,7 +409,8 @@
           account_number: account.accountNumber,
           iban: account.iban,
           phone: account.phone || null,
-        }).select().single().then(({ data }) => {
+        }).select().single().then(({ data, error }) => {
+          if (error) { notifyWriteError("add bank", error); return; }
           if (data) {
             const idx = cache.banks.findIndex(b => b.id === tempId);
             if (idx >= 0) cache.banks[idx] = data;
@@ -368,12 +427,16 @@
         if (patch.accountNumber) dbPatch.account_number = patch.accountNumber;
         if (patch.iban !== undefined)  dbPatch.iban     = patch.iban;
         if (patch.phone !== undefined) dbPatch.phone    = patch.phone || null;
-        supabase.from("bank_accounts").update(dbPatch).eq("id", id).then(() => {});
+        supabase.from("bank_accounts").update(dbPatch).eq("id", id).then(({ error }) => {
+          if (error) notifyWriteError("update bank", error);
+        });
       },
       removeBank(id) {
         cache.banks = cache.banks.filter(b => b.id !== id);
         cache.settings.bankAccounts = cache.banks;
-        supabase.from("bank_accounts").delete().eq("id", id).then(() => {});
+        supabase.from("bank_accounts").delete().eq("id", id).then(({ error }) => {
+          if (error) notifyWriteError("remove bank", error);
+        });
       },
     };
 

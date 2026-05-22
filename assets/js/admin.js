@@ -166,6 +166,25 @@ function showToast(msg) {
   toastTimer = setTimeout(() => $toast.classList.remove("show"), 2200);
 }
 
+/* تنبيه الأدمن عند فشل أي حفظ على الخادم (بدل الفشل الصامت) */
+let lastWriteErrAt = 0;
+window.addEventListener("data-write-error", () => {
+  /* امنع تكرار الرسائل المتلاحقة */
+  const now = Date.now();
+  if (now - lastWriteErrAt < 3000) return;
+  lastWriteErrAt = now;
+  showToast(getLang() === "en"
+    ? "⚠️ A change could not be saved to the server. Check your connection and retry."
+    : "⚠️ تعذّر حفظ التغيير على الخادم. تحقّقي من الاتصال وأعيدي المحاولة.");
+});
+
+/* تنبيه الأدمن أن التطبيق يعمل ببيانات غير متصلة */
+window.addEventListener("data-offline", () => {
+  showToast(getLang() === "en"
+    ? "⚠️ Working offline — changes may not be saved to the server."
+    : "⚠️ تعملين دون اتصال — قد لا تُحفظ التغييرات على الخادم.");
+});
+
 /* =====================================================
    Dashboard
 ===================================================== */
