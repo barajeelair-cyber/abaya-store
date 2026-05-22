@@ -493,14 +493,45 @@
       },
     };
 
-    /* ===== رفع الصور إلى Storage ===== */
+    /* ===== ضغط الصورة في المتصفح قبل الرفع =====
+       يصغّر الأبعاد ويحوّل لـ JPEG لتقليل الحجم كثيراً، فيصبح الرفع
+       أسرع وأنجح على الاتصالات الضعيفة (يتفادى "Failed to fetch"). */
+    async function compressImage(file, maxDim, quality) {
+      try {
+        if (!file || !file.type || !file.type.startsWith("image/") || file.type === "image/gif") return file;
+        const dataUrl = await new Promise((res, rej) => {
+          const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file);
+        });
+        const img = await new Promise((res, rej) => {
+          const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = dataUrl;
+        });
+        let w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+        const scale = Math.min(1, maxDim / Math.max(w, h));
+        if (scale >= 1 && file.size < 700 * 1024) return file; /* صغيرة أصلاً */
+        w = Math.round(w * scale); h = Math.round(h * scale);
+        const canvas = document.createElement("canvas"); canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        const blob = await new Promise(res => canvas.toBlob(res, "image/jpeg", quality));
+        if (!blob || blob.size >= file.size) return file; /* لا فائدة من الضغط */
+        return new File([blob], (file.name || "image").replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+      } catch (_) { return file; }
+    }
+
+    /* ===== رفع الصور إلى Storage (مع ضغط وإعادة محاولة) ===== */
     window.uploadToStorage = async function (bucket, file, path) {
-      const ext = file.name.split(".").pop() || "jpg";
+      file = await compressImage(file, 1400, 0.82);
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
       const filename = path || `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { data, error } = await supabase.storage.from(bucket).upload(filename, file, { upsert: false });
-      if (error) throw error;
-      const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(data.path);
-      return publicUrl;
+      let lastErr;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const { data, error } = await supabase.storage.from(bucket).upload(filename, file, { upsert: true, contentType: file.type });
+          if (error) { lastErr = error; continue; }
+          const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(data.path);
+          return publicUrl;
+        } catch (e) { lastErr = e; }
+      }
+      throw lastErr || new Error("upload failed");
     };
 
     /* ===== جاهز ===== */
