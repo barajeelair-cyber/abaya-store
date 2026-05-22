@@ -409,10 +409,25 @@ async function handleImageFiles(idx, files) {
     workingColors[idx].images = workingColors[idx].image ? [workingColors[idx].image] : [];
     delete workingColors[idx].image;
   }
+  const useStorage = !!(window.uploadToStorage && window.AMAL_CONFIG?.BUCKET_PRODUCTS);
   for (const file of files) {
     if (file.size > 10 * 1024 * 1024) { showToast(t("admin.product.image_too_big")); continue; }
-    const dataUrl = await Utils.fileToDataURL(file);
-    workingColors[idx].images.push(dataUrl);
+    try {
+      if (useStorage) {
+        /* رفع إلى Supabase Storage  —  يخزّن URL قصير في DB بدل base64 */
+        showToast("⏳ جاري رفع الصورة...");
+        const url = await window.uploadToStorage(window.AMAL_CONFIG.BUCKET_PRODUCTS, file);
+        workingColors[idx].images.push(url);
+        showToast("✓ تم رفع الصورة");
+      } else {
+        /* localStorage fallback - base64 */
+        const dataUrl = await Utils.fileToDataURL(file);
+        workingColors[idx].images.push(dataUrl);
+      }
+    } catch (err) {
+      console.error("[image upload]", err);
+      showToast("فشل رفع الصورة: " + (err.message || err));
+    }
   }
   renderColors();
 }
@@ -978,9 +993,22 @@ function setupHeroBgControls() {
       const f = e.target.files?.[0];
       if (!f) return;
       if (f.size > 10 * 1024 * 1024) { showToast(t("admin.product.image_too_big")); return; }
-      const dataUrl = await Utils.fileToDataURL(f);
-      SettingsAPI.save({ heroBgImage: dataUrl });
-      showToast(t("admin.settings.hero_bg_saved"));
+      const useStorage = !!(window.uploadToStorage && window.AMAL_CONFIG?.BUCKET_HERO);
+      try {
+        let imageRef;
+        if (useStorage) {
+          showToast("⏳ جاري رفع الخلفية...");
+          imageRef = await window.uploadToStorage(window.AMAL_CONFIG.BUCKET_HERO, f);
+        } else {
+          imageRef = await Utils.fileToDataURL(f);
+        }
+        SettingsAPI.save({ heroBgImage: imageRef });
+        showToast(t("admin.settings.hero_bg_saved"));
+      } catch (err) {
+        console.error("[hero bg]", err);
+        showToast("فشل رفع الصورة: " + (err.message || err));
+        return;
+      }
       applyContactSettings();
     };
   }

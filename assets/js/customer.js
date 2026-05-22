@@ -660,11 +660,28 @@ if ($proofInput) {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) { showToast(t("checkout.image_too_big")); return; }
-    paymentProof = await Utils.fileToDataURL(file);
+
+    const useStorage = !!(window.uploadToStorage && window.AMAL_CONFIG?.BUCKET_PROOFS);
+    let preview;
+    try {
+      if (useStorage) {
+        showToast("⏳ جاري رفع الإيصال...");
+        paymentProof = await window.uploadToStorage(window.AMAL_CONFIG.BUCKET_PROOFS, file);
+        preview = paymentProof;
+      } else {
+        paymentProof = await Utils.fileToDataURL(file);
+        preview = paymentProof;
+      }
+    } catch (err) {
+      console.error("[proof upload]", err);
+      showToast("فشل رفع الإيصال: " + (err.message || err));
+      return;
+    }
+
     if ($proofPrev) {
       $proofPrev.innerHTML = `
         <div class="upload-preview">
-          <img src="${paymentProof}" alt="">
+          <img src="${preview}" alt="">
           <div class="meta">✓ ${(file.size/1024).toFixed(0)} KB</div>
           <button type="button" class="remove-img" id="removeProof">✕</button>
         </div>`;
