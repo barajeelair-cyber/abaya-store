@@ -264,7 +264,10 @@ function renderProducts() {
   } else if (currentCategory === "__bestseller__") {
     products = products.filter(p => p.isBestseller);
   } else if (currentCategory !== "all") {
-    products = products.filter(p => p.category === currentCategory);
+    products = products.filter(p =>
+      p.category === currentCategory ||
+      (Array.isArray(p.categories) && p.categories.includes(currentCategory))
+    );
   }
   products = products.filter(productMatchesFilters);
 

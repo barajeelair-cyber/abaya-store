@@ -361,6 +361,16 @@ function fillCategorySelects() {
   const formCat = document.getElementById("formCategory");
   if (formCat) formCat.innerHTML = opts;
   if ($filterCat) $filterCat.innerHTML = `<option value="">${t("admin.products.all_categories")}</option>` + opts;
+  /* مربعات اختيار التصنيفات المتعددة في نموذج المنتج */
+  const catsBox = document.getElementById("formCategoriesBox");
+  if (catsBox) {
+    catsBox.innerHTML = cats.map(c => {
+      const name = (lang === "en" && c.name_en) ? c.name_en : c.name_ar;
+      return `<label style="display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border:1px solid var(--line); border-radius:999px; cursor:pointer; font-size:13px;">
+        <input type="checkbox" class="form-cat-cb" value="${escapeAttr(c.id)}"> ${escapeHtml(name)}
+      </label>`;
+    }).join("");
+  }
 
   /* أيضاً عبّئ select الأقمشة والقَصّات من القائمة الفعلية (Supabase)
      بدل القائمة الافتراضية الثابتة، حتى تظهر كل الأقمشة/القصات التي
@@ -548,6 +558,15 @@ function renderStockGrid() {
 document.getElementById("addProductBtn").onclick = () => openProductModal(null);
 document.getElementById("cancelProduct").onclick = () => $productModal.classList.remove("open");
 
+/* تحديد/قراءة التصنيفات المتعددة في نموذج المنتج */
+function setFormCategories(ids) {
+  const set = new Set(ids || []);
+  document.querySelectorAll("#formCategoriesBox .form-cat-cb").forEach(cb => { cb.checked = set.has(cb.value); });
+}
+function getFormCategories() {
+  return [...document.querySelectorAll("#formCategoriesBox .form-cat-cb:checked")].map(cb => cb.value);
+}
+
 function openProductModal(product) {
   /* تأكد دائماً أن قائمة التصنيفات محدّثة قبل فتح المودال */
   fillCategorySelects();
@@ -556,7 +575,8 @@ function openProductModal(product) {
     $productTitle.textContent = t("admin.product.edit_title");
     $productForm.id.value          = product.id;
     $productForm.name.value         = product.name;
-    $productForm.category.value     = product.category || "";
+    setFormCategories((product.categories && product.categories.length)
+      ? product.categories : (product.category ? [product.category] : []));
     $productForm.price.value        = product.price;
     $productForm.discount.value     = product.discount || 0;
     $productForm.description.value  = product.description || "";
@@ -579,8 +599,9 @@ function openProductModal(product) {
   } else {
     $productTitle.textContent = t("admin.product.add_title");
     $productForm.id.value = "";
-    const firstCat = document.getElementById("formCategory").querySelector("option");
-    if (firstCat) $productForm.category.value = firstCat.value;
+    /* منتج جديد: فعّل أول تصنيف افتراضياً */
+    const firstCb = document.querySelector("#formCategoriesBox .form-cat-cb");
+    setFormCategories(firstCb ? [firstCb.value] : []);
     workingColors = [];
     workingSizes  = [];
     workingStock  = {};
@@ -596,7 +617,8 @@ $productForm.onsubmit = (e) => {
 
   /* تحقق */
   if (!f.name.value.trim()) { showToast(getLang() === "en" ? "Enter product name" : "اكتبي اسم المنتج"); return; }
-  if (!f.category.value)    { showToast(getLang() === "en" ? "Select a category" : "اختاري التصنيف"); return; }
+  const selectedCats = getFormCategories();
+  if (selectedCats.length === 0) { showToast(getLang() === "en" ? "Select at least one category" : "اختاري تصنيفاً واحداً على الأقل"); return; }
   if (!f.price.value || Number(f.price.value) <= 0) { showToast(getLang() === "en" ? "Enter a valid price" : "اكتبي سعراً صحيحاً"); return; }
   if (workingColors.length === 0) { showToast(t("admin.product.need_color")); return; }
   if (workingColors.some(c => !c.name)) { showToast(t("admin.product.need_color_names")); return; }
@@ -623,7 +645,8 @@ $productForm.onsubmit = (e) => {
   const product = {
     id: f.id.value || undefined,
     name: f.name.value.trim(),
-    category: f.category.value,
+    categories: selectedCats,
+    category: selectedCats[0],
     fabric: (f.fabric && f.fabric.value) || "",
     cut:    (f.cut    && f.cut.value)    || "",
     isOpen:        !!(f.isOpen && f.isOpen.checked),

@@ -139,7 +139,16 @@
         const payload = mapProductToDB(product);
         /* نظّف حقول المفاتيح الأجنبية: قيمة فارغة "" أو معرّف غير موجود
            تخالف قيد FK وتُفشل الحفظ → نحوّلها إلى null. */
-        if (!payload.category || !cache.categories.some(c => c.id === payload.category)) payload.category = null;
+        /* نظّف قائمة التصنيفات المتعددة: أبقِ التصنيفات الموجودة فقط */
+        if (Array.isArray(payload.categories)) {
+          payload.categories = payload.categories.filter(id => cache.categories.some(c => c.id === id));
+        } else {
+          payload.categories = [];
+        }
+        /* التصنيف الرئيسي (لقيد FK والفرز) = أول تصنيف صالح */
+        if (!payload.category || !cache.categories.some(c => c.id === payload.category)) {
+          payload.category = payload.categories[0] || null;
+        }
         if (!payload.fabric   || !cache.fabrics.some(f => f.id === payload.fabric))     payload.fabric   = null;
         if (!payload.cut      || !cache.cuts.some(c => c.id === payload.cut))           payload.cut      = null;
         const isUpdate = !!product.id;
@@ -784,11 +793,14 @@
 
   /* ===== Mappers ===== */
   function mapProductFromDB(p) {
+    const cats = (Array.isArray(p.categories) && p.categories.length)
+      ? p.categories : (p.category ? [p.category] : []);
     return {
       id: p.id,
       name: p.name,
       description: p.description || "",
       category: p.category,
+      categories: cats,
       fabric: p.fabric,
       cut: p.cut,
       price: Number(p.price),
@@ -803,10 +815,13 @@
     };
   }
   function mapProductToDB(p) {
+    const cats = (Array.isArray(p.categories) && p.categories.length)
+      ? p.categories : (p.category ? [p.category] : []);
     return {
       name: p.name,
       description: p.description,
-      category: p.category,
+      category: cats[0] || p.category || null,  /* تصنيف رئيسي للتوافق/الفرز */
+      categories: cats,                          /* كل التصنيفات */
       fabric: p.fabric,
       cut: p.cut,
       price: Number(p.price || 0),
