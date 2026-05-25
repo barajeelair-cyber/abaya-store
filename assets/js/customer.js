@@ -200,9 +200,11 @@ function renderCategories() {
   ];
 
   $catsBar.innerHTML = [
+    /* تبويب «الكل» يعرض كل المنتجات */
+    `<button class="cat-pill ${currentCategory === "all" ? "active" : ""}" data-id="all">${escapeHtml(t("category.all"))}</button>`,
     ...specialTabs.map(s =>
       `<button class="cat-pill ${s.cls} ${s.id === currentCategory ? "active" : ""}" data-id="${s.id}">${s.name}</button>`),
-    ...cats.map(c => {
+    ...cats.filter(c => c.id !== "all").map(c => {
       const info = Utils.categoryById(c.id);
       return `<button class="cat-pill ${c.id === currentCategory ? "active" : ""}" data-id="${c.id}">${escapeHtml(info.name)}</button>`;
     })
