@@ -1348,6 +1348,9 @@ function loadDB() {
       if (!db.settings.textOverrides) db.settings.textOverrides = { ar: {}, en: {} };
       if (!db.settings.cities) db.settings.cities = defaultCities();
       if (!db.settings.customers) db.settings.customers = [];
+      /* أعِد بيانات دخول الأدمن الافتراضية إن كانت مفقودة (يصلح قواعد
+         بيانات جزئية كُتبت بالخطأ، حتى لا يتعطّل تسجيل الدخول) */
+      if (!db.settings.admin) db.settings.admin = { username: "admin", password: "admin123" };
       if (db.settings.heroBgOpacity === undefined) db.settings.heroBgOpacity = 0.55;
       if (db.settings.heroBgImage === undefined) db.settings.heroBgImage = "";
       /* migrations جديدة: fabrics, cuts, reviews, siteInfo, sizeCharts */

@@ -480,13 +480,15 @@
       try {
         const ov = cache.settings.textOverrides || cache.settings.text_overrides;
         if (!ov) return;
-        const KEY = "abaya_amal_v2";
-        let db = {};
-        try { db = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (_) { db = {}; }
-        db.settings = db.settings || {};
-        db.settings.textOverrides = ov;
-        localStorage.setItem(KEY, JSON.stringify(db));
-        if (typeof window._loadOverrides === "function") window._loadOverrides();
+        /* استخدم loadDB/saveDB حتى تبقى قاعدة localStorage كاملة (تشمل
+           بيانات دخول الأدمن) ولا نكتب قاعدة جزئية تُعطّل تسجيل الدخول. */
+        if (typeof window.loadDB === "function" && typeof window.saveDB === "function") {
+          const db = window.loadDB();
+          db.settings.textOverrides = ov;
+          window.saveDB(db);
+        } else if (typeof window._loadOverrides === "function") {
+          window._loadOverrides();
+        }
         if (typeof window.applyTranslations === "function") window.applyTranslations();
       } catch (e) { console.warn("[Supabase] applyTextOverrides:", e); }
     }
