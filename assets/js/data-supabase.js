@@ -694,11 +694,40 @@
     }
     window.refreshSupabaseCache = refreshCache;
 
-    /* حدّث عند عودة التبويب/التطبيق للظهور أو استعادة التركيز */
+    /* ===== تحديث الكود تلقائياً عند نشر نسخة جديدة =====
+       يقارن نسخة السكربت المحمّلة حالياً بالنسخة المعلنة على الخادم،
+       فإذا نُشرت نسخة أحدث يعيد تحميل الصفحة مرة واحدة تلقائياً. هذا
+       يمنع بقاء التبويبات/التطبيقات القديمة تعمل بكود قديم. */
+    let _reloadedForVersion = false;
+    function currentLoadedVersion() {
+      try {
+        const s = document.querySelector('script[src*="data-supabase.js"]');
+        return s ? (new URL(s.src)).searchParams.get("v") : null;
+      } catch (_) { return null; }
+    }
+    async function checkForNewVersion() {
+      if (_reloadedForVersion) return;
+      try {
+        const mine = currentLoadedVersion();
+        if (!mine) return;
+        const res = await fetch(location.pathname + "?_vc=" + Date.now(), { cache: "no-store" });
+        if (!res.ok) return;
+        const html = await res.text();
+        const m = html.match(/data-supabase\.js\?v=([A-Za-z0-9._-]+)/);
+        const latest = m ? m[1] : null;
+        if (latest && latest !== mine) {
+          _reloadedForVersion = true;
+          location.reload();
+        }
+      } catch (_) {}
+    }
+    window.checkForNewVersion = checkForNewVersion;
+
+    /* حدّث البيانات + افحص النسخة عند عودة التبويب/التطبيق للظهور */
     document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") refreshCache();
+      if (document.visibilityState === "visible") { checkForNewVersion(); refreshCache(); }
     });
-    window.addEventListener("focus", refreshCache);
+    window.addEventListener("focus", () => { checkForNewVersion(); refreshCache(); });
     window.addEventListener("online", refreshCache);
 
     /* ===== جاهز ===== */
