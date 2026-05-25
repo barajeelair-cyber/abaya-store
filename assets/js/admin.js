@@ -1025,6 +1025,8 @@ function openOrderModal(id) {
       ${o.couponDiscount > 0 ? `<div class="line"><span>${t("admin.order.coupon")} (${escapeHtml(o.couponCode || "")})</span><strong style="color:var(--ok)">− ${Utils.fmt(o.couponDiscount)}</strong></div>` : ""}
       <div class="line"><span>${t("admin.order.delivery")}</span><strong>${Utils.fmt(o.deliveryFee)}</strong></div>
       <div class="line"><span>${t("admin.order.total")}</span><strong style="color:var(--gold)">${Utils.fmt(o.total)}</strong></div>
+      ${o.senderName ? `<div class="line"><span>👤 اسم صاحب الحوالة</span><strong>${escapeHtml(o.senderName)}</strong></div>` : ""}
+      ${o.transferBank ? `<div class="line"><span>🏦 حُوّل إلى حساب</span><strong>${escapeHtml(o.transferBank)}</strong></div>` : ""}
       ${o.paymentProof
         ? `<div class="proof"><strong>${proofLabel}</strong><br><a href="${o.paymentProof}" target="_blank"><img src="${o.paymentProof}" alt=""></a></div>`
         : `<div class="proof" style="color:var(--danger)"><strong>${noProof}</strong></div>`}

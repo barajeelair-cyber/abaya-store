@@ -42,7 +42,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@500;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="assets/css/customer.css?v=20260525j" />
+  <link rel="stylesheet" href="assets/css/customer.css?v=20260525k" />
 </head>
 <body>
 
@@ -289,6 +289,16 @@
         <label class="opt-label" style="display:block; margin: 16px 0 8px;" data-i18n="checkout.banks">💳 حوّلي المبلغ على أحد الحسابات التالية:</label>
         <div id="bankAccountsList"></div>
 
+        <!-- معلومات الحوالة (مطلوبة) -->
+        <div class="field" style="margin-top:14px;">
+          <label>👤 اسم صاحب الحوالة (مطلوب)</label>
+          <input type="text" name="senderName" required placeholder="الاسم الذي حوّلتِ منه" />
+        </div>
+        <div class="field">
+          <label>🏦 حوّلتِ المبلغ إلى أي حساب؟ (مطلوب)</label>
+          <select name="transferBank" id="transferBankSelect" required></select>
+        </div>
+
         <!-- رفع صورة التحويل -->
         <label class="opt-label" style="display:block; margin: 16px 0 8px;" data-i18n="checkout.proof">📸 ارفعي صورة التحويل (مطلوبة لتأكيد الطلب):</label>
         <label class="upload-zone" id="proofZone">
@@ -522,9 +532,9 @@
   <!-- ============ تنبيه ============ -->
   <div class="toast" id="toast">تمت الإضافة إلى السلة</div>
 
-  <script src="assets/js/supabase-config.js?v=20260525j"></script>
-  <script src="assets/js/data.js?v=20260525j"></script>
-  <script src="assets/js/data-supabase.js?v=20260525j"></script>
-  <script src="assets/js/customer.js?v=20260525j"></script>
+  <script src="assets/js/supabase-config.js?v=20260525k"></script>
+  <script src="assets/js/data.js?v=20260525k"></script>
+  <script src="assets/js/data-supabase.js?v=20260525k"></script>
+  <script src="assets/js/customer.js?v=20260525k"></script>
 </body>
 </html>

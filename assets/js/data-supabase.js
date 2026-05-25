@@ -852,6 +852,8 @@
       couponCode: o.coupon_code,
       couponDiscount: Number(o.coupon_discount || 0),
       total: Number(o.total || 0),
+      senderName: o.transfer_sender_name || "",
+      transferBank: o.transfer_to_bank || "",
       paymentProof: o.payment_proof_url,
       paymentVerifiedAt: o.payment_verified_at,
       shippedAt: o.shipped_at,
@@ -873,6 +875,8 @@
       coupon_code: o.couponCode,
       coupon_discount: o.couponDiscount,
       total: o.total,
+      transfer_sender_name: o.senderName || null,
+      transfer_to_bank: o.transferBank || null,
       payment_proof_url: o.paymentProof,
       status: "awaiting",
     };

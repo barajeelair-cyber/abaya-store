@@ -591,6 +591,16 @@ function renderBankAccounts() {
   $bankList.querySelectorAll(".copy").forEach(b =>
     b.onclick = () => { navigator.clipboard.writeText(b.dataset.copy); showToast(t("checkout.copied")); }
   );
+
+  /* عبّئ قائمة «حوّلتِ إلى أي حساب؟» من الحسابات نفسها */
+  const bankSel = document.getElementById("transferBankSelect");
+  if (bankSel) {
+    const ph = getLang() === "en" ? "Select the account you transferred to" : "اختاري الحساب الذي حوّلتِ إليه";
+    bankSel.innerHTML = `<option value="" disabled selected>${ph}</option>` + banks.map(b => {
+      const label = `${b.bankName} — ${b.accountName}${b.accountNumber ? " (" + b.accountNumber + ")" : ""}`;
+      return `<option value="${escapeHtml(label)}">${escapeHtml(label)}</option>`;
+    }).join("");
+  }
 }
 
 function renderSummary() {
@@ -731,6 +741,10 @@ if ($form) $form.onsubmit = async (e) => {
   const data = new FormData($form);
   const city = Utils.cityById(data.get("city"));
   if (!city) { showToast(t("checkout.select_city")); return; }
+  const senderName  = (data.get("senderName") || "").trim();
+  const transferBank = data.get("transferBank") || "";
+  if (!senderName)   { showToast(getLang() === "en" ? "Enter the transfer sender's name" : "اكتبي اسم صاحب الحوالة"); return; }
+  if (!transferBank) { showToast(getLang() === "en" ? "Select which account you transferred to" : "اختاري الحساب الذي حوّلتِ إليه"); return; }
   if (!paymentProof) { showToast(t("checkout.upload_first")); return; }
 
   const items = [...cart.values()].map(it => ({
@@ -767,6 +781,7 @@ if ($form) $form.onsubmit = async (e) => {
       items, subtotal, savings,
       couponCode, couponDiscount,
       total,
+      senderName, transferBank,
       paymentProof,
     });
   } catch (err) {
