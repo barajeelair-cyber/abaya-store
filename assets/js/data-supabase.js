@@ -452,6 +452,112 @@
       },
     };
 
+    /* ===== توحيد مفاتيح الإعدادات (snake_case ↔ camelCase) =====
+       صفّ store_settings في القاعدة يستخدم snake_case (site_info,
+       text_overrides, size_charts...) بينما تتوقّع واجهات القراءة
+       camelCase. نوفّر الاسمين معاً حتى تقرأ الواجهة والمتجر القيم
+       الحقيقية من Supabase بدل القيم الافتراضية. */
+    function normalizeSettings() {
+      const s = cache.settings || (cache.settings = {});
+      const pair = (camel, snake) => {
+        if (s[snake] != null && s[camel] == null) s[camel] = s[snake];
+        if (s[camel] != null && s[snake] == null) s[snake] = s[camel];
+      };
+      pair("siteInfo", "site_info");
+      pair("textOverrides", "text_overrides");
+      pair("sizeCharts", "size_charts");
+      pair("heroBgImage", "hero_bg_image");
+      pair("heroBgOpacity", "hero_bg_opacity");
+      pair("soundEnabled", "sound_enabled");
+      pair("storeName", "store_name");
+    }
+    normalizeSettings();
+
+    /* اجعل دالة الترجمة t() في المتجر تلتقط تخصيصات النصوص المخزّنة في
+       Supabase: ننسخها إلى نفس مفتاح localStorage الذي تقرأه data.js ثم
+       نعيد تحميل ذاكرة التخصيصات ونعيد تطبيق الترجمة. */
+    function applyTextOverridesToRuntime() {
+      try {
+        const ov = cache.settings.textOverrides || cache.settings.text_overrides;
+        if (!ov) return;
+        const KEY = "abaya_amal_v2";
+        let db = {};
+        try { db = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (_) { db = {}; }
+        db.settings = db.settings || {};
+        db.settings.textOverrides = ov;
+        localStorage.setItem(KEY, JSON.stringify(db));
+        if (typeof window._loadOverrides === "function") window._loadOverrides();
+        if (typeof window.applyTranslations === "function") window.applyTranslations();
+      } catch (e) { console.warn("[Supabase] applyTextOverrides:", e); }
+    }
+    applyTextOverridesToRuntime();
+
+    /* ===== SiteInfoAPI (من نحن / الشحن / الأسئلة / السياسات) ===== */
+    window.SiteInfoAPI = {
+      get() {
+        return cache.settings.siteInfo || cache.settings.site_info
+          || (typeof window.defaultSiteInfo === "function" ? window.defaultSiteInfo() : {});
+      },
+      update(patch) {
+        const merged = { ...this.get(), ...patch };
+        cache.settings.siteInfo = merged;
+        cache.settings.site_info = merged;
+        window.SettingsAPI.save({ siteInfo: merged });
+        window.dispatchEvent(new Event("data-changed"));
+        return merged;
+      },
+    };
+
+    /* ===== TextOverridesAPI (نصوص الواجهة) ===== */
+    window.TextOverridesAPI = {
+      all() {
+        return cache.settings.textOverrides || cache.settings.text_overrides || { ar: {}, en: {} };
+      },
+      get(lang, key) { return this.all()?.[lang]?.[key] || ""; },
+      set(lang, key, value) {
+        const o = JSON.parse(JSON.stringify(this.all() || { ar: {}, en: {} }));
+        if (!o[lang]) o[lang] = {};
+        if (value && String(value).trim()) o[lang][key] = String(value);
+        else delete o[lang][key];
+        cache.settings.textOverrides = o;
+        cache.settings.text_overrides = o;
+        window.SettingsAPI.save({ textOverrides: o });
+        applyTextOverridesToRuntime();
+        window.dispatchEvent(new Event("data-changed"));
+      },
+      reset(key) {
+        const o = JSON.parse(JSON.stringify(this.all() || { ar: {}, en: {} }));
+        if (o.ar) delete o.ar[key];
+        if (o.en) delete o.en[key];
+        cache.settings.textOverrides = o;
+        cache.settings.text_overrides = o;
+        window.SettingsAPI.save({ textOverrides: o });
+        applyTextOverridesToRuntime();
+        window.dispatchEvent(new Event("data-changed"));
+      },
+      editableKeys() { return window.EDITABLE_TEXTS || []; },
+    };
+
+    /* ===== SizeChartsAPI (جداول المقاسات) ===== */
+    window.SizeChartsAPI = {
+      get() {
+        const charts = cache.settings.sizeCharts || cache.settings.size_charts;
+        if (charts && Array.isArray(charts.gulf) && charts.gulf.length > 0
+            && charts.gulf.every(r => r.sleeve !== undefined)) {
+          return charts;
+        }
+        return (typeof window.defaultSizeCharts === "function") ? window.defaultSizeCharts() : (charts || {});
+      },
+      save(patch) {
+        const merged = { ...this.get(), ...patch };
+        cache.settings.sizeCharts = merged;
+        cache.settings.size_charts = merged;
+        window.SettingsAPI.save({ sizeCharts: merged });
+        window.dispatchEvent(new Event("data-changed"));
+        return merged;
+      },
+    };
+
     /* ===== Customers (للزبائن) ===== */
     window.CustomersAPI = {
       list() { return []; }, /* لا نسمح بقراءة قائمة الزبائن من client */
@@ -575,6 +681,8 @@
           const keep = cache.settings.bankAccounts;
           cache.settings = settingsRes.data;
           cache.settings.bankAccounts = keep;
+          normalizeSettings();
+          applyTextOverridesToRuntime();
         }
         _lastRefresh = Date.now();
         window.dispatchEvent(new Event("data-changed"));
