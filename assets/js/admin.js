@@ -1548,10 +1548,14 @@ document.getElementById("addCityBtn")?.addEventListener("click", () => {
 /* =====================================================
    إدارة الأقمشة والقَصّات (مولّد عام)
 ===================================================== */
-function buildLookupAdmin(api, listElId, addBtnId, defaultRow) {
+function buildLookupAdmin(apiName, listElId, addBtnId, defaultRow) {
   return function render() {
     const el = document.getElementById(listElId);
     if (!el) return;
+    /* احسم الـ API وقت الاستدعاء (وليس وقت التحميل) حتى نلتقط نسخة
+       Supabase بعد جاهزيتها بدل نسخة data.js المحلية. */
+    const api = window[apiName];
+    if (!api) return;
     const items = api.list();
     el.innerHTML = items.length ? `
       <div class="category-row" style="font-weight:700; color:var(--muted); font-size:12px;">
@@ -1595,11 +1599,11 @@ function buildLookupAdmin(api, listElId, addBtnId, defaultRow) {
 }
 
 const renderFabricsAdmin = buildLookupAdmin(
-  FabricsAPI, "fabricsList", "addFabricBtn",
+  "FabricsAPI", "fabricsList", "addFabricBtn",
   { name_ar: "قماش جديد", name_en: "New fabric" }
 );
 const renderCutsAdmin = buildLookupAdmin(
-  CutsAPI, "cutsList", "addCutBtn",
+  "CutsAPI", "cutsList", "addCutBtn",
   { name_ar: "قَصّة جديدة", name_en: "New cut" }
 );
 
