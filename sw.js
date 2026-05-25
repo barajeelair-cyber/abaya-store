@@ -8,7 +8,7 @@
    - يبلّغ الصفحات المفتوحة لتعيد التحميل بعد التحديث
 ========================================================= */
 
-const VERSION = "amal-v7-passthrough";
+const VERSION = "amal-v8-passthrough-20260525f";
 
 self.addEventListener("install", (event) => {
   /* نشّط النسخة الجديدة فوراً دون انتظار */
