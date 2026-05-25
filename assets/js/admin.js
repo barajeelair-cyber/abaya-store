@@ -33,6 +33,45 @@ document.getElementById("logoutBtn")?.addEventListener("click", () => {
 });
 
 /* =====================================================
+   زر «نشر التحديثات للجميع»
+   يضع علامة نشر جديدة في قاعدة البيانات، فتلتقطها كل الأجهزة في كل
+   الدول وتُحدّث نفسها تلقائياً عند فتح المتجر أو العودة إليه — دون
+   الحاجة لمسح ذاكرة المتصفح.
+===================================================== */
+document.getElementById("publishBtn")?.addEventListener("click", async () => {
+  const btn = document.getElementById("publishBtn");
+  const original = btn.innerHTML;
+  btn.disabled = true; btn.style.opacity = ".7"; btn.innerHTML = "⏳ جاري النشر...";
+  try {
+    const now = Date.now();
+    if (window.supabaseClient) {
+      /* اقرأ site_info الحالي وادمج علامة النشر دون المساس بأي محتوى */
+      const { data, error: rerr } = await window.supabaseClient
+        .from("store_settings").select("site_info").eq("id", 1).single();
+      if (rerr) throw rerr;
+      const info = (data && data.site_info) || {};
+      info.__publishedAt = now;
+      const { error } = await window.supabaseClient
+        .from("store_settings").update({ site_info: info }).eq("id", 1);
+      if (error) throw error;
+      try { localStorage.setItem("amal_publish_seen", String(now)); } catch (_) {}
+    } else if (window.SiteInfoAPI?.update) {
+      window.SiteInfoAPI.update({ __publishedAt: now });
+    } else {
+      throw new Error("no backend");
+    }
+    btn.innerHTML = "✅ تم النشر للجميع";
+    if (typeof showToast === "function")
+      showToast("تم نشر التحديثات — ستظهر على كل الأجهزة خلال لحظات ✓");
+    setTimeout(() => { btn.innerHTML = original; btn.disabled = false; btn.style.opacity = "1"; }, 2600);
+  } catch (e) {
+    console.error("[publish]", e);
+    btn.innerHTML = original; btn.disabled = false; btn.style.opacity = "1";
+    if (typeof showToast === "function") showToast("تعذّر النشر، حاولي المحاولة مجدداً");
+  }
+});
+
+/* =====================================================
    PWA  —  تسجيل Service Worker وزر التثبيت
 ===================================================== */
 if ("serviceWorker" in navigator) {

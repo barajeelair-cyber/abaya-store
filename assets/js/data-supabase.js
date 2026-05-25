@@ -723,12 +723,48 @@
     }
     window.checkForNewVersion = checkForNewVersion;
 
-    /* حدّث البيانات + افحص النسخة عند عودة التبويب/التطبيق للظهور */
+    /* ===== علامة «النشر» من لوحة التحكم =====
+       عند ضغط المالكة على زر «نشر التحديثات» تتغيّر علامة النشر في
+       قاعدة البيانات. هنا نقارنها بآخر علامة رآها هذا الجهاز، فإذا
+       تغيّرت نُعيد تحميل الصفحة مرة واحدة لجلب كل جديد (محتوى وكود)
+       دون أي حاجة لمسح ذاكرة المتصفح. */
+    const PUBLISH_SEEN_KEY = "amal_publish_seen";
+    function readPublishMarkerFromCache() {
+      try {
+        const s = cache.settings || {};
+        const info = s.siteInfo || s.site_info;
+        return info && info.__publishedAt != null ? String(info.__publishedAt) : null;
+      } catch (_) { return null; }
+    }
+    /* خط الأساس عند التحميل: سجّل العلامة الحالية دون إعادة تحميل
+       (التحميل الطازج يحتوي أصلاً على آخر نسخة). */
+    try {
+      const baseline = readPublishMarkerFromCache();
+      if (baseline != null) localStorage.setItem(PUBLISH_SEEN_KEY, baseline);
+    } catch (_) {}
+    async function checkPublishMarker() {
+      try {
+        const { data } = await supabase.from("store_settings").select("site_info").eq("id", 1).single();
+        const server = data && data.site_info && data.site_info.__publishedAt != null
+          ? String(data.site_info.__publishedAt) : null;
+        if (server == null) return;
+        let seen = null;
+        try { seen = localStorage.getItem(PUBLISH_SEEN_KEY); } catch (_) {}
+        if (seen == null) { try { localStorage.setItem(PUBLISH_SEEN_KEY, server); } catch (_) {} return; }
+        if (server !== seen) {
+          try { localStorage.setItem(PUBLISH_SEEN_KEY, server); } catch (_) {}
+          location.reload();
+        }
+      } catch (_) {}
+    }
+    window.checkPublishMarker = checkPublishMarker;
+
+    /* حدّث البيانات + افحص النسخة وعلامة النشر عند عودة التبويب للظهور */
     document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") { checkForNewVersion(); refreshCache(); }
+      if (document.visibilityState === "visible") { checkForNewVersion(); checkPublishMarker(); refreshCache(); }
     });
-    window.addEventListener("focus", () => { checkForNewVersion(); refreshCache(); });
-    window.addEventListener("online", refreshCache);
+    window.addEventListener("focus", () => { checkForNewVersion(); checkPublishMarker(); refreshCache(); });
+    window.addEventListener("online", () => { checkPublishMarker(); refreshCache(); });
 
     /* ===== جاهز ===== */
     window.supabaseReady = true;
