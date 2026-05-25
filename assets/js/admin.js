@@ -1240,6 +1240,14 @@ function renderCouponsList() {
                   : (k === "code" ? el.value.trim().toUpperCase() : el.value.trim());
       });
       if (!patch.code) { showToast(t("admin.settings.coupon_need_code")); return; }
+      /* امنع تكرار الكود (الجدول يفرض أن يكون الكود فريداً) */
+      const dupe = CouponsAPI.list().find(x => x.id !== id && (x.code || "").toUpperCase() === patch.code.toUpperCase());
+      if (dupe) {
+        showToast(getLang() === "en"
+          ? `Code "${patch.code}" is already used — choose a different code`
+          : `الكود "${patch.code}" مستخدم مسبقاً — اختاري كوداً مختلفاً`);
+        return;
+      }
       const existing = CouponsAPI.list().find(x => x.id === id);
       CouponsAPI.save({ ...existing, ...patch });
       renderCouponsList();
