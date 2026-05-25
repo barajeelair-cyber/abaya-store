@@ -362,16 +362,28 @@ function fillCategorySelects() {
   if (formCat) formCat.innerHTML = opts;
   if ($filterCat) $filterCat.innerHTML = `<option value="">${t("admin.products.all_categories")}</option>` + opts;
 
-  /* أيضاً عبّئ select الأقمشة والقَصّات */
+  /* أيضاً عبّئ select الأقمشة والقَصّات من القائمة الفعلية (Supabase)
+     بدل القائمة الافتراضية الثابتة، حتى تظهر كل الأقمشة/القصات التي
+     تديرها المالكة وتُحفظ/تُعرض بشكل صحيح عند تعديل المنتج. */
   const fabricSel = document.getElementById("formFabric");
   if (fabricSel) {
-    fabricSel.innerHTML = `<option value="">—</option>` + DEFAULT_FABRICS.map(f =>
-      `<option value="${f.id}">${escapeHtml(t("fabric." + f.id))}</option>`).join("");
+    const fabs = (window.FabricsAPI && window.FabricsAPI.list && window.FabricsAPI.list().length)
+      ? window.FabricsAPI.list() : DEFAULT_FABRICS;
+    fabricSel.innerHTML = `<option value="">—</option>` + fabs.map(f => {
+      const name = (lang === "en" && f.name_en) ? f.name_en
+        : (f.name_ar || f.name_en || t("fabric." + f.id));
+      return `<option value="${f.id}">${escapeHtml(name)}</option>`;
+    }).join("");
   }
   const cutSel = document.getElementById("formCut");
   if (cutSel) {
-    cutSel.innerHTML = `<option value="">—</option>` + DEFAULT_CUTS.map(c =>
-      `<option value="${c.id}">${escapeHtml(t("cut." + c.id))}</option>`).join("");
+    const cuts = (window.CutsAPI && window.CutsAPI.list && window.CutsAPI.list().length)
+      ? window.CutsAPI.list() : DEFAULT_CUTS;
+    cutSel.innerHTML = `<option value="">—</option>` + cuts.map(c => {
+      const name = (lang === "en" && c.name_en) ? c.name_en
+        : (c.name_ar || c.name_en || t("cut." + c.id));
+      return `<option value="${c.id}">${escapeHtml(name)}</option>`;
+    }).join("");
   }
 }
 

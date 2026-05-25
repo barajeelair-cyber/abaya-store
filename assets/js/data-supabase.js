@@ -348,7 +348,16 @@
 
     /* ===== ReviewsAPI ===== */
     window.ReviewsAPI = {
-      list() { return cache.reviews; },
+      /* عمود القاعدة اسمه comment وتاريخها created_at، بينما تقرأ الواجهة
+         والمتجر r.text و r.date — نوفّر الاسمين معاً حتى يظهر نص المراجعة
+         والتاريخ بشكل صحيح في الإدارة وفي المتجر. */
+      list() {
+        return cache.reviews.map(r => ({
+          ...r,
+          text: (r.text != null ? r.text : (r.comment != null ? r.comment : "")),
+          date: (r.date != null ? r.date : (r.created_at ? String(r.created_at).slice(0, 10) : "")),
+        }));
+      },
       save(review) {
         const payload = {
           name: review.name,
