@@ -21,7 +21,7 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: 100px; }
+html { scroll-behavior: smooth; scroll-padding-top: 100px; overflow-x: clip; }
 html, body { margin: 0; padding: 0; }
 body {
   font-family: "Tajawal", "Cairo", system-ui, sans-serif;
@@ -969,4 +969,9 @@ html[dir="ltr"] .brand-text em { font-style: italic; }
   .row-2 { grid-template-columns: 1fr; }
   .pdetails { grid-template-columns: 1fr; }
   .cart-btn span:nth-child(2) { display: none; }
+  /* امنعي تجاوز شريط التنقّل عرضَ الشاشة على الموبايل (كان يسبّب
+     انزياح النوافذ يميناً ويساراً). نقلّص الحشو واللوجو ونسمح بالانكماش. */
+  .nav-inner { padding: 10px 14px; gap: 10px; }
+  .brand { min-width: 0; flex-shrink: 1; gap: 8px; }
+  .brand img.logo-img { height: 56px; max-width: 150px; }
 }
