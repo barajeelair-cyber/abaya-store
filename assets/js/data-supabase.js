@@ -534,6 +534,65 @@
       throw lastErr || new Error("upload failed");
     };
 
+    /* ===== إعادة جلب البيانات من جديد (تحديث تلقائي) =====
+       تُعيد تحميل الجداول الأساسية إلى نفس كائن الـ cache ثم تُطلق
+       'data-changed' فتُعيد الصفحة الرسم. تُستدعى عند عودة التبويب
+       للظهور حتى تظهر الإضافات الجديدة دون إعادة تحميل يدوية. */
+    let _refreshing = false;
+    let _lastRefresh = 0;
+    async function refreshCache() {
+      if (_refreshing) return;
+      if (Date.now() - _lastRefresh < 4000) return; /* throttle */
+      _refreshing = true;
+      try {
+        const [
+          productsRes, ordersRes, categoriesRes, citiesRes,
+          fabricsRes, cutsRes, couponsRes, reviewsRes,
+          banksRes, settingsRes,
+        ] = await Promise.all([
+          supabase.from("products").select("*").order("created_at", { ascending: false }),
+          supabase.from("orders").select("*").order("created_at", { ascending: false }),
+          supabase.from("categories").select("*").order("sort", { ascending: true }),
+          supabase.from("cities").select("*"),
+          supabase.from("fabrics").select("*"),
+          supabase.from("cuts").select("*"),
+          supabase.from("coupons").select("*"),
+          supabase.from("reviews").select("*").eq("approved", true).order("created_at", { ascending: false }),
+          supabase.from("bank_accounts").select("*").eq("active", true),
+          supabase.from("store_settings").select("*").eq("id", 1).single(),
+        ]);
+        /* لا نكتب فوق الـ cache إذا فشل الجلب (تفادي مسح البيانات) */
+        if (productsRes.data)   cache.products   = productsRes.data.map(mapProductFromDB);
+        if (ordersRes.data)     cache.orders     = ordersRes.data.map(mapOrderFromDB);
+        if (categoriesRes.data) cache.categories = categoriesRes.data;
+        if (citiesRes.data)     cache.cities     = citiesRes.data;
+        if (fabricsRes.data)    cache.fabrics    = fabricsRes.data;
+        if (cutsRes.data)       cache.cuts       = cutsRes.data;
+        if (couponsRes.data)    cache.coupons    = couponsRes.data;
+        if (reviewsRes.data)    cache.reviews    = reviewsRes.data;
+        if (banksRes.data)    { cache.banks = banksRes.data; cache.settings.bankAccounts = cache.banks; }
+        if (settingsRes.data) {
+          const keep = cache.settings.bankAccounts;
+          cache.settings = settingsRes.data;
+          cache.settings.bankAccounts = keep;
+        }
+        _lastRefresh = Date.now();
+        window.dispatchEvent(new Event("data-changed"));
+      } catch (e) {
+        console.warn("[Supabase] فشل التحديث التلقائي:", e);
+      } finally {
+        _refreshing = false;
+      }
+    }
+    window.refreshSupabaseCache = refreshCache;
+
+    /* حدّث عند عودة التبويب/التطبيق للظهور أو استعادة التركيز */
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") refreshCache();
+    });
+    window.addEventListener("focus", refreshCache);
+    window.addEventListener("online", refreshCache);
+
     /* ===== جاهز ===== */
     window.supabaseReady = true;
     window.dispatchEvent(new Event("data-ready"));
