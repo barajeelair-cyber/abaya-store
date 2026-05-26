@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@500;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="assets/css/admin.css?v=20260525l" />
+  <link rel="stylesheet" href="assets/css/admin.css?v=20260525m" />
 </head>
 <body>
 
@@ -53,9 +53,16 @@
       </label>
       <button type="submit" class="btn" style="width:100%; padding:12px;" data-i18n="admin.login.signin">دخول</button>
       <div class="login-error" id="loginError"></div>
-      <p class="sub" style="margin-top:14px; font-size:12px;">
-        <span data-i18n="admin.login.default">الافتراضي:</span> <strong>admin</strong> / <strong>admin123</strong>  —  <span data-i18n="admin.login.change_hint">غيّريه من الإعدادات.</span>
-      </p>
+      <button type="button" id="forgotPwdLink"
+        style="background:none; border:none; color:var(--gold-2); font-size:12px; margin-top:14px; cursor:pointer; text-decoration:underline; padding:0;">
+        نسيتِ كلمة المرور؟
+      </button>
+      <div id="forgotPwdHelp" style="display:none; font-size:12px; color:var(--muted); margin-top:10px; padding:12px; background:rgba(212,175,55,.06); border:1px solid var(--gold-soft); border-radius:8px; text-align:right; line-height:1.7;">
+        <strong style="color:var(--gold-2);">طرق استعادة كلمة المرور:</strong><br>
+        <strong>١) وضع التصفّح الخاص:</strong> افتحي صفحة لوحة التحكم في نافذة تصفّح خاصة (Incognito) — ستعمل بيانات الدخول الأصلية هناك. ثم بعد الدخول، غيّري كلمة المرور من «الإعدادات».<br>
+        <strong>٢) من قاعدة البيانات (للمطوّر):</strong> تواصلي مع المطوّر لإعادة الضبط عبر لوحة Supabase.<br>
+        <strong>٣) مسح بيانات الموقع:</strong> من إعدادات المتصفح، امسحي بيانات الموقع لهذا العنوان ثم ادخلي بالبيانات الأصلية وغيّريها.
+      </div>
       <button type="button" class="lang-toggle-admin" id="langToggleLogin" style="margin-top:14px;">English / العربية</button>
     </form>
   </div>
@@ -579,9 +586,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="assets/js/supabase-config.js?v=20260525l"></script>
-<script src="assets/js/data.js?v=20260525l"></script>
-<script src="assets/js/data-supabase.js?v=20260525l"></script>
-<script src="assets/js/admin.js?v=20260525l"></script>
+<script src="assets/js/supabase-config.js?v=20260525m"></script>
+<script src="assets/js/data.js?v=20260525m"></script>
+<script src="assets/js/data-supabase.js?v=20260525m"></script>
+<script src="assets/js/admin.js?v=20260525m"></script>
 </body>
 </html>

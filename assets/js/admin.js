@@ -28,6 +28,13 @@ $loginForm.onsubmit = (e) => {
     $loginError.textContent = t("admin.login.error");
   }
 };
+
+/* رابط «نسيتِ كلمة المرور؟»: يُظهر/يُخفي تعليمات الاستعادة */
+document.getElementById("forgotPwdLink")?.addEventListener("click", () => {
+  const h = document.getElementById("forgotPwdHelp");
+  if (h) h.style.display = (h.style.display === "none" || !h.style.display) ? "block" : "none";
+});
+
 document.getElementById("logoutBtn")?.addEventListener("click", () => {
   AuthAPI.logout(); location.reload();
 });
