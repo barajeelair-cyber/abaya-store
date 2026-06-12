@@ -42,7 +42,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@500;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="assets/css/customer.css?v=20260525m" />
+  <link rel="stylesheet" href="assets/css/customer.css?v=20260525n" />
 </head>
 <body>
 
@@ -285,34 +285,44 @@
 
         <div class="summary" id="checkoutSummary"></div>
 
-        <!-- الحسابات البنكية -->
-        <label class="opt-label" style="display:block; margin: 16px 0 8px;" data-i18n="checkout.banks">💳 حوّلي المبلغ على أحد الحسابات التالية:</label>
-        <div id="bankAccountsList"></div>
-
-        <!-- معلومات الحوالة (مطلوبة) -->
-        <div class="field" style="margin-top:14px;">
-          <label>👤 اسم صاحب الحوالة (مطلوب)</label>
-          <input type="text" name="senderName" required placeholder="الاسم الذي حوّلتِ منه" />
-        </div>
-        <div class="field">
-          <label>🏦 حوّلتِ المبلغ إلى أي حساب؟ (مطلوب)</label>
-          <select name="transferBank" id="transferBankSelect" required></select>
-        </div>
-
-        <!-- رفع صورة التحويل -->
-        <label class="opt-label" style="display:block; margin: 16px 0 8px;" data-i18n="checkout.proof">📸 ارفعي صورة التحويل (مطلوبة لتأكيد الطلب):</label>
-        <label class="upload-zone" id="proofZone">
-          <input type="file" id="proofInput" accept="image/*" />
-          <div class="uz-icon">⬆️</div>
-          <div data-i18n="checkout.upload_hint">اسحبي الصورة هنا أو انقري للاختيار</div>
-          <div style="font-size:12px; margin-top:4px;" data-i18n="checkout.upload_hint_2">PNG / JPG  —  حتى 3 ميجا</div>
-        </label>
-        <div id="proofPreview"></div>
-
-        <div style="display:flex; gap:10px; margin-top: 16px;">
-          <button type="submit" class="checkout-btn" style="flex:1;" id="submitOrderBtn" data-i18n="checkout.confirm">تأكيد الطلب</button>
-          <button type="button" class="icon-btn" id="cancelCheckout"
+        <!-- زر متابعة لإتمام الدفع (يظهر أولاً، يكشف قسم الدفع) -->
+        <div id="proceedRow" style="display:flex; gap:10px; margin-top: 16px;">
+          <button type="button" class="checkout-btn" style="flex:1;" id="proceedToPaymentBtn">↓ متابعة لإتمام الدفع</button>
+          <button type="button" class="icon-btn" id="cancelCheckout1"
                   style="border:1px solid var(--line); padding:0 18px; border-radius:999px;" data-i18n="checkout.cancel">إلغاء</button>
+        </div>
+
+        <!-- قسم الدفع: مخفي حتى الضغط على متابعة -->
+        <div id="paymentSection" style="display:none;">
+          <!-- الحسابات البنكية -->
+          <label class="opt-label" style="display:block; margin: 16px 0 8px;" data-i18n="checkout.banks">💳 حوّلي المبلغ على أحد الحسابات التالية:</label>
+          <div id="bankAccountsList"></div>
+
+          <!-- معلومات الحوالة (مطلوبة) -->
+          <div class="field" style="margin-top:14px;">
+            <label>👤 اسم صاحب الحوالة (مطلوب)</label>
+            <input type="text" name="senderName" required placeholder="الاسم الذي حوّلتِ منه" />
+          </div>
+          <div class="field">
+            <label>🏦 حوّلتِ المبلغ إلى أي حساب؟ (مطلوب)</label>
+            <select name="transferBank" id="transferBankSelect" required></select>
+          </div>
+
+          <!-- رفع صورة التحويل -->
+          <label class="opt-label" style="display:block; margin: 16px 0 8px;" data-i18n="checkout.proof">📸 ارفعي صورة التحويل (مطلوبة لتأكيد الطلب):</label>
+          <label class="upload-zone" id="proofZone">
+            <input type="file" id="proofInput" accept="image/*" />
+            <div class="uz-icon">⬆️</div>
+            <div data-i18n="checkout.upload_hint">اسحبي الصورة هنا أو انقري للاختيار</div>
+            <div style="font-size:12px; margin-top:4px;" data-i18n="checkout.upload_hint_2">PNG / JPG  —  حتى 3 ميجا</div>
+          </label>
+          <div id="proofPreview"></div>
+
+          <div style="display:flex; gap:10px; margin-top: 16px;">
+            <button type="submit" class="checkout-btn" style="flex:1;" id="submitOrderBtn" data-i18n="checkout.confirm">تأكيد الطلب</button>
+            <button type="button" class="icon-btn" id="cancelCheckout"
+                    style="border:1px solid var(--line); padding:0 18px; border-radius:999px;" data-i18n="checkout.cancel">إلغاء</button>
+          </div>
         </div>
       </form>
     </div>
@@ -532,9 +542,9 @@
   <!-- ============ تنبيه ============ -->
   <div class="toast" id="toast">تمت الإضافة إلى السلة</div>
 
-  <script src="assets/js/supabase-config.js?v=20260525m"></script>
-  <script src="assets/js/data.js?v=20260525m"></script>
-  <script src="assets/js/data-supabase.js?v=20260525m"></script>
-  <script src="assets/js/customer.js?v=20260525m"></script>
+  <script src="assets/js/supabase-config.js?v=20260525n"></script>
+  <script src="assets/js/data.js?v=20260525n"></script>
+  <script src="assets/js/data-supabase.js?v=20260525n"></script>
+  <script src="assets/js/customer.js?v=20260525n"></script>
 </body>
 </html>

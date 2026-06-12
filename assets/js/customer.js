@@ -673,6 +673,11 @@ if ($goCheckout) {
     if (couponEl) couponEl.value = "";
     setCouponStatus("", "");
     renderSummary();
+    /* ابدئي دائماً بمرحلة المعلومات الشخصية: قسم الدفع مخفي */
+    const ps = document.getElementById("paymentSection");
+    const pr = document.getElementById("proceedRow");
+    if (ps) ps.style.display = "none";
+    if (pr) pr.style.display = "flex";
     $checkout?.classList.add("open");
   };
 }
@@ -682,6 +687,28 @@ document.getElementById("couponInput")?.addEventListener("keydown", (e) => {
   if (e.key === "Enter") { e.preventDefault(); applyCoupon(); }
 });
 $cancelChk?.addEventListener("click", () => $checkout?.classList.remove("open"));
+document.getElementById("cancelCheckout1")?.addEventListener("click", () => $checkout?.classList.remove("open"));
+
+/* زر «متابعة لإتمام الدفع»: يكشف قسم الدفع (الحسابات + الحوالة + الصورة)
+   بعد التأكد من تعبئة المعلومات الشخصية. */
+document.getElementById("proceedToPaymentBtn")?.addEventListener("click", () => {
+  const data = new FormData($form);
+  const en = getLang() === "en";
+  if (!String(data.get("name") || "").trim()) { showToast(en ? "Enter your name" : "اكتبي اسمك"); return; }
+  if (!String(data.get("phone") || "").trim()) { showToast(en ? "Enter your phone" : "اكتبي رقم جوالك"); return; }
+  const city = Utils.cityById(data.get("city"));
+  if (!city) { showToast(t("checkout.select_city")); return; }
+  if (!String(data.get("area") || "").trim()) { showToast(en ? "Enter the district/street" : "اكتبي الحي/الشارع"); return; }
+  /* السلة سبق التحقّق منها قبل فتح المودال؛ كل المعلومات الشخصية مكتملة → اعرضي قسم الدفع */
+  const ps = document.getElementById("paymentSection");
+  const pr = document.getElementById("proceedRow");
+  if (pr) pr.style.display = "none";
+  if (ps) {
+    ps.style.display = "block";
+    /* مرّري المنظر إلى قسم الحسابات لتسهيل النسخ */
+    setTimeout(() => ps.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  }
+});
 $citySel?.addEventListener("change", renderSummary);
 
 /* رفع صورة التحويل */
