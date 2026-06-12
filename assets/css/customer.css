@@ -366,19 +366,8 @@ html[dir="ltr"] .brand-text em { font-style: italic; }
   padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
 }
 .badge-low      { right: 14px; background: rgba(230,150,30,.97); color: #fff; }
+.badge-out      { right: 14px; background: rgba(192,39,30,.97); color: #fff; }
 .badge-discount { left: 14px; background: var(--success); color: #fff; }
-/* «نفذ» يظهر كشارة بارزة في منتصف الصورة بدل الزاوية */
-.badge-out {
-  top: 50%; left: 50%; right: auto;
-  transform: translate(-50%, -50%);
-  padding: 10px 36px; border-radius: 8px;
-  background: rgba(192,39,30,.95); color: #fff;
-  border: 2px solid #fff;
-  font-size: 22px; font-weight: 800; letter-spacing: 2px;
-  box-shadow: 0 8px 30px rgba(0,0,0,.5), 0 0 0 2px rgba(192,39,30,.45);
-  text-shadow: 0 1px 2px rgba(0,0,0,.4);
-  z-index: 2;
-}
 
 /* تمييز المنتج الذي نفد مخزونه عن باقي المنتجات */
 .card.out-of-stock { opacity: .82; border-color: rgba(192,39,30,.55); box-shadow: 0 0 0 1px rgba(192,39,30,.28) inset; }
