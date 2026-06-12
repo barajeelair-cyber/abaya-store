@@ -155,7 +155,7 @@ const I18N = {
 
     /* Product card */
     "product.view": "عرض",
-    "product.unavailable": "غير متوفر",
+    "product.unavailable": "نفذ",
     "product.limited": "قطع محدودة",
     "product.out_of_stock": "نفد المخزون",
     "product.discount_label": "خصم",

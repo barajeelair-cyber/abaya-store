@@ -725,6 +725,17 @@
         return s ? (new URL(s.src)).searchParams.get("v") : null;
       } catch (_) { return null; }
     }
+    /* لا تُعِد التحميل أثناء عملية حرجة للزبونة (سلة مفتوحة أو دفع
+       جارٍ أو نموذج فتح) — أجّل حتى انتهاء التفاعل. */
+    function isSafeToReload() {
+      try {
+        if (document.querySelector(".cart-drawer.open")) return false;
+        if (document.querySelector(".modal.open"))       return false;
+        const active = document.activeElement;
+        if (active && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName)) return false;
+        return true;
+      } catch (_) { return true; }
+    }
     async function checkForNewVersion() {
       if (_reloadedForVersion) return;
       try {
@@ -736,12 +747,16 @@
         const m = html.match(/data-supabase\.js\?v=([A-Za-z0-9._-]+)/);
         const latest = m ? m[1] : null;
         if (latest && latest !== mine) {
+          if (!isSafeToReload()) return; /* سنحاول لاحقاً عند انتهاء التفاعل */
           _reloadedForVersion = true;
           location.reload();
         }
       } catch (_) {}
     }
     window.checkForNewVersion = checkForNewVersion;
+    /* استطلاع دوري كل دقيقتين: حتى مع بقاء التبويب مفتوحاً، الزبائن
+       النشطون يحصلون على آخر نسخة تلقائياً دون أي تدخل. */
+    setInterval(() => { checkForNewVersion(); }, 120000);
 
     /* ===== علامة «النشر» من لوحة التحكم =====
        عند ضغط المالكة على زر «نشر التحديثات» تتغيّر علامة النشر في
@@ -772,6 +787,7 @@
         try { seen = localStorage.getItem(PUBLISH_SEEN_KEY); } catch (_) {}
         if (seen == null) { try { localStorage.setItem(PUBLISH_SEEN_KEY, server); } catch (_) {} return; }
         if (server !== seen) {
+          if (!isSafeToReload()) return; /* لا تقاطعي زبونة في منتصف الطلب */
           try { localStorage.setItem(PUBLISH_SEEN_KEY, server); } catch (_) {}
           location.reload();
         }
