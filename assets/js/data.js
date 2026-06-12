@@ -157,7 +157,7 @@ const I18N = {
     "product.view": "عرض",
     "product.unavailable": "نفذ",
     "product.limited": "قطع محدودة",
-    "product.out_of_stock": "نفد المخزون",
+    "product.out_of_stock": "نفذ",
     "product.discount_label": "خصم",
 
     /* Size Guide */
@@ -194,7 +194,7 @@ const I18N = {
     "product.stock_choose_size": "اختاري المقاس لمعرفة المتوفر",
     "product.stock_available": "متوفر:",
     "product.stock_piece": "قطعة",
-    "product.size_out": "نفد هذا المقاس",
+    "product.size_out": "هذا المقاس نفذ",
     "product.add_to_cart": "أضيفي إلى العربة",
 
     /* Cart */
@@ -206,7 +206,7 @@ const I18N = {
     "cart.add_success": "تمت الإضافة إلى عربة التسوق ✨",
     "cart.stock_less": "الكمية المتاحة أقل",
     "cart.no_more": "لا يوجد كمية أكبر",
-    "cart.variant_out": "نفد المخزون لهذه التركيبة",
+    "cart.variant_out": "هذه التركيبة نفذت",
 
     /* Checkout */
     "checkout.title": "إتمام الطلب",
