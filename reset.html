@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>إعادة تعيين — عبايات أمل</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: -apple-system, "Segoe UI", "Tajawal", Arial, sans-serif;
+      background: linear-gradient(135deg, #0a0908 0%, #1a1614 100%);
+      color: #f5e9c8; display: flex; align-items: center; justify-content: center;
+      padding: 20px; min-height: 100vh;
+    }
+    .box {
+      max-width: 460px; width: 100%; text-align: center;
+      background: rgba(20,16,14,.85);
+      border: 1px solid rgba(212,175,55,.35); border-radius: 16px;
+      padding: 36px 26px; backdrop-filter: blur(10px);
+      box-shadow: 0 12px 40px rgba(0,0,0,.5);
+    }
+    .logo { font-size: 28px; font-weight: 800; color: #d4af37; margin-bottom: 6px; letter-spacing: 1px; }
+    .sub { font-size: 13px; color: #a89a70; margin-bottom: 26px; }
+    h1 { font-size: 20px; margin-bottom: 10px; color: #f5e9c8; }
+    p  { font-size: 15px; line-height: 1.7; margin-bottom: 24px; color: #d8caa0; }
+    .status {
+      font-size: 14px; padding: 12px; border-radius: 8px;
+      background: rgba(212,175,55,.08); border: 1px solid rgba(212,175,55,.2);
+      margin-bottom: 20px; min-height: 44px; text-align: right;
+    }
+    .status .line { display: block; padding: 3px 0; }
+    .status .ok    { color: #7cd992; }
+    .status .work  { color: #d4af37; }
+    .status .err   { color: #ff8b8b; }
+    button {
+      width: 100%; padding: 14px; font-size: 16px; font-weight: 700;
+      border: none; border-radius: 10px; cursor: pointer;
+      background: linear-gradient(135deg, #d4af37, #b8942a);
+      color: #0a0908; margin-top: 6px;
+      transition: transform .15s, box-shadow .15s;
+    }
+    button:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(212,175,55,.25); }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+    .link {
+      display: inline-block; margin-top: 16px; font-size: 13px;
+      color: #a89a70; text-decoration: none;
+    }
+    .link:hover { color: #d4af37; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="logo">عبايات أمل</div>
+    <div class="sub">Amal — Abaya and More</div>
+
+    <h1>إعادة تعيين المتجر</h1>
+    <p>إذا كان المتجر لا يفتح معكِ أو يظهر بشكل غير صحيح، اضغطي الزر أدناه لتنظيف الذاكرة المؤقتة وإعادة التحميل من جديد.</p>
+
+    <div class="status" id="status">
+      <span class="line">جاهز للتنظيف. اضغطي الزر لبدء إعادة التعيين.</span>
+    </div>
+
+    <button id="resetBtn">🔄 نظّفي المتجر وأعيدي التحميل</button>
+    <a class="link" href="/">↩ رجوع للمتجر</a>
+  </div>
+
+  <script>
+    const $s = document.getElementById("status");
+    const $b = document.getElementById("resetBtn");
+    function log(msg, cls) {
+      const el = document.createElement("span");
+      el.className = "line " + (cls || "");
+      el.textContent = msg;
+      $s.appendChild(el);
+    }
+    async function doReset() {
+      $b.disabled = true;
+      $s.innerHTML = "";
+      log("جاري التنظيف…", "work");
+
+      // 1) unregister service workers
+      try {
+        if ("serviceWorker" in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          for (const r of regs) await r.unregister();
+          log("✓ تم إلغاء تسجيل خدمة الخلفية (" + regs.length + ")", "ok");
+        }
+      } catch (e) { log("⚠ تعذّر إلغاء SW: " + e.message, "err"); }
+
+      // 2) clear caches
+      try {
+        if ("caches" in window) {
+          const keys = await caches.keys();
+          for (const k of keys) await caches.delete(k);
+          log("✓ تم مسح الكاش (" + keys.length + " عنصر)", "ok");
+        }
+      } catch (e) { log("⚠ تعذّر مسح الكاش: " + e.message, "err"); }
+
+      // 3) clear localStorage / sessionStorage (keep language preference)
+      try {
+        const lang = localStorage.getItem("abaya_amal_lang");
+        localStorage.clear();
+        sessionStorage.clear();
+        if (lang) localStorage.setItem("abaya_amal_lang", lang);
+        log("✓ تم مسح البيانات المحلية", "ok");
+      } catch (e) { log("⚠ تعذّر مسح البيانات: " + e.message, "err"); }
+
+      log("🎉 اكتمل التنظيف. يعاد التحميل خلال ثانيتين…", "ok");
+
+      // 4) hard reload with cache bypass
+      setTimeout(() => {
+        location.replace("/?reset=" + Date.now());
+      }, 2000);
+    }
+    $b.addEventListener("click", doReset);
+  </script>
+</body>
+</html>
