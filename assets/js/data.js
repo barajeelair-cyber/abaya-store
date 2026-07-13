@@ -1708,94 +1708,13 @@ function defaultCities() {
 
 /* ---------- بذرة افتراضية ---------- */
 function seedData() {
-  const p1Id = uid();
-  const p2Id = uid();
-  const p3Id = uid();
-  const p4Id = uid();
+  /* ⚠️ لا نضع أي منتجات وهمية هنا. المصدر الحقيقي الوحيد للمنتجات
+     هو Supabase. لو فشل تحميل Supabase (شبكة/CDN)، الموقع يعرض شاشة
+     خطأ واضحة بدل عرض منتجات وهمية للزبائن. */
+  const _dummy = null;
   return {
-    products: [
-      {
-        id: p1Id,
-        name: "عباية المسائية الذهبية",
-        description: "تصميم مسائي راقٍ بتطريز ذهبي يدوي وحاشية مزخرفة، تناسب المناسبات الخاصة.",
-        category: "luxury",
-        fabric: "satin",
-        cut: "kloush",
-        isOpen: false,
-        isEmbroidered: true,
-        isBestseller: true,
-        isNew: false,
-        price: 340,
-        discount: 0,
-        colors: [
-          { name: "أسود",      images: ["https://images.unsplash.com/photo-1583391733956-6c78276477e1?w=900&q=80"] },
-          { name: "بني داكن",  images: ["https://images.unsplash.com/photo-1566174053879-31528523f8ae?w=900&q=80"] },
-        ],
-        sizes: ["S", "M", "L", "XL"],
-        stock: {
-          "أسود|S": 3, "أسود|M": 5, "أسود|L": 4, "أسود|XL": 2,
-          "بني داكن|S": 2, "بني داكن|M": 3, "بني داكن|L": 2, "بني داكن|XL": 1,
-        },
-      },
-      {
-        id: p2Id,
-        name: "عباية يومية بسيطة",
-        description: "عباية مريحة بقصة عصرية تناسب الإطلالة اليومية والعمل.",
-        category: "everyday",
-        fabric: "crepe",
-        cut: "straight",
-        isOpen: false,
-        isEmbroidered: false,
-        isBestseller: false,
-        isNew: true,
-        price: 180,
-        discount: 10,
-        colors: [
-          { name: "أسود", images: ["https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=900&q=80"] },
-        ],
-        sizes: ["S", "M", "L"],
-        stock: { "أسود|S": 4, "أسود|M": 6, "أسود|L": 3 },
-      },
-      {
-        id: p3Id,
-        name: "عباية الخليج الفاخرة",
-        description: "عباية سوداء كلاسيكية بتطريز ذهبي يدوي على الأكمام والياقة.",
-        category: "khaleeji",
-        fabric: "silk",
-        cut: "kloush",
-        isOpen: false,
-        isEmbroidered: true,
-        isBestseller: true,
-        isNew: false,
-        price: 280,
-        discount: 0,
-        colors: [
-          { name: "أسود", images: ["https://images.unsplash.com/photo-1551803091-e20673f15770?w=900&q=80"] },
-        ],
-        sizes: ["M", "L", "XL"],
-        stock: { "أسود|M": 4, "أسود|L": 5, "أسود|XL": 3 },
-      },
-      {
-        id: p4Id,
-        name: "عباية مفتوحة عصرية",
-        description: "عباية مفتوحة بقصة فضفاضة وحزام علوي، لإطلالة جريئة ومميزة.",
-        category: "colored",
-        fabric: "chiffon",
-        cut: "wrap",
-        isOpen: true,
-        isEmbroidered: false,
-        isBestseller: false,
-        isNew: true,
-        price: 260,
-        discount: 15,
-        colors: [
-          { name: "أسود", images: ["https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=900&q=80"] },
-          { name: "بيج",  images: ["https://images.unsplash.com/photo-1485518882345-15568b007407?w=900&q=80"] },
-        ],
-        sizes: ["S", "M", "L"],
-        stock: { "أسود|S": 2, "أسود|M": 3, "أسود|L": 2, "بيج|S": 1, "بيج|M": 2, "بيج|L": 1 },
-      },
-    ],
+    /* ⚠️ فارغة عمداً — كل المنتجات تأتي من Supabase حصراً */
+    products: [],
     orders: [],
     settings: {
       storeName: "عبايات أمل",

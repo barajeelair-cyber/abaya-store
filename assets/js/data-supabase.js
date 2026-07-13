@@ -45,25 +45,94 @@
   }
 
   const { SUPABASE_URL, SUPABASE_ANON_KEY, BUCKET_PRODUCTS, BUCKET_PROOFS, BUCKET_HERO } = window.AMAL_CONFIG;
-  const CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
+  /* الأولوية: نسخة محلية على نفس الدومين (لا يحجبها أي ISP)
+     ثم CDNs احتياطية لو الملف المحلي لسبب ما فشل */
+  const CDNS = [
+    "/assets/vendor/supabase.min.js",
+    "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js",
+    "https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js",
+    "https://esm.sh/@supabase/supabase-js@2/dist/umd/supabase.min.js",
+  ];
 
-  loadSupabase().then(initAdapter).catch(err => {
-    /* فشل تحميل supabase-js أو جلب البيانات الأولية → نكمل بـ localStorage
-       (الـ APIs المعرّفة في data.js تبقى فعّالة) ونُعلم الواجهة. */
-    notifyOffline(err);
-    window.dispatchEvent(new Event("data-ready"));
+  /* 🧹 نظّف أي بيانات قديمة في localStorage من مرحلة seed (قبل ربط Supabase)
+     — إن كان فيها منتجات تحمل معرّفات وهمية (p1..p16) أو أي منتج غير موجود
+     في Supabase فسنسمح لطبقة Supabase أن تعيد ملء الكاش من جديد. */
+  try {
+    const raw = localStorage.getItem("abaya_amal_v2");
+    if (raw) {
+      const db = JSON.parse(raw);
+      const seedIds = ["p1","p2","p3","p4","p5","p6","p7","p8","p9","p10","p11","p12","p13","p14","p15","p16"];
+      const hasSeed = Array.isArray(db.products) && db.products.some(p => seedIds.includes(p.id));
+      if (hasSeed) {
+        console.warn("[Supabase] تم اكتشاف منتجات seed قديمة — يمسحها");
+        db.products = [];
+        localStorage.setItem("abaya_amal_v2", JSON.stringify(db));
+      }
+    }
+  } catch(_) {}
+
+  loadSupabaseWithRetry().then(initAdapter).catch(err => {
+    /* فشل نهائي بعد كل المحاولات → اعرض شاشة خطأ مع زر «إعادة المحاولة».
+       لا نرجع لبيانات localStorage القديمة حتى لا يظهر المتجر بشكل خاطئ. */
+    console.error("[Supabase] فشل التحميل نهائياً:", err);
+    showLoadFailureBanner(err);
+    /* لا نرسل data-ready حتى لا يبدأ العرض بأصناف قديمة */
   });
 
-  function loadSupabase() {
+  function loadSupabaseWithRetry() {
+    if (window.supabase) return Promise.resolve();
+    const tryLoad = (i) => {
+      if (i >= CDNS.length) return Promise.reject(new Error("كل CDN فشلت"));
+      return loadScript(CDNS[i], 6000).catch(err => {
+        console.warn(`[Supabase] CDN[${i}] فشل: ${err.message}, جرّب التالي...`);
+        return tryLoad(i + 1);
+      });
+    };
+    return tryLoad(0);
+  }
+
+  function loadScript(url, timeoutMs) {
     return new Promise((resolve, reject) => {
-      if (window.supabase) return resolve();
       const s = document.createElement("script");
-      s.src = CDN;
-      s.onload = () => resolve();
-      s.onerror = (e) => reject(e);
+      let done = false;
+      const finish = (err) => {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        err ? reject(err) : resolve();
+      };
+      const timer = setTimeout(() => finish(new Error("timeout")), timeoutMs);
+      s.src = url;
+      s.onload = () => finish();
+      s.onerror = () => finish(new Error("network"));
       document.head.appendChild(s);
     });
   }
+
+  function showLoadFailureBanner(err) {
+    /* لا تكرّر البانر */
+    if (document.getElementById("amalLoadFail")) return;
+    const isRTL = document.dir === "rtl" || document.documentElement.getAttribute("dir") === "rtl";
+    const box = document.createElement("div");
+    box.id = "amalLoadFail";
+    box.setAttribute("dir", "rtl");
+    box.style.cssText = "position:fixed;inset:0;z-index:99999;background:linear-gradient(135deg,#0a0908 0%,#1a1614 100%);color:#f5e9c8;display:flex;align-items:center;justify-content:center;padding:20px;font-family:-apple-system,'Segoe UI','Tajawal',Arial,sans-serif;";
+    box.innerHTML = `
+      <div style="max-width:460px;text-align:center;background:rgba(20,16,14,.85);border:1px solid rgba(212,175,55,.35);border-radius:16px;padding:32px 24px;box-shadow:0 12px 40px rgba(0,0,0,.5);">
+        <div style="font-size:26px;font-weight:800;color:#d4af37;margin-bottom:4px;">عبايات أمل</div>
+        <div style="font-size:12px;color:#a89a70;margin-bottom:22px;">Amal — Abaya and More</div>
+        <div style="font-size:38px;margin-bottom:14px;">📡</div>
+        <h2 style="font-size:19px;margin:0 0 10px;color:#f5e9c8;">تعذّر تحميل بيانات المتجر</h2>
+        <p style="font-size:14px;line-height:1.7;color:#d8caa0;margin:0 0 20px;">قد تكون شبكة الإنترنت لديكِ ضعيفة أو أن مزوّد الإنترنت يحجب أحد الملفات. جرّبي إعادة المحاولة أو تنظيف المتجر.</p>
+        <button id="amalRetryBtn" style="width:100%;padding:13px;font-size:15px;font-weight:700;border:none;border-radius:10px;cursor:pointer;background:linear-gradient(135deg,#d4af37,#b8942a);color:#0a0908;margin-bottom:10px;">🔄 إعادة المحاولة</button>
+        <a href="/reset.html" style="display:block;padding:12px;font-size:14px;color:#d4af37;text-decoration:none;border:1px solid rgba(212,175,55,.35);border-radius:10px;">🧹 تنظيف المتجر وإعادة التحميل</a>
+        <div style="font-size:11px;color:#7a6e4d;margin-top:14px;">${(err?.message||err||"").toString().substring(0,120)}</div>
+      </div>`;
+    document.body.appendChild(box);
+    document.getElementById("amalRetryBtn").addEventListener("click", () => location.reload());
+  }
+  /* اعرض دالة الفشل للـ customer.js حتى يستخدمها بدل ما يعرض بيانات وهمية. */
+  window.amalShowLoadFailure = showLoadFailureBanner;
 
   async function initAdapter() {
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
